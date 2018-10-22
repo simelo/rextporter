@@ -7,6 +7,7 @@ import (
 )
 
 type Host struct {
+	Ref string
 	Location          string `json:"location"`
 	Port             int    `json:"port"`
 	AuthType         string `json:"auth_type"`
@@ -25,7 +26,7 @@ type Metric struct {
 }
 
 type Link struct {
-	Host string `json:"host"`
+	HostRef string `json:"host_ref"`
 	Metric string `json:"metric"`
 	URL string `json:"url"`
 	HttpMethod string `json:"http_method"`

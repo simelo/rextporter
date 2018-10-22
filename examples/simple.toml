@@ -1,5 +1,6 @@
 # All hots to be monitored.
 [[hosts]]
+ref = "hostname1"
 location = "127.0.0.1"
 port = 8080
 authType = "CSRF"
@@ -7,8 +8,17 @@ tokenKey = "X-CSRF-Token"
 genTokenEndpoint = "/api/v1/csrf"
 
 [[hosts]]
+ref = "hostname2"
 location = "127.0.0.1"
 port = 8081
+authType = "CSRF"
+tokenKey = "X-CSRF-Token"
+genTokenEndpoint = "/api/v1/csrf"
+
+[[hosts]]
+ref = "hostname3"
+location = "127.0.0.1"
+port = 8083
 authType = "CSRF"
 tokenKey = "X-CSRF-Token"
 genTokenEndpoint = "/api/v1/csrf"
@@ -32,19 +42,19 @@ name = "cpu_temp"
 
 # Now you should define what metrics to take care of in what host
 [[metricsForHost]]
-host = "127.0.0.1:8080"
+hostRef = "hostname1"
 metric = "uptime"
 url = "/api/v1.0/ut"
 httpMethod = "GET"
 
 [[metricsForHost]]
-host = "127.0.0.1:8081"
+hostRef = "hostname2"
 metric = "uptime"
 url = "/api/v1.0/started_since"
 httpMethod = "GET"
 
 [[metricsForHost]]
-host = "127.0.0.1:8081"
+hostRef = "hostname3"
 metric = "cpu_temp"
 url = "/api/v1.0/sensors"
 path = "/cpu/temp"
