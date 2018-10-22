@@ -6,6 +6,14 @@ import (
 	"os"
 )
 
+type Host struct {
+	Location          string `json:"location"`
+	Port             int    `json:"port"`
+	AuthType         string `json:"auth_type"`
+	TokenKey         string `json:"token_key"`
+	GenTokenEndpoint string `json:"gen_token_endpoint"`
+}
+
 type MetricOptions struct {
 	Type string `json:"type"`
 	Description string `json:"description"`
@@ -20,13 +28,14 @@ type Link struct {
 	Host string `json:"host"`
 	Metric string `json:"metric"`
 	URL string `json:"url"`
+	HttpMethod string `json:"http_method"`
 	Path string `json:"path,omitempty"`
 }
 
 type RootConfig struct {
-	Hosts []string `json:"hosts"`
+	Hosts []Host `json:"hosts"`
 	Metrics []Metric `json:"metrics"`
-	MetricsForHost []Link `json:"metricsforhost"`
+	MetricsForHost []Link `json:"metrics_for_host"`
 }
 
 var rootConfig RootConfig

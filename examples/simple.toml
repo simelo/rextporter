@@ -1,5 +1,17 @@
 # All hots to be monitored.
-hosts = ["127.0.0.1:8080", "127.0.0.1:8081", "127.0.0.1:8082", "127.0.0.1:8083"]
+[[hosts]]
+location = "127.0.0.1"
+port = 8080
+authType = "CSRF"
+tokenKey = "X-CSRF-Token"
+genTokenEndpoint = "/api/v1/csrf"
+
+[[hosts]]
+location = "127.0.0.1"
+port = 8081
+authType = "CSRF"
+tokenKey = "X-CSRF-Token"
+genTokenEndpoint = "/api/v1/csrf"
 
 
 # All metrics to be measured.
@@ -19,21 +31,24 @@ name = "cpu_temp"
 
 
 # Now you should define what metrics to take care of in what host
-[[metricsforhost]]
+[[metricsForHost]]
 host = "127.0.0.1:8080"
 metric = "uptime"
 url = "/api/v1.0/ut"
+httpMethod = "GET"
 
-[[metricsforhost]]
+[[metricsForHost]]
 host = "127.0.0.1:8081"
 metric = "uptime"
 url = "/api/v1.0/started_since"
+httpMethod = "GET"
 
-[[metricsforhost]]
+[[metricsForHost]]
 host = "127.0.0.1:8081"
 metric = "cpu_temp"
 url = "/api/v1.0/sensors"
 path = "/cpu/temp"
+httpMethod = "GET"
 
 
 # TODO(denisacostaq@gmail.com):
