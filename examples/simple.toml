@@ -1,0 +1,41 @@
+# All hots to be monitored.
+hosts = ["127.0.0.1:8080", "127.0.0.1:8081", "127.0.0.1:8082", "127.0.0.1:8083"]
+
+
+# All metrics to be measured.
+[[metrics]]
+name = "uptime"
+
+  [metrics.options]
+  type = "Counter"
+  description = "I am running since"
+
+[[metrics]]
+name = "cpu_temp"
+
+  [metrics.options]
+  type = "Gauge"
+  description = "This say how much hot is the cpu"
+
+
+# Now you should define what metrics to take care of in what host
+[[metricsforhost]]
+host = "127.0.0.1:8080"
+metric = "uptime"
+url = "/api/v1.0/ut"
+
+[[metricsforhost]]
+host = "127.0.0.1:8081"
+metric = "uptime"
+url = "/api/v1.0/started_since"
+
+[[metricsforhost]]
+host = "127.0.0.1:8081"
+metric = "cpu_temp"
+url = "/api/v1.0/sensors"
+path = "/cpu/temp"
+
+
+# TODO(denisacostaq@gmail.com):
+# if you refer(under "metrics_for_host") to a not previously defined host or metric it will be raise an error and the process will not start
+# if in all your definition you not use some host or metric the process will raise a warning and the process will start normally.
