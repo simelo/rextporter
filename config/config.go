@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"os"
+	"strconv"
 )
 
 type Host struct {
@@ -13,6 +14,7 @@ type Host struct {
 	AuthType         string `json:"auth_type"`
 	TokenKey         string `json:"token_key"`
 	GenTokenEndpoint string `json:"gen_token_endpoint"`
+	GenTokenKey string `json:"gen_token_key"`
 }
 
 type MetricOptions struct {
@@ -43,6 +45,14 @@ var rootConfig RootConfig
 
 func Config() RootConfig {
 	return rootConfig
+}
+
+func UriToGetMetric(host Host, metricInHost Link) string {
+	return host.Location + ":" + strconv.Itoa(host.Port) + metricInHost.URL
+}
+
+func UriToGetToken(host Host) string {
+	return host.Location + ":" + strconv.Itoa(host.Port) + host.GenTokenEndpoint
 }
 
 func init() {
