@@ -66,22 +66,32 @@ func (conf RootConfig) FindHostByRef(ref string) (host Host, err error) {
 	return Host{}, err
 }
 
-func UriToGetMetric(host Host, metricInHost Link) string {
+func (host Host) UriToGetMetric(metricInHost Link) string {
 	return host.Location + ":" + strconv.Itoa(host.Port) + metricInHost.URL
 }
 
-func UriToGetToken(host Host) string {
+func (host Host) UriToGetToken() string {
 	return host.Location + ":" + strconv.Itoa(host.Port) + host.GenTokenEndpoint
 }
 
 // TODO(denisacostaq@gmail.com): Fill some data structures for efficient lookup from ref to host for example
 func init() {
 	// FIXME(denisacostaq@gmail.com): not portable
-	viper.SetConfigFile(os.Getenv("GOPATH") + "/src/github.com/denisacostaq/rextporter/examples/simple.toml")
+	viper.SetConfigFile(os.Getenv("GOPATH") + "/src/github.com/denisacostaq/rextporter/examples/simple2.toml")
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalln("Error loading config file:", err)
 	}
 	if err:= viper.Unmarshal(&rootConfig); err != nil {
 		log.Fatalln("Error unmarshalling:", err)
 	}
+}
+
+func (conf RootConfig) FilterLinksByHost(host Host) []Link {
+	var links []Link
+	for _,link := range conf.MetricsForHost {
+		if strings.Compare(host.Ref, link.HostRef) == 0 {
+			links = append(links, link)
+		}
+	}
+	return links
 }

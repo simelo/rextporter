@@ -16,10 +16,14 @@ type token struct {
 	CsrfToken string `json:"csrf_token"`
 }
 
-type MetricClient struct {
-	link config.Link
+type BaseClient struct {
 	req *http.Request
 	host config.Host
+}
+
+type MetricClient struct {
+	BaseClient
+	link config.Link
 	token string
 }
 
@@ -32,7 +36,7 @@ func NewMetricClient(link config.Link) (client *MetricClient, err error) {
 		errCause := fmt.Sprintln("can not find a host", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	client.req, err = http.NewRequest(link.HttpMethod, config.UriToGetMetric(client.host, link), nil)
+	client.req, err = http.NewRequest(link.HttpMethod, client.host.UriToGetMetric(link), nil)
 	if err != nil {
 		errCause := fmt.Sprintln("can not create the request:", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
@@ -73,7 +77,7 @@ func (client *MetricClient) GetRemoteInfo() (data []byte, err error) {
 	}
 	var resp *http.Response
 	if resp, err = doRequest(); err != nil {
-		log.Println("can not do the request:", err.Error(), "trying with a new token")
+		log.Println("can not do the request:", err.Error(), "trying with a new token...")
 		if err = client.ResetToken(); err != nil {
 			errCause := fmt.Sprintln("can not reset the token:", err.Error())
 			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
@@ -83,30 +87,26 @@ func (client *MetricClient) GetRemoteInfo() (data []byte, err error) {
 			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	}
-	data, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
+	if data, err = ioutil.ReadAll(resp.Body); err != nil {
 		errCause := fmt.Sprintln("can not read the body:", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return data, nil
 }
 
-func (client *MetricClient) GetMetric() (interface{}, error) {
+func (client *MetricClient) GetMetric() (val interface{}, err error) {
 	const generalScopeErr = "error getting metric data"
-	data, err := client.GetRemoteInfo()
-	if err != nil {
+	var data []byte
+	if data, err = client.GetRemoteInfo(); err != nil {
 		return nil, common.ErrorFromThisScope(err.Error(), generalScopeErr)
 	}
 	var jsonData interface{}
-	err = json.Unmarshal(data, &jsonData)
-	if err != nil {
-		errCause := fmt.Sprintln("can not decode the body:", err.Error())
+	if err = json.Unmarshal(data, &jsonData); err != nil {
+		errCause := fmt.Sprintln("can not decode the body:", string(data), err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	var val interface{}
 	jpath := "$" + strings.Replace(client.link.Path, "/", ".", -1)
-	val, err = jsonpath.JsonPathLookup(jsonData, jpath)
-	if err != nil {
+	if val, err = jsonpath.JsonPathLookup(jsonData, jpath); err != nil {
 		errCause := fmt.Sprintln("can not locate the path:", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
