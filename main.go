@@ -31,11 +31,10 @@ func main() {
 		if tk, err := client.GetToken(host); err != nil {
 			log.Println("Can not get the token:", err)
 		} else {
-			log.Println("tk:", tk)
+			// log.Println("tk:", tk)
 			links := filterLinksByHost(host, conf)
 			for _, link := range links {
-				client.GetMetric(host, link, tk)
-				log.Println(client.GetMetric(host, link, tk))
+				log.Println(client.GetMetric(link, tk))
 			}
 		}
 	}

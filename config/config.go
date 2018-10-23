@@ -44,6 +44,7 @@ type RootConfig struct {
 var rootConfig RootConfig
 
 func Config() RootConfig {
+	// TODO(denisacostaq@gmail.com): Make it a singleton
 	return rootConfig
 }
 
