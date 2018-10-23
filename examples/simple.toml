@@ -52,6 +52,13 @@ httpMethod = "GET"
 path = "/blockchain/head/seq"
 
 [[metricsForHost]]
+hostRef = "hostname1"
+metric = "uptime"
+url = "/api/v1/health"
+httpMethod = "GET"
+path = "/blockchain/head/block_hash"
+
+[[metricsForHost]]
 hostRef = "hostname2"
 metric = "uptime"
 url = "/api/v1/health"

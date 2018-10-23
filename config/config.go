@@ -5,6 +5,9 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
+	"fmt"
+	"errors"
 )
 
 type Host struct {
@@ -48,6 +51,21 @@ func Config() RootConfig {
 	return rootConfig
 }
 
+func (conf RootConfig) FindHostByRef(ref string) (host Host, err error) {
+	found := false
+	for _, host = range conf.Hosts {
+		found = strings.Compare(host.Ref, ref) == 0
+		if found {
+			return
+		}
+	}
+	if !found {
+		errCause := fmt.Sprintln("can not find a host for Ref:", ref)
+		err = errors.New(errCause)
+	}
+	return Host{}, err
+}
+
 func UriToGetMetric(host Host, metricInHost Link) string {
 	return host.Location + ":" + strconv.Itoa(host.Port) + metricInHost.URL
 }
@@ -56,7 +74,9 @@ func UriToGetToken(host Host) string {
 	return host.Location + ":" + strconv.Itoa(host.Port) + host.GenTokenEndpoint
 }
 
+// TODO(denisacostaq@gmail.com): Fill some data structures for efficient lookup from ref to host for example
 func init() {
+	// FIXME(denisacostaq@gmail.com): not portable
 	viper.SetConfigFile(os.Getenv("GOPATH") + "/src/github.com/denisacostaq/rextporter/examples/simple.toml")
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalln("Error loading config file:", err)

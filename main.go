@@ -28,13 +28,14 @@ func main() {
 	}
 
 	for _, host := range conf.Hosts {
-		if tk, err := client.GetToken(host); err != nil {
-			log.Println("Can not get the token:", err)
-		} else {
-			// log.Println("tk:", tk)
-			links := filterLinksByHost(host, conf)
-			for _, link := range links {
-				log.Println(client.GetMetric(link, tk))
+		// cl, err := client.NewTokenClient(host)
+		// log.Println("tk:", tk)
+		links := filterLinksByHost(host, conf)
+		for _, link := range links {
+			if cl, err := client.NewMetricClient(link); err != nil {
+				log.Println(err.Error())
+			} else {
+				log.Println(cl.GetMetric())
 			}
 		}
 	}
