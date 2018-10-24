@@ -3,11 +3,11 @@ package config
 import (
 	"github.com/spf13/viper"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 	"fmt"
 	"errors"
+	"bytes"
 )
 
 type Host struct {
@@ -51,6 +51,17 @@ func Config() RootConfig {
 	return rootConfig
 }
 
+func NewConfig(strConf string) {
+	buff := bytes.NewBuffer([]byte(strConf))
+	if err := viper.ReadConfig(buff); err != nil {
+		log.Fatalln("Error loading config file:", err)
+	}
+	rootConfig = RootConfig{}
+	if err:= viper.Unmarshal(&rootConfig); err != nil {
+		log.Fatalln("Error unmarshalling:", err)
+	}
+}
+
 func (conf RootConfig) FindHostByRef(ref string) (host Host, err error) {
 	found := false
 	for _, host = range conf.Hosts {
@@ -76,14 +87,14 @@ func (host Host) UriToGetToken() string {
 
 // TODO(denisacostaq@gmail.com): Fill some data structures for efficient lookup from ref to host for example
 func init() {
-	// FIXME(denisacostaq@gmail.com): not portable
-	viper.SetConfigFile(os.Getenv("GOPATH") + "/src/github.com/denisacostaq/rextporter/examples/simple2.toml")
-	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalln("Error loading config file:", err)
-	}
-	if err:= viper.Unmarshal(&rootConfig); err != nil {
-		log.Fatalln("Error unmarshalling:", err)
-	}
+	//// FIXME(denisacostaq@gmail.com): not portable
+	//viper.SetConfigFile(os.Getenv("GOPATH") + "/src/github.com/denisacostaq/rextporter/examples/simple2.toml")
+	//if err := viper.ReadInConfig(); err != nil {
+	//	log.Fatalln("Error loading config file:", err)
+	//}
+	//if err:= viper.Unmarshal(&rootConfig); err != nil {
+	//	log.Fatalln("Error unmarshalling:", err)
+	//}
 }
 
 func (conf RootConfig) FilterLinksByHost(host Host) []Link {
