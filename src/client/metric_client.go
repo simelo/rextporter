@@ -65,7 +65,7 @@ func (client *MetricClient) ResetToken() (err error) {
 
 func (client *MetricClient) GetRemoteInfo() (data []byte, err error) {
 	const generalScopeErr = "error making a server request to get metric from remote endpoint"
-	client.req.Header.Set(client.host.TokenKey, client.token)
+	client.req.Header.Set(client.host.TokenHeaderKey, client.token)
 	doRequest := func() (*http.Response, error) {
 		httpClient := &http.Client{}
 		var resp *http.Response

@@ -4,7 +4,7 @@ ref = "hostname1"
 location = "http://127.0.0.1"
 port = 8080
 authType = "CSRF"
-tokenKey = "X-CSRF-Token"
+tokenHeaderKey = "X-CSRF-Token"
 genTokenEndpoint = "/api/v1/csrf"
 genTokenKey = "csrf_token"
 
@@ -13,7 +13,7 @@ ref = "hostname2"
 location = "http://127.0.0.1"
 port = 8080
 authType = "CSRF"
-tokenKey = "X-CSRF-Token"
+tokenHeaderKey = "X-CSRF-Token"
 genTokenEndpoint = "/api/v1/csrf"
 genTokenKey = "csrf_token"
 
@@ -22,7 +22,7 @@ ref = "hostname3"
 location = "http://127.0.0.1"
 port = 8080
 authType = "CSRF"
-tokenKey = "X-CSRF-Token"
+tokenHeaderKey = "X-CSRF-Token"
 genTokenEndpoint = "/api/v1/csrf"
 genTokenKey = "csrf_token"
 

@@ -15,7 +15,7 @@ type Host struct {
 	Location          string `json:"location"`
 	Port             int    `json:"port"`
 	AuthType         string `json:"auth_type"`
-	TokenKey         string `json:"token_key"`
+	TokenHeaderKey         string `json:"token_header_key"`
 	GenTokenEndpoint string `json:"gen_token_endpoint"`
 	GenTokenKey string `json:"gen_token_key"`
 }
