@@ -2,12 +2,12 @@ package config
 
 import (
 	"github.com/spf13/viper"
-	"log"
 	"strconv"
 	"strings"
 	"fmt"
 	"errors"
 	"bytes"
+	"github.com/denisacostaq/rextporter/src/common"
 )
 
 type Host struct {
@@ -51,15 +51,20 @@ func Config() RootConfig {
 	return rootConfig
 }
 
-func NewConfig(strConf string) {
+func NewConfig(strConf string) (error) {
+	const generalScopeErr = "error creating a config instance"
+	viper.SetConfigType("toml")
 	buff := bytes.NewBuffer([]byte(strConf))
 	if err := viper.ReadConfig(buff); err != nil {
-		log.Fatalln("Error loading config file:", err)
+		errCause := fmt.Sprintln("can not read the buffer", err.Error())
+		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	rootConfig = RootConfig{}
-	if err:= viper.Unmarshal(&rootConfig); err != nil {
-		log.Fatalln("Error unmarshalling:", err)
+	if err := viper.Unmarshal(&rootConfig); err != nil {
+		errCause := fmt.Sprintln("can not parse config data", err.Error())
+		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	return nil
 }
 
 func (conf RootConfig) FindHostByRef(ref string) (host Host, err error) {
