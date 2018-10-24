@@ -4,7 +4,7 @@ import (
 	"testing"
 	"net"
 	"net/http/httptest"
-	"github.com/denisacostaq/rextporter/config"
+	"github.com/denisacostaq/rextporter/src/config"
 	"net/http"
 	"log"
 	"encoding/json"

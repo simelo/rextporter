@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/denisacostaq/rextporter/config"
+	"github.com/denisacostaq/rextporter/src/config"
 	"log"
 	"encoding/json"
-	"github.com/denisacostaq/rextporter/client"
+	"github.com/denisacostaq/rextporter/src/client"
 )
 
 func main() {
