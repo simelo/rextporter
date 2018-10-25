@@ -6,18 +6,18 @@ test: ## Run test with GOARCH=Default
 	go test  -timeout=5m ./cmd/...
 
 test-386: ## Run tests  with GOARCH=386
-	GOARCH=386 go test ./cmd/... -timeout=5m
-	GOARCH=386 go test ./src/... -timeout=5m
+	# GOARCH=386 go test ./cmd/... -timeout=5m
+	# GOARCH=386 go test ./src/... -timeout=5m
+	GOARCH=386 go test github.com/simelo/rextporter/src/client
 
 test-amd64: ## Run tests with GOARCH=amd64
-	GOARCH=amd64  go test ./cmd/... -timeout=5m
-	GOARCH=amd64  go test ./src/... -timeout=5m
+	# GOARCH=amd64  go test ./cmd/... -timeout=5m
+	# GOARCH=amd64  go test ./src/... -timeout=5m
+	GOARCH=amd64 go test github.com/simelo/rextporter/src/client
 
 lint: ## Run linters. Use make install-linters first.
 	vendorcheck ./...
 	golangci-lint run -c .golangci.yml ./...
-	# lib/cgo needs separate linting rules
-	golangci-lint run -c .golangci.libcgo.yml ./lib/cgo/...
 	# The govet version in golangci-lint is out of date and has spurious warnings, run it separately
 	go vet -all ./...
 
