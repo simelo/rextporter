@@ -5,16 +5,14 @@ import (
 	"log"
 	"encoding/json"
 	"github.com/denisacostaq/rextporter/src/client"
+	"os"
 )
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	// FIXME(denisacostaq@gmail.com): not portable
+	config.NewConfigFromFilePath(os.Getenv("GOPATH") + "/src/github.com/denisacostaq/rextporter/examples/simple.toml")
 	conf := config.Config()
-	if /*b*/_, err := json.MarshalIndent(conf, "", " "); err != nil {
-		log.Println("Error marshalling:", err)
-	} else {
-		//os.Stdout.Write(b)
-	}
 
 	for _, host := range conf.Hosts {
 		// cl, err := client.NewTokenClient(host)
