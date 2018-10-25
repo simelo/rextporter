@@ -6,7 +6,7 @@ port = 8080
 authType = "CSRF"
 tokenHeaderKey = "X-CSRF-Token"
 genTokenEndpoint = "/api/v1/csrf"
-genTokenKey = "csrf_token"
+tokenKeyFromEndpoint = "csrf_token"
 
 [[hosts]]
 ref = "hostname2"
@@ -15,7 +15,7 @@ port = 8080
 authType = "CSRF"
 tokenHeaderKey = "X-CSRF-Token"
 genTokenEndpoint = "/api/v1/csrf"
-genTokenKey = "csrf_token"
+tokenKeyFromEndpoint = "csrf_token"
 
 [[hosts]]
 ref = "hostname3"
@@ -24,7 +24,7 @@ port = 8080
 authType = "CSRF"
 tokenHeaderKey = "X-CSRF-Token"
 genTokenEndpoint = "/api/v1/csrf"
-genTokenKey = "csrf_token"
+tokenKeyFromEndpoint = "csrf_token"
 
 
 # All metrics to be measured.
@@ -46,28 +46,28 @@ name = "cpu_temp"
 # Now you should define what metrics to take care of in what host
 [[metricsForHost]]
 hostRef = "hostname1"
-metric = "uptime"
+metricRef = "uptime"
 url = "/api/v1/health"
 httpMethod = "GET"
 path = "/blockchain/head/seq"
 
 [[metricsForHost]]
 hostRef = "hostname1"
-metric = "uptime"
+metricRef = "uptime"
 url = "/api/v1/health"
 httpMethod = "GET"
 path = "/blockchain/head/block_hash"
 
 [[metricsForHost]]
 hostRef = "hostname2"
-metric = "uptime"
+metricRef = "uptime"
 url = "/api/v1/health"
 httpMethod = "GET"
 path = "/blockchain/head/seq"
 
 [[metricsForHost]]
 hostRef = "hostname3"
-metric = "cpu_temp"
+metricRef = "cpu_temp"
 url = "/api/v1/health"
 httpMethod = "GET"
 path = "/blockchain/head/seq"

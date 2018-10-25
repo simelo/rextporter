@@ -17,7 +17,43 @@ type Host struct {
 	AuthType         string `json:"auth_type"`
 	TokenHeaderKey         string `json:"token_header_key"`
 	GenTokenEndpoint string `json:"gen_token_endpoint"`
-	GenTokenKey string `json:"gen_token_key"`
+	TokenKeyFromEndpoint string `json:"token_key_from_endpoint"`
+}
+
+// isValidUrl tests a string to determine if it is a url or not.
+func isValidUrl(toTest string) bool {
+	if _, err := url.ParseRequestURI(toTest); err != nil {
+		return false
+	}
+	return true
+}
+
+func (host Host) validate() (errs []error) {
+	if len(host.Ref) == 0 {
+		errs = append(errs, errors.New("ref is required in host"))
+	}
+	if len(host.Location) == 0 {
+		errs = append(errs, errors.New("location is required in host"))
+	}
+	if !isValidUrl(host.Location) {
+		errs = append(errs, errors.New("location is not a valid url in host"))
+	}
+	if !isValidUrl(host.UriToGetToken()) {
+		errs = append(errs, errors.New("location + port can not form a valid uri in host"))
+	}
+	if host.Port < 0 || host.Port > 65535 {
+		errs = append(errs, errors.New("port number should be between 0 and 65535 in host"))
+	}
+	if strings.Compare(host.AuthType, "CSRF") == 0 && len(host.TokenHeaderKey) == 0 {
+		errs = append(errs, errors.New("TokenHeaderKey is required if you are using CSRF"))
+	}
+	if strings.Compare(host.AuthType, "CSRF") == 0 && len(host.GenTokenEndpoint) == 0 {
+		errs = append(errs, errors.New("GenTokenEndpoint is required if you are using CSRF"))
+	}
+	if strings.Compare(host.AuthType, "CSRF") == 0 && len(host.TokenKeyFromEndpoint) == 0 {
+		errs = append(errs, errors.New("TokenKeyFromEndpoint is required if you are using CSRF"))
+	}
+	return errs
 }
 
 type MetricOptions struct {
@@ -32,7 +68,7 @@ type Metric struct {
 
 type Link struct {
 	HostRef string `json:"host_ref"`
-	Metric string `json:"metric"`
+	MetricRef string `json:"metric_ref"`
 	URL string `json:"url"`
 	HttpMethod string `json:"http_method"`
 	Path string `json:"path,omitempty"`
