@@ -1,0 +1,30 @@
+sudo: required
+dist: trusty
+language: go
+go:
+  - "1.11.x"
+
+matrix:
+  include:
+    - os: linux
+      env: VERSION_UPGRADE_TEST_WAIT_TIMEOUT=30s
+    - os: osx
+      # Do not start osx build for PR
+      if: type != pull_request
+      osx_image: xcode8
+      env: VERSION_UPGRADE_TEST_WAIT_TIMEOUT=30s
+
+install:
+  - cd $GOPATH/src/github.com/denisacostaq/rextporter
+  - go get -t ./...
+  - make install-linters
+
+
+script:
+  - make lint
+  - make test-386
+  - make test-amd64
+
+notifications:
+  email: false
+  webhooks: https://fathomless-fjord-24024.herokuapp.com/notify
