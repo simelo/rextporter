@@ -2,7 +2,6 @@ package client
 
 import (
 	"github.com/simelo/rextporter/src/config"
-	"github.com/olemis/rextporter/src/config"
 	"fmt"
 	"github.com/simelo/rextporter/src/common"
 	"net/http"
