@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/denisacostaq/rextporter/src/config"
-	"github.com/denisacostaq/rextporter/src/common"
+	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/common"
 	"net/http"
 	"encoding/json"
 	"io/ioutil"

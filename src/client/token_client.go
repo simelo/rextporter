@@ -1,9 +1,10 @@
 package client
 
 import (
-	"github.com/denisacostaq/rextporter/src/config"
+	"github.com/simelo/rextporter/src/config"
+	"github.com/olemis/rextporter/src/config"
 	"fmt"
-	"github.com/denisacostaq/rextporter/src/common"
+	"github.com/simelo/rextporter/src/common"
 	"net/http"
 	"io/ioutil"
 )

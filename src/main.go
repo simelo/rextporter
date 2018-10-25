@@ -1,10 +1,9 @@
 package main
 
 import (
-	"github.com/denisacostaq/rextporter/src/config"
+	"github.com/simelo/rextporter/src/config"
 	"log"
-	"encoding/json"
-	"github.com/denisacostaq/rextporter/src/client"
+	"github.com/simelo/rextporter/src/client"
 	"os"
 )
 

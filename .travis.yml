@@ -15,7 +15,8 @@ matrix:
       env: VERSION_UPGRADE_TEST_WAIT_TIMEOUT=30s
 
 install:
-  - cd $GOPATH/src/github.com/denisacostaq/rextporter
+  - if [[ ! -d $GOPATH/src/github.com/simelo/rextporter ]]; then mkdir -p $GOPATH/src/github.com/simelo; ln -s $TRAVIS_BUILD_DIR $GOPATH/src/github.com/simelo/rextporter; fi
+  - cd $GOPATH/src/github.com/simelo/rextporter
   - go get -t ./...
   - make install-linters
 

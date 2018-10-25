@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"errors"
 	"bytes"
-	"github.com/denisacostaq/rextporter/src/common"
+	"github.com/simelo/rextporter/src/common"
 	"log"
 	"net/url"
 )

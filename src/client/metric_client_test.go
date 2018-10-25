@@ -8,7 +8,7 @@ import (
 	"log"
 	"github.com/stretchr/testify/suite"
 	"github.com/stretchr/testify/require"
-	"github.com/denisacostaq/rextporter/src/config"
+	"github.com/simelo/rextporter/src/config"
 )
 
 var jsonResponse = `
