@@ -1,42 +1,48 @@
 package client
 
 import (
-	"github.com/simelo/rextporter/src/config"
-	"github.com/simelo/rextporter/src/common"
-	"net/http"
 	"encoding/json"
-	"io/ioutil"
-	"github.com/oliveagle/jsonpath"
-	"strings"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"strings"
+
+	"github.com/oliveagle/jsonpath"
+	"github.com/simelo/rextporter/src/common"
+	"github.com/simelo/rextporter/src/config"
 )
 
 type token struct {
 	CsrfToken string `json:"csrf_token"`
 }
 
+// BaseClient have common data to be shared through embedded struct in thouse type who implement the
+// client.Client interface
 type BaseClient struct {
-	req *http.Request
+	req  *http.Request
 	host config.Host
 }
 
+// MetricClient implement the getRemoteInfo method from client.Client interface by using some .toml config parameters
+// like for example: where is the host? it should be a GET, a POST or some other ...
+// sa NewMetricClient method.
 type MetricClient struct {
 	BaseClient
-	link config.Link
+	link  config.Link
 	token string
 }
 
+// NewMetricClient will put a lot of paramethers in the data structure based in the .toml confg file values.
 func NewMetricClient(link config.Link) (client *MetricClient, err error) {
 	const generalScopeErr = "error creating a client to get a metric from remote endpoint"
 	client = new(MetricClient)
 	client.link = link
-	client.host, err = config.Config().FindHostByRef(link.HostRef)
-	if err != nil {
+	if client.BaseClient.host, err = config.Config().FindHostByRef(link.HostRef); err != nil {
 		errCause := fmt.Sprintln("can not find a host", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	client.req, err = http.NewRequest(link.HttpMethod, client.host.UriToGetMetric(link), nil)
+	client.BaseClient.req, err = http.NewRequest(link.HTTPMethod, client.BaseClient.host.URIToGetMetric(link), nil)
 	if err != nil {
 		errCause := fmt.Sprintln("can not create the request:", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
@@ -44,13 +50,16 @@ func NewMetricClient(link config.Link) (client *MetricClient, err error) {
 	return client, nil
 }
 
-func (client *MetricClient) ResetToken() (err error) {
+func (client *MetricClient) resetToken() (err error) {
 	const generalScopeErr = "error making resetting the token"
 	client.token = ""
 	var clientToken *TokenClient
-	clientToken, err = NewTokenClient(client.host)
+	if clientToken, err = newTokenClient(client.BaseClient.host); err != nil {
+		errCause := fmt.Sprintln("can not find a host", err.Error())
+		return common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
 	var data []byte
-	if data, err = clientToken.GetRemoteInfo(); err != nil {
+	if data, err = clientToken.getRemoteInfo(); err != nil {
 		errCause := fmt.Sprintln("can make the request to get a token:", err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -63,9 +72,9 @@ func (client *MetricClient) ResetToken() (err error) {
 	return nil
 }
 
-func (client *MetricClient) GetRemoteInfo() (data []byte, err error) {
+func (client *MetricClient) getRemoteInfo() (data []byte, err error) {
 	const generalScopeErr = "error making a server request to get metric from remote endpoint"
-	client.req.Header.Set(client.host.TokenHeaderKey, client.token)
+	client.req.Header.Set(client.BaseClient.host.TokenHeaderKey, client.token)
 	doRequest := func() (*http.Response, error) {
 		httpClient := &http.Client{}
 		var resp *http.Response
@@ -78,7 +87,7 @@ func (client *MetricClient) GetRemoteInfo() (data []byte, err error) {
 	var resp *http.Response
 	if resp, err = doRequest(); err != nil {
 		log.Println("can not do the request:", err.Error(), "trying with a new token...")
-		if err = client.ResetToken(); err != nil {
+		if err = client.resetToken(); err != nil {
 			errCause := fmt.Sprintln("can not reset the token:", err.Error())
 			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
@@ -94,10 +103,12 @@ func (client *MetricClient) GetRemoteInfo() (data []byte, err error) {
 	return data, nil
 }
 
+// GetMetric return the metric previously binded through config parameters like:
+// url(endpoint), json path, type and so on.
 func (client *MetricClient) GetMetric() (val interface{}, err error) {
 	const generalScopeErr = "error getting metric data"
 	var data []byte
-	if data, err = client.GetRemoteInfo(); err != nil {
+	if data, err = client.getRemoteInfo(); err != nil {
 		return nil, common.ErrorFromThisScope(err.Error(), generalScopeErr)
 	}
 	var jsonData interface{}

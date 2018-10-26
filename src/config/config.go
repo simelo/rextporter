@@ -1,29 +1,33 @@
 package config
 
 import (
-	"github.com/spf13/viper"
-	"strconv"
-	"strings"
-	"fmt"
-	"errors"
 	"bytes"
-	"github.com/simelo/rextporter/src/common"
+	"errors"
+	"fmt"
 	"log"
 	"net/url"
+	"strconv"
+	"strings"
+
+	"github.com/simelo/rextporter/src/common"
+	"github.com/spf13/viper"
 )
 
+// Host is a concept to grap information about a running server, for example:
+// where is it http://localhost:1234 (Location + : + Port), what auth kind you need to use?
+// what is the header key you in which you need to send the token, and so on.
 type Host struct {
-	Ref string
-	Location          string `json:"location"`
-	Port             int    `json:"port"`
-	AuthType         string `json:"auth_type"`
-	TokenHeaderKey         string `json:"token_header_key"`
-	GenTokenEndpoint string `json:"gen_token_endpoint"`
+	Ref                  string
+	Location             string `json:"location"`
+	Port                 int    `json:"port"`
+	AuthType             string `json:"auth_type"`
+	TokenHeaderKey       string `json:"token_header_key"`
+	GenTokenEndpoint     string `json:"gen_token_endpoint"`
 	TokenKeyFromEndpoint string `json:"token_key_from_endpoint"`
 }
 
-// isValidUrl tests a string to determine if it is a url or not.
-func isValidUrl(toTest string) bool {
+// isValidUrl tests a string to determine if it is a valid url or not.
+func isValidURL(toTest string) bool {
 	if _, err := url.ParseRequestURI(toTest); err != nil {
 		return false
 	}
@@ -37,10 +41,10 @@ func (host Host) validate() (errs []error) {
 	if len(host.Location) == 0 {
 		errs = append(errs, errors.New("location is required in host"))
 	}
-	if !isValidUrl(host.Location) {
+	if !isValidURL(host.Location) {
 		errs = append(errs, errors.New("location is not a valid url in host"))
 	}
-	if !isValidUrl(host.UriToGetToken()) {
+	if !isValidURL(host.URIToGetToken()) {
 		errs = append(errs, errors.New("location + port can not form a valid uri in host"))
 	}
 	if host.Port < 0 || host.Port > 65535 {
@@ -58,8 +62,9 @@ func (host Host) validate() (errs []error) {
 	return errs
 }
 
+// MetricOptions keep information about the metric, mostly the type(Counter, Gauge, Summary and Histogram)
 type MetricOptions struct {
-	Type string `json:"type"`
+	Type        string `json:"type"`
 	Description string `json:"description"`
 }
 
@@ -70,8 +75,9 @@ func (mo MetricOptions) validate() (errs []error) {
 	return errs
 }
 
+// Metric keep the metric name ans an instace of MetricOptions
 type Metric struct {
-	Name string `json:"name"`
+	Name    string        `json:"name"`
 	Options MetricOptions `json:"options"`
 }
 
@@ -83,12 +89,15 @@ func (metric Metric) validate() (errs []error) {
 	return errs
 }
 
+// Link is a concep who map properties of a Metric in a Host, for example you can define
+// some hosts some metrics and in Link you yould specifi the properties of a giving metric in
+// a giving host, for example the Url and the json path(Path) from where you can scrap the information.
 type Link struct {
-	HostRef string `json:"host_ref"`
-	MetricRef string `json:"metric_ref"`
-	URL string `json:"url"`
-	HttpMethod string `json:"http_method"`
-	Path string `json:"path,omitempty"`
+	HostRef    string `json:"host_ref"`
+	MetricRef  string `json:"metric_ref"`
+	URL        string `json:"url"`
+	HTTPMethod string `json:"http_method"`
+	Path       string `json:"path,omitempty"`
 }
 
 func (link Link) validate() (errs []error) {
@@ -101,7 +110,7 @@ func (link Link) validate() (errs []error) {
 	if len(link.URL) == 0 {
 		errs = append(errs, errors.New("url is required"))
 	}
-	if len(link.HttpMethod) == 0 {
+	if len(link.HTTPMethod) == 0 {
 		errs = append(errs, errors.New("HttpMethod is required in Link(metric fo host)"))
 	}
 	if len(link.Path) == 0 {
@@ -111,7 +120,7 @@ func (link Link) validate() (errs []error) {
 	if hostNotFound != nil {
 		errs = append(errs, hostNotFound)
 	} else {
-		if !isValidUrl(host.UriToGetMetric(link)) {
+		if !isValidURL(host.URIToGetMetric(link)) {
 			errs = append(errs, errors.New("can not create a valid uri under link"))
 		}
 		errs = append(errs, host.validate()...)
@@ -125,10 +134,12 @@ func (link Link) validate() (errs []error) {
 	return errs
 }
 
+// RootConfig is the top level node for th config tree, it have a list of hosts, a list of metrics
+// and a lis of links(MetricsForHost, saw how a metric is mapped in a host).
 type RootConfig struct {
-	Hosts []Host `json:"hosts"`
-	Metrics []Metric `json:"metrics"`
-	MetricsForHost []Link `json:"metrics_for_host"`
+	Hosts          []Host   `json:"hosts"`
+	Metrics        []Metric `json:"metrics"`
+	MetricsForHost []Link   `json:"metrics_for_host"`
 }
 
 var rootConfig RootConfig
@@ -153,9 +164,10 @@ func (conf RootConfig) validate() {
 	}
 }
 
+// Config TODO(denisacostaq@gmail.com): make a singleton
 func Config() RootConfig {
 	//if b, err := json.MarshalIndent(rootConfig, "", " "); err != nil {
-	//	log.Println("Error marshalling:", err)
+	//	log.Println("Error marshaling:", err)
 	//} else {
 	//	os.Stdout.Write(b)
 	//	log.Println("\n\n\n\n\n")
@@ -164,7 +176,8 @@ func Config() RootConfig {
 	return rootConfig
 }
 
-func NewConfigFromRawString(strConf string) (error) {
+// NewConfigFromRawString allow you to define a .toml config in the fly, a raw string with the "file content"
+func NewConfigFromRawString(strConf string) error {
 	const generalScopeErr = "error creating a config instance"
 	viper.SetConfigType("toml")
 	buff := bytes.NewBuffer([]byte(strConf))
@@ -181,7 +194,7 @@ func NewConfigFromRawString(strConf string) (error) {
 	return nil
 }
 
-// TODO(denisacostaq@gmail.com): Fill some data structures for efficient lookup from ref to host for example
+// NewConfigFromFilePath TODO(denisacostaq@gmail.com): Fill some data structures for efficient lookup from ref to host for example
 func NewConfigFromFilePath(path string) error {
 	const generalScopeErr = "error creating a config instance"
 	viper.SetConfigFile(path)
@@ -189,7 +202,7 @@ func NewConfigFromFilePath(path string) error {
 		errCause := fmt.Sprintln("error reading config file:", path, err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err:= viper.Unmarshal(&rootConfig); err != nil {
+	if err := viper.Unmarshal(&rootConfig); err != nil {
 		errCause := fmt.Sprintln("can not decode the config data", err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -197,6 +210,8 @@ func NewConfigFromFilePath(path string) error {
 	return nil
 }
 
+// FindHostByRef will return a host where you can match the host.Ref with the ref parameter
+// or an error if not found.
 func (conf RootConfig) FindHostByRef(ref string) (host Host, err error) {
 	found := false
 	for _, host = range conf.Hosts {
@@ -212,6 +227,8 @@ func (conf RootConfig) FindHostByRef(ref string) (host Host, err error) {
 	return Host{}, err
 }
 
+// FindMetricByRef will return a metric where you can match the metric.Ref with the ref parameter
+// or an error if not found.
 func (conf RootConfig) FindMetricByRef(ref string) (metric Metric, err error) {
 	found := false
 	for _, metric = range conf.Metrics {
@@ -227,17 +244,20 @@ func (conf RootConfig) FindMetricByRef(ref string) (metric Metric, err error) {
 	return Metric{}, err
 }
 
-func (host Host) UriToGetMetric(metricInHost Link) string {
+// URIToGetMetric build the URI from where you will to get metric information
+func (host Host) URIToGetMetric(metricInHost Link) string {
 	return host.Location + ":" + strconv.Itoa(host.Port) + metricInHost.URL
 }
 
-func (host Host) UriToGetToken() string {
+// URIToGetToken build the URI from where you will to get the token
+func (host Host) URIToGetToken() string {
 	return host.Location + ":" + strconv.Itoa(host.Port) + host.TokenKeyFromEndpoint
 }
 
+// FilterLinksByHost will return all links where you can match the host.Ref with link.HostRef
 func (conf RootConfig) FilterLinksByHost(host Host) []Link {
 	var links []Link
-	for _,link := range conf.MetricsForHost {
+	for _, link := range conf.MetricsForHost {
 		if strings.Compare(host.Ref, link.HostRef) == 0 {
 			links = append(links, link)
 		}
