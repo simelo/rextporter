@@ -125,13 +125,30 @@ func (link Link) validate() (errs []error) {
 		}
 		errs = append(errs, host.validate()...)
 	}
-	metric, metricNotFound := Config().FindMetricByRef(link.MetricRef)
+	metric, metricNotFound := Config().findMetricByRef(link.MetricRef)
 	if metricNotFound != nil {
 		errs = append(errs, metricNotFound)
 	} else {
 		errs = append(errs, metric.validate()...)
 	}
 	return errs
+}
+
+// MetricName will return a name for a metric in a host
+func (link Link) MetricName() string {
+	return link.HostRef + "_" + link.MetricRef
+}
+
+// MetricDescription will look for the metric associated trough ref and return the description
+func (link Link) MetricDescription() (description string, err error) {
+	const generalScopeErr = "error getting metric description"
+	if metric, err := Config().findMetricByRef(link.MetricRef); err != nil {
+		errCause := fmt.Sprintln("can not find the metric", err.Error())
+		return "", common.ErrorFromThisScope(errCause, generalScopeErr)
+	} else {
+		description = metric.Options.Description
+	}
+	return description, err
 }
 
 // RootConfig is the top level node for the config tree, it has a list of hosts, a list of metrics
@@ -227,9 +244,9 @@ func (conf RootConfig) FindHostByRef(ref string) (host Host, err error) {
 	return Host{}, err
 }
 
-// FindMetricByRef will return a metric where you can match the metric.Ref with the ref parameter
+// findMetricByRef will return a metric where you can match the metric.Ref with the ref parameter
 // or an error if not found.
-func (conf RootConfig) FindMetricByRef(ref string) (metric Metric, err error) {
+func (conf RootConfig) findMetricByRef(ref string) (metric Metric, err error) {
 	found := false
 	for _, metric = range conf.Metrics {
 		found = strings.Compare(metric.Name, ref) == 0
@@ -242,6 +259,18 @@ func (conf RootConfig) FindMetricByRef(ref string) (metric Metric, err error) {
 		err = errors.New(errCause)
 	}
 	return Metric{}, err
+}
+
+// FindMetricType will return the metric type through the metric related with ref
+func (link Link) FindMetricType() (metricType string, err error) {
+	const generalScopeErr = "error looking for metric type"
+	var metric Metric
+	if metric, err = Config().findMetricByRef(link.MetricRef); err != nil {
+		errCause := fmt.Sprintln("can not find metric by ref:", link.MetricRef, err.Error())
+		return metricType, common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	metricType = metric.Options.Type
+	return metricType, err
 }
 
 // URIToGetMetric build the URI from where you will to get metric information
