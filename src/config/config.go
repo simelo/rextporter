@@ -140,15 +140,15 @@ func (link Link) MetricName() string {
 }
 
 // MetricDescription will look for the metric associated trough ref and return the description
-func (link Link) MetricDescription() (description string, err error) {
+func (link Link) MetricDescription() (string, error) {
 	const generalScopeErr = "error getting metric description"
-	if metric, err := Config().findMetricByRef(link.MetricRef); err != nil {
+	var metric Metric
+	var err error
+	if metric, err = Config().findMetricByRef(link.MetricRef); err != nil {
 		errCause := fmt.Sprintln("can not find the metric", err.Error())
 		return "", common.ErrorFromThisScope(errCause, generalScopeErr)
-	} else {
-		description = metric.Options.Description
 	}
-	return description, err
+	return metric.Options.Description, err
 }
 
 // RootConfig is the top level node for the config tree, it has a list of hosts, a list of metrics
