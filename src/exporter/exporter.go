@@ -188,7 +188,8 @@ func onDemandMetricsUpdateHandler(orgHandler http.Handler, configFile string) (n
 	return http.HandlerFunc(hf)
 }
 
-// ExportMetrics will read the config value and created all the specified metrics from the config file.
+// ExportMetrics will read the config file from the CLI parammeter `-config` if any
+// or use a default one.
 func ExportMetrics() {
 	gopath := os.Getenv("GOPATH")
 	defaultConfigFilePath := gopath + "/src/github.com/simelo/rextporter/examples/simple.toml"
