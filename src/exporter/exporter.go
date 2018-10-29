@@ -19,8 +19,6 @@ type Metric interface {
 	prometheusMetric() prometheus.Collector
 }
 
-var metrics []Metric
-
 // ExportableCounterMetric has the necessary http client to get and updated value for the counter metric
 type ExportableCounterMetric struct {
 	Client  *client.MetricClient
@@ -129,14 +127,12 @@ func createMetric(t string, link config.Link) (metric Metric, err error) {
 			errCause := fmt.Sprintln("can not crate a counter", err.Error())
 			return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		break
 	case "Gauge":
 		metric, err = createGauge(link)
 		if err != nil {
 			errCause := fmt.Sprintln("can not crate a counter", err.Error())
 			return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		break
 	default:
 		errCause := fmt.Sprintln("No switch handler for", t)
 		return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
@@ -146,7 +142,10 @@ func createMetric(t string, link config.Link) (metric Metric, err error) {
 
 // ExportMetrics will read the config value and created all the specified metrics from the config file.
 func ExportMetrics() {
-	config.NewConfigFromFilePath("/usr/share/gocode/src/github.com/denisacostaq/rextporter/examples/simple.toml")
+	filePath := "/usr/share/gocode/src/github.com/denisacostaq/rextporter/examples/simple.toml"
+	if err := config.NewConfigFromFilePath(filePath); err != nil {
+		log.Fatalln("can not open file", err)
+	}
 	conf := config.Config()
 	metrics := make([]Metric, len(conf.MetricsForHost))
 	for linkIdx, link := range conf.MetricsForHost {
@@ -173,7 +172,7 @@ func ExportMetrics() {
 			metric.update()
 		}
 	}()
-	http.ListenAndServe(":8000", nil)
+	log.Panicln(http.ListenAndServe(":8000", nil))
 }
 
 // TODO(denisacostaq@gmail.com): you can use a NewProcessCollector, NewGoProcessCollector, make a blockchain collector sense?
