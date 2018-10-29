@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -142,7 +143,8 @@ func createMetric(t string, link config.Link) (metric Metric, err error) {
 
 // ExportMetrics will read the config value and created all the specified metrics from the config file.
 func ExportMetrics() {
-	filePath := "/usr/share/gocode/src/github.com/denisacostaq/rextporter/examples/simple.toml"
+	gopath := os.Getenv("GOPATH")
+	filePath := gopath + "/src/github.com/denisacostaq/rextporter/examples/simple.toml"
 	if err := config.NewConfigFromFilePath(filePath); err != nil {
 		log.Fatalln("can not open file", err)
 	}
