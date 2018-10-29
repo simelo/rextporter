@@ -13,6 +13,7 @@ import (
 	"github.com/simelo/rextporter/src/config"
 )
 
+// Metric interface allow you to put all the metrics in a container an update all of them.
 type Metric interface {
 	update()
 	prometheusMetric() prometheus.Collector
@@ -46,7 +47,6 @@ type ExportableGaugeMetric struct {
 }
 
 func (metric ExportableGaugeMetric) update() {
-	log.Println("Update")
 	val, err := metric.Client.GetMetric()
 	if err != nil {
 		log.Fatal("can not get the data", err)
@@ -143,8 +143,6 @@ func createMetric(t string, link config.Link) (metric Metric, err error) {
 	}
 	return metric, err
 }
-
-var g prometheus.Gauge
 
 // ExportMetrics will read the config value and created all the specified metrics from the config file.
 func ExportMetrics() {
