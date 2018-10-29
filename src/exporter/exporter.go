@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -172,10 +173,8 @@ func createMetrics(confFile string) (metrics []Metric, err error) {
 	return metrics, err
 }
 
-func onDemandMetricsUpdateHandler(orgHandler http.Handler) (newHandler http.Handler) {
-	gopath := os.Getenv("GOPATH")
-	filePath := gopath + "/src/github.com/denisacostaq/rextporter/examples/simple.toml"
-	metrics, err := createMetrics(filePath)
+func onDemandMetricsUpdateHandler(orgHandler http.Handler, configFile string) (newHandler http.Handler) {
+	metrics, err := createMetrics(configFile)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -191,7 +190,11 @@ func onDemandMetricsUpdateHandler(orgHandler http.Handler) (newHandler http.Hand
 
 // ExportMetrics will read the config value and created all the specified metrics from the config file.
 func ExportMetrics() {
-	http.Handle("/metric", onDemandMetricsUpdateHandler(promhttp.Handler()))
+	gopath := os.Getenv("GOPATH")
+	defaultConfigFilePath := gopath + "/src/github.com/simelo/rextporter/examples/simple.toml"
+	configFile := flag.String("config", defaultConfigFilePath, "Config file path.")
+	flag.Parse()
+	http.Handle("/metric", onDemandMetricsUpdateHandler(promhttp.Handler(), *configFile))
 	log.Panicln(http.ListenAndServe(":8000", nil))
 }
 
