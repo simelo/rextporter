@@ -8,69 +8,83 @@ tokenHeaderKey = "X-CSRF-Token"
 genTokenEndpoint = "/api/v1/csrf"
 tokenKeyFromEndpoint = "csrf_token"
 
-[[hosts]]
-ref = "hostname2"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+# [[hosts]]
+# ref = "hostname2"
+# location = "http://127.0.0.1"
+# port = 8080
+# authType = "CSRF"
+# tokenHeaderKey = "X-CSRF-Token"
+# genTokenEndpoint = "/api/v1/csrf"
+# tokenKeyFromEndpoint = "csrf_token"
 
-[[hosts]]
-ref = "hostname3"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+# [[hosts]]
+# ref = "hostname3"
+# location = "http://127.0.0.1"
+# port = 8080
+# authType = "CSRF"
+# tokenHeaderKey = "X-CSRF-Token"
+# genTokenEndpoint = "/api/v1/csrf"
+# tokenKeyFromEndpoint = "csrf_token"
 
 
 # All metrics to be measured.
 [[metrics]]
-name = "uptime"
+name = "seq"
 
   [metrics.options]
   type = "Counter"
   description = "I am running since"
 
 [[metrics]]
-name = "cpu_temp"
+name = "openConnections"
 
   [metrics.options]
   type = "Gauge"
-  description = "This say how much hot is the cpu"
+  description = "Track the open connections in the system"
+
+# [[metrics]]
+# name = "cpu_temp"
+
+#   [metrics.options]
+#   type = "Gauge"
+#   description = "This say how much hot is the cpu"
 
 
 # Now you should define what metrics to take care of in what host
 [[metricsForHost]]
 hostRef = "hostname1"
-metricRef = "uptime"
+metricRef = "seq"
 url = "/api/v1/health"
 httpMethod = "GET"
 path = "/blockchain/head/seq"
 
 [[metricsForHost]]
 hostRef = "hostname1"
-metricRef = "uptime"
+metricRef = "openConnections"
 url = "/api/v1/health"
 httpMethod = "GET"
-path = "/blockchain/head/block_hash"
+path = "open_connections"
 
-[[metricsForHost]]
-hostRef = "hostname2"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/blockchain/head/seq"
+# [[metricsForHost]]
+# hostRef = "hostname1"
+# metricRef = "uptime"
+# url = "/api/v1/health"
+# httpMethod = "GET"
+# path = "/blockchain/head/block_hash"
 
-[[metricsForHost]]
-hostRef = "hostname3"
-metricRef = "cpu_temp"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/blockchain/head/seq"
+# [[metricsForHost]]
+# hostRef = "hostname2"
+# metricRef = "uptime"
+# url = "/api/v1/health"
+# httpMethod = "GET"
+# path = "/blockchain/head/seq"
+
+# [[metricsForHost]]
+# hostRef = "hostname3"
+# metricRef = "cpu_temp"
+# url = "/api/v1/health"
+# httpMethod = "GET"
+# path = "/blockchain/head/seq"
 
 
 # TODO(denisacostaq@gmail.com):
