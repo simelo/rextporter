@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -120,7 +119,7 @@ func getPrometheusMetrics(metrics []Metric) []prometheus.Collector {
 
 func createMetric(t string, link config.Link) (metric Metric, err error) {
 	// TODO(denisacostaq@gmail.com): refactor the code bellow. var creator func(config.Link) (Metric, error)
-	var generalScopeErr string
+	var generalScopeErr = "Error creating metric"
 	switch t {
 	case "Counter":
 		metric, err = createCounter(link)
@@ -141,39 +140,58 @@ func createMetric(t string, link config.Link) (metric Metric, err error) {
 	return metric, err
 }
 
-// ExportMetrics will read the config value and created all the specified metrics from the config file.
-func ExportMetrics() {
-	gopath := os.Getenv("GOPATH")
-	filePath := gopath + "/src/github.com/denisacostaq/rextporter/examples/simple.toml"
-	if err := config.NewConfigFromFilePath(filePath); err != nil {
-		log.Fatalln("can not open file", err)
+func updateMetrics(metrics []Metric) {
+	log.Println("Updating metrics")
+	for _, metric := range metrics {
+		metric.update()
+	}
+}
+
+func createMetrics(confFile string) (metrics []Metric, err error) {
+	var generalScopeErr = "Error creating metrics"
+	if err = config.NewConfigFromFilePath(confFile); err != nil {
+		errCause := fmt.Sprintln("can not open the config file", err.Error())
+		return metrics, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	conf := config.Config()
-	metrics := make([]Metric, len(conf.MetricsForHost))
+	metrics = make([]Metric, len(conf.MetricsForHost))
 	for linkIdx, link := range conf.MetricsForHost {
 		var metricType string
-		var err error
 		if metricType, err = link.FindMetricType(); err != nil {
-			log.Panicln(err)
+			errCause := fmt.Sprintln("can not find the metric type", err.Error())
+			return metrics, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		var metric Metric
 		if metric, err = createMetric(metricType, link); err != nil {
-			log.Panicln(err)
+			errCause := fmt.Sprintln("can not create the metric", err.Error())
+			return metrics, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		metrics[linkIdx] = metric
 	}
 	prometheus.MustRegister(getPrometheusMetrics(metrics)...)
-	http.Handle("/metric", promhttp.Handler())
-	// NOTE(denisacostaq@gmail.com): This is a fate test, it should be removed
-	// check https://github.com/skycoin/skycoin/blob/develop/src/api/http.go
-	// make a wrapper in the http handler. TODO
-	go func() {
-		t := time.NewTimer(time.Second * 5)
-		<-t.C
-		for _, metric := range metrics {
-			metric.update()
-		}
-	}()
+	return metrics, err
+}
+
+func onDemandMetricsUpdateHandler(orgHandler http.Handler) (newHandler http.Handler) {
+	gopath := os.Getenv("GOPATH")
+	filePath := gopath + "/src/github.com/denisacostaq/rextporter/examples/simple.toml"
+	metrics, err := createMetrics(filePath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	hf := func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Before")
+		updateMetrics(metrics)
+		// http.Error(w, "Unable to update metrics", http.StatusInternalServerError)
+		orgHandler.ServeHTTP(w, r) // call original
+		log.Println("After")
+	}
+	return http.HandlerFunc(hf)
+}
+
+// ExportMetrics will read the config value and created all the specified metrics from the config file.
+func ExportMetrics() {
+	http.Handle("/metric", onDemandMetricsUpdateHandler(promhttp.Handler()))
 	log.Panicln(http.ListenAndServe(":8000", nil))
 }
 
