@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Host is a concept to grap information about a running server, for example:
+// Host is a concept to grab information about a running server, for example:
 // where is it http://localhost:1234 (Location + : + Port), what auth kind you need to use?
 // what is the header key you in which you need to send the token, and so on.
 type Host struct {
@@ -26,7 +26,7 @@ type Host struct {
 	TokenKeyFromEndpoint string `json:"token_key_from_endpoint"`
 }
 
-// isValidUrl tests a string to determine if it is a valid url or not.
+// isValidUrl tests a string to determine if it is a valid URL or not.
 func isValidURL(toTest string) bool {
 	if _, err := url.ParseRequestURI(toTest); err != nil {
 		return false
@@ -62,7 +62,7 @@ func (host Host) validate() (errs []error) {
 	return errs
 }
 
-// MetricOptions keep information about the metric, mostly the type(Counter, Gauge, Summary and Histogram)
+// MetricOptions keep information you about the metric, mostly the type(Counter, Gauge, Summary, and Histogram)
 type MetricOptions struct {
 	Type        string `json:"type"`
 	Description string `json:"description"`
@@ -75,7 +75,7 @@ func (mo MetricOptions) validate() (errs []error) {
 	return errs
 }
 
-// Metric keep the metric name ans an instace of MetricOptions
+// Metric keep the metric name as an instance of MetricOptions
 type Metric struct {
 	Name    string        `json:"name"`
 	Options MetricOptions `json:"options"`
@@ -89,9 +89,9 @@ func (metric Metric) validate() (errs []error) {
 	return errs
 }
 
-// Link is a concep who map properties of a Metric in a Host, for example you can define
-// some hosts some metrics and in Link you yould specifi the properties of a giving metric in
-// a giving host, for example the Url and the json path(Path) from where you can scrap the information.
+// Link is a concept who map properties of a Metric in a Host, for example, you can define
+// some hosts some metrics and in Link your specific the properties of a giving metric in
+// a giving host, for example, the Url and the json path(Path) from where you can scrap the information.
 type Link struct {
 	HostRef    string `json:"host_ref"`
 	MetricRef  string `json:"metric_ref"`
@@ -134,8 +134,8 @@ func (link Link) validate() (errs []error) {
 	return errs
 }
 
-// RootConfig is the top level node for th config tree, it have a list of hosts, a list of metrics
-// and a lis of links(MetricsForHost, saw how a metric is mapped in a host).
+// RootConfig is the top level node for the config tree, it has a list of hosts, a list of metrics
+// and a list of links(MetricsForHost, says how a metric is mapped in a host).
 type RootConfig struct {
 	Hosts          []Host   `json:"hosts"`
 	Metrics        []Metric `json:"metrics"`
@@ -176,7 +176,7 @@ func Config() RootConfig {
 	return rootConfig
 }
 
-// NewConfigFromRawString allow you to define a .toml config in the fly, a raw string with the "file content"
+// NewConfigFromRawString allow you to define a `.toml` config in the fly, a raw string with the "config content"
 func NewConfigFromRawString(strConf string) error {
 	const generalScopeErr = "error creating a config instance"
 	viper.SetConfigType("toml")

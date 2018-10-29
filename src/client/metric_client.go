@@ -17,15 +17,15 @@ type token struct {
 	CsrfToken string `json:"csrf_token"`
 }
 
-// BaseClient have common data to be shared through embedded struct in thouse type who implement the
+// BaseClient have common data to be shared through embedded struct in those type who implement the
 // client.Client interface
 type BaseClient struct {
 	req  *http.Request
 	host config.Host
 }
 
-// MetricClient implement the getRemoteInfo method from client.Client interface by using some .toml config parameters
-// like for example: where is the host? it should be a GET, a POST or some other ...
+// MetricClient implements the getRemoteInfo method from `client.Client` interface by using some `.toml` config parameters
+// like for example: where is the host? it should be a GET, a POST or some other? ...
 // sa NewMetricClient method.
 type MetricClient struct {
 	BaseClient
@@ -33,7 +33,7 @@ type MetricClient struct {
 	token string
 }
 
-// NewMetricClient will put a lot of paramethers in the data structure based in the .toml confg file values.
+// NewMetricClient will put a lot of parameters in the data structure based on the `.toml` config file values.
 func NewMetricClient(link config.Link) (client *MetricClient, err error) {
 	const generalScopeErr = "error creating a client to get a metric from remote endpoint"
 	client = new(MetricClient)
@@ -103,7 +103,7 @@ func (client *MetricClient) getRemoteInfo() (data []byte, err error) {
 	return data, nil
 }
 
-// GetMetric return the metric previously binded through config parameters like:
+// GetMetric returns the metric previously bound through config parameters like:
 // url(endpoint), json path, type and so on.
 func (client *MetricClient) GetMetric() (val interface{}, err error) {
 	const generalScopeErr = "error getting metric data"
