@@ -5,16 +5,19 @@ test: ## Run test with GOARCH=Default
 	# go test  -timeout=5m ./src/...
 	# go test  -timeout=5m ./cmd/...
 	go test github.com/simelo/rextporter/src/client
+	go test github.com/simelo/rextporter/test/integration
 
 test-386: ## Run tests  with GOARCH=386
 	# GOARCH=386 go test ./cmd/... -timeout=5m
 	# GOARCH=386 go test ./src/... -timeout=5m
 	GOARCH=386 go test github.com/simelo/rextporter/src/client
+	GOARCH=386 go test github.com/simelo/rextporter/test/integration
 
 test-amd64: ## Run tests with GOARCH=amd64
 	# GOARCH=amd64  go test ./cmd/... -timeout=5m
 	# GOARCH=amd64  go test ./src/... -timeout=5m
 	GOARCH=amd64 go test github.com/simelo/rextporter/src/client
+	GOARCH=amd64 go test github.com/simelo/rextporter/test/integration
 
 lint: ## Run linters. Use make install-linters first.
 	vendorcheck ./...

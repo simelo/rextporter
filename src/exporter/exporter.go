@@ -1,11 +1,9 @@
 package exporter
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -32,6 +30,7 @@ func (metric ExportableCounterMetric) update() {
 	if err != nil {
 		log.Fatal("can not get the data", err)
 	}
+	// FIXME(denisacostaq@gmail.com): reset to zero and add the fix value.
 	metric.Counter.Add(val.(float64))
 }
 
@@ -50,7 +49,7 @@ func (metric ExportableGaugeMetric) update() {
 	if err != nil {
 		log.Fatal("can not get the data", err)
 	}
-	metric.Gauge.Add(val.(float64))
+	metric.Gauge.Set(val.(float64))
 }
 
 func (metric ExportableGaugeMetric) prometheusMetric() prometheus.Collector {
@@ -148,12 +147,8 @@ func updateMetrics(metrics []Metric) {
 	}
 }
 
-func createMetrics(confFile string) (metrics []Metric, err error) {
+func createMetrics() (metrics []Metric, err error) {
 	var generalScopeErr = "Error creating metrics"
-	if err = config.NewConfigFromFilePath(confFile); err != nil {
-		errCause := fmt.Sprintln("can not open the config file", err.Error())
-		return metrics, common.ErrorFromThisScope(errCause, generalScopeErr)
-	}
 	conf := config.Config()
 	metrics = make([]Metric, len(conf.MetricsForHost))
 	for linkIdx, link := range conf.MetricsForHost {
@@ -173,8 +168,8 @@ func createMetrics(confFile string) (metrics []Metric, err error) {
 	return metrics, err
 }
 
-func onDemandMetricsUpdateHandler(orgHandler http.Handler, configFile string) (newHandler http.Handler) {
-	metrics, err := createMetrics(configFile)
+func onDemandMetricsUpdateHandler(orgHandler http.Handler) (newHandler http.Handler) {
+	metrics, err := createMetrics()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -190,13 +185,17 @@ func onDemandMetricsUpdateHandler(orgHandler http.Handler, configFile string) (n
 
 // ExportMetrics will read the config file from the CLI parammeter `-config` if any
 // or use a default one.
-func ExportMetrics() {
-	gopath := os.Getenv("GOPATH")
-	defaultConfigFilePath := gopath + "/src/github.com/simelo/rextporter/examples/simple.toml"
-	configFile := flag.String("config", defaultConfigFilePath, "Config file path.")
-	flag.Parse()
-	http.Handle("/metric", onDemandMetricsUpdateHandler(promhttp.Handler(), *configFile))
-	log.Panicln(http.ListenAndServe(":8000", nil))
+func ExportMetrics(configFile string, listenPort uint16) (srv *http.Server) {
+	if err := config.NewConfigFromFilePath(configFile); err != nil {
+		log.Fatalln("can not open the config file", err.Error())
+	}
+	port := fmt.Sprintf(":%d", listenPort)
+	srv = &http.Server{Addr: port}
+	http.Handle("/metric", onDemandMetricsUpdateHandler(promhttp.Handler()))
+	go func() {
+		log.Panicln(srv.ListenAndServe())
+	}()
+	return srv
 }
 
 // TODO(denisacostaq@gmail.com): you can use a NewProcessCollector, NewGoProcessCollector, make a blockchain collector sense?

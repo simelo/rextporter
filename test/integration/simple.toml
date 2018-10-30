@@ -1,0 +1,27 @@
+# All hots to be monitored.
+[[hosts]]
+ref = "myMonitoredServer"
+location = "http://127.0.0.1"
+port = 8080
+authType = "CSRF"
+tokenHeaderKey = "X-CSRF-Token"
+genTokenEndpoint = "/api/v1/csrf"
+tokenKeyFromEndpoint = "csrf_token"
+
+
+# All metrics to be measured.
+[[metrics]]
+name = "open_connections_is_a_fake_name_for_test_purpose"
+
+  [metrics.options]
+  type = "Gauge"
+  description = "Track the open connections in the system"
+
+
+# Now you should define what metrics to take care of in what host
+[[metricsForHost]]
+hostRef = "myMonitoredServer"
+metricRef = "open_connections_is_a_fake_name_for_test_purpose"
+url = "/api/v1/health"
+httpMethod = "GET"
+path = "open_connections"
