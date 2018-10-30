@@ -29,7 +29,7 @@ func (link Link) MetricDescription() (string, error) {
 	var metric Metric
 	var err error
 	if metric, err = Config().findMetricByRef(link.MetricRef); err != nil {
-		errCause := fmt.Sprintln("can not find the metric", err.Error())
+		errCause := fmt.Sprintln("can not find the metric: ", err.Error())
 		return "", common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return metric.Options.Description, err
@@ -40,7 +40,7 @@ func (link Link) FindMetricType() (metricType string, err error) {
 	const generalScopeErr = "error looking for metric type"
 	var metric Metric
 	if metric, err = Config().findMetricByRef(link.MetricRef); err != nil {
-		errCause := fmt.Sprintln("can not find metric by ref:", link.MetricRef, err.Error())
+		errCause := fmt.Sprintln("can not find metric by ref: ", link.MetricRef, err.Error())
 		return metricType, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metricType = metric.Options.Type

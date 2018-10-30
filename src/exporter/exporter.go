@@ -30,7 +30,7 @@ func (metric ExportableCounterMetric) update() {
 	if err != nil {
 		log.Fatal("can not get the data", err)
 	}
-	// FIXME(denisacostaq@gmail.com): reset to zero and add the fix value.
+	// FIXME(denisacostaq@gmail.com): reset to zero and add the fix value. metric.Counter.
 	metric.Counter.Add(val.(float64))
 }
 
@@ -59,11 +59,11 @@ func (metric ExportableGaugeMetric) prometheusMetric() prometheus.Collector {
 func createMetricCommonStages(link config.Link) (metricClient *client.MetricClient, description string, err error) {
 	const generalScopeErr = "error initializing metric creation scope"
 	if metricClient, err = client.NewMetricClient(link); err != nil {
-		errCause := fmt.Sprintln("error creating metric client", err.Error())
+		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metricClient, description, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if description, err = link.MetricDescription(); err != nil {
-		errCause := fmt.Sprintln("can not build the description", err.Error())
+		errCause := fmt.Sprintln("can not build the description: ", err.Error())
 		return metricClient, description, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return metricClient, description, err
@@ -74,7 +74,7 @@ func createCounter(link config.Link) (metric ExportableCounterMetric, err error)
 	var metricClient *client.MetricClient
 	var description string
 	if metricClient, description, err = createMetricCommonStages(link); err != nil {
-		errCause := fmt.Sprintln("can not get parameters for gauge", err.Error())
+		errCause := fmt.Sprintln("can not get parameters for gauge: ", err.Error())
 		return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metric = ExportableCounterMetric{
@@ -94,7 +94,7 @@ func createGauge(link config.Link) (metric ExportableGaugeMetric, err error) {
 	var metricClient *client.MetricClient
 	var description string
 	if metricClient, description, err = createMetricCommonStages(link); err != nil {
-		errCause := fmt.Sprintln("can not build the parameters for counter", err.Error())
+		errCause := fmt.Sprintln("can not build the parameters for counter: ", err.Error())
 		return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metric = ExportableGaugeMetric{
@@ -124,17 +124,17 @@ func createMetric(t string, link config.Link) (metric Metric, err error) {
 	case "Counter":
 		metric, err = createCounter(link)
 		if err != nil {
-			errCause := fmt.Sprintln("can not crate a counter", err.Error())
+			errCause := fmt.Sprintln("can not crate a counter: ", err.Error())
 			return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	case "Gauge":
 		metric, err = createGauge(link)
 		if err != nil {
-			errCause := fmt.Sprintln("can not crate a counter", err.Error())
+			errCause := fmt.Sprintln("can not crate a counter: ", err.Error())
 			return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	default:
-		errCause := fmt.Sprintln("No switch handler for", t)
+		errCause := fmt.Sprintln("No switch handler for: ", t)
 		return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return metric, err
@@ -154,12 +154,12 @@ func createMetrics() (metrics []Metric, err error) {
 	for linkIdx, link := range conf.MetricsForHost {
 		var metricType string
 		if metricType, err = link.FindMetricType(); err != nil {
-			errCause := fmt.Sprintln("can not find the metric type", err.Error())
+			errCause := fmt.Sprintln("can not find the metric type: ", err.Error())
 			return metrics, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		var metric Metric
 		if metric, err = createMetric(metricType, link); err != nil {
-			errCause := fmt.Sprintln("can not create the metric", err.Error())
+			errCause := fmt.Sprintln("can not create the metric: ", err.Error())
 			return metrics, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		metrics[linkIdx] = metric

@@ -2,7 +2,7 @@ package config
 
 import (
 	"errors"
-	"strconv"
+	"fmt"
 	"strings"
 )
 
@@ -21,12 +21,12 @@ type Host struct {
 
 // URIToGetMetric build the URI from where you will to get metric information
 func (host Host) URIToGetMetric(metricInHost Link) string {
-	return host.Location + ":" + strconv.Itoa(host.Port) + metricInHost.URL
+	return fmt.Sprintf("%s:%d%s", host.Location, host.Port, metricInHost.URL)
 }
 
 // URIToGetToken build the URI from where you will to get the token
 func (host Host) URIToGetToken() string {
-	return host.Location + ":" + strconv.Itoa(host.Port) + host.TokenKeyFromEndpoint
+	return fmt.Sprintf("%s:%d%s", host.Location, host.Port, host.TokenKeyFromEndpoint)
 }
 
 func (host Host) validate() (errs []error) {

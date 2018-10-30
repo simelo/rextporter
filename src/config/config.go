@@ -40,12 +40,12 @@ func NewConfigFromRawString(strConf string) error {
 	viper.SetConfigType("toml")
 	buff := bytes.NewBuffer([]byte(strConf))
 	if err := viper.ReadConfig(buff); err != nil {
-		errCause := fmt.Sprintln("can not read the buffer", err.Error())
+		errCause := fmt.Sprintln("can not read the buffer: ", err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	rootConfig = RootConfig{}
 	if err := viper.Unmarshal(&rootConfig); err != nil {
-		errCause := fmt.Sprintln("can not decode the config data", err.Error())
+		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	rootConfig.validate()
@@ -57,11 +57,11 @@ func NewConfigFromFilePath(path string) error {
 	const generalScopeErr = "error creating a config instance"
 	viper.SetConfigFile(path)
 	if err := viper.ReadInConfig(); err != nil {
-		errCause := fmt.Sprintln("error reading config file:", path, err.Error())
+		errCause := fmt.Sprintln("error reading config file: ", path, err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err := viper.Unmarshal(&rootConfig); err != nil {
-		errCause := fmt.Sprintln("can not decode the config data", err.Error())
+		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	rootConfig.validate()
@@ -79,7 +79,7 @@ func (conf RootConfig) FindHostByRef(ref string) (host Host, err error) {
 		}
 	}
 	if !found {
-		errCause := fmt.Sprintln("can not find a host for Ref:", ref)
+		errCause := fmt.Sprintln("can not find a host for Ref: ", ref)
 		err = errors.New(errCause)
 	}
 	return Host{}, err
@@ -107,7 +107,7 @@ func (conf RootConfig) findMetricByRef(ref string) (metric Metric, err error) {
 		}
 	}
 	if !found {
-		errCause := fmt.Sprintln("can not find a host for Ref:", ref)
+		errCause := fmt.Sprintln("can not find a host for Ref: ", ref)
 		err = errors.New(errCause)
 	}
 	return Metric{}, err
