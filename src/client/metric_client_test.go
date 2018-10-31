@@ -66,12 +66,12 @@ type SkycoinStatsSuit struct {
 	testServer *httptest.Server
 }
 
-func (suite *SkycoinStatsSuit) SetupTest() {
+func (suite *SkycoinStatsSuit) SetupSuite() {
 	suite.testServer = stubSkycoin()
 	suite.testServer.Start()
 }
 
-func (suite *SkycoinStatsSuit) TearDownTest() {
+func (suite *SkycoinStatsSuit) TearDownSuite() {
 	suite.testServer.Close()
 }
 

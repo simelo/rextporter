@@ -62,7 +62,7 @@ type HealthSuit struct {
 	srv        *http.Server
 }
 
-func (suite *HealthSuit) SetupTest() {
+func (suite *HealthSuit) SetupSuite() {
 	suite.testServer = stubSkycoin()
 	suite.testServer.Start()
 
@@ -77,7 +77,7 @@ func (suite *HealthSuit) SetupTest() {
 	require.NotNil(suite.srv)
 }
 
-func (suite *HealthSuit) TearDownTest() {
+func (suite *HealthSuit) TearDownSuite() {
 	suite.testServer.Close()
 	require := require.New(suite.T())
 	var usingAVariableToMakeLinterHappy = context.Context(nil)
