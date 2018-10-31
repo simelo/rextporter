@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/simelo/rextporter/src/exporter"
 	"github.com/stretchr/testify/require"
@@ -69,6 +70,10 @@ func (suite *HealthSuit) SetupTest() {
 	gopath := os.Getenv("GOPATH")
 	configFilePath := gopath + "/src/github.com/simelo/rextporter/test/integration/simple.toml"
 	suite.srv = exporter.ExportMetrics(configFilePath, 8081)
+	for i := 0; i < 3; i++ {
+		t := time.NewTimer(time.Second)
+		<-t.C
+	}
 	require.NotNil(suite.srv)
 }
 
