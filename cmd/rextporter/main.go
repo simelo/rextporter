@@ -13,4 +13,6 @@ func main() {
 	configFile := flag.String("config", defaultConfigFilePath, "Config file path.")
 	flag.Parse()
 	exporter.ExportMetrics(*configFile, 8080)
+	waitForEver := make(chan bool)
+	<-waitForEver
 }
