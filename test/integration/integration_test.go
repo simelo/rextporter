@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/simelo/rextporter/src/exporter"
@@ -99,13 +98,13 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
-	resp, err := http.Get("http://127.0.0.1:8081/metric")
+	resp, err := http.Get("http://127.0.0.1:8081/metrics")
 	suite.Nil(err)
 	var data []byte
 	data, err = ioutil.ReadAll(resp.Body)
 	suite.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Equal(resp.StatusCode, http.StatusOK)
-	suite.True(strings.Contains(string(data), "open_connections_is_a_fake_name_for_test_purpose"))
+	suite.Equal(http.StatusOK, resp.StatusCode)
+	suite.Contains(string(data), "open_connections_is_a_fake_name_for_test_purpose")
 }

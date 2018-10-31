@@ -191,7 +191,7 @@ func ExportMetrics(configFile string, listenPort uint16) (srv *http.Server) {
 	}
 	port := fmt.Sprintf(":%d", listenPort)
 	srv = &http.Server{Addr: port}
-	http.Handle("/metric", onDemandMetricsUpdateHandler(promhttp.Handler()))
+	http.Handle("/metrics", onDemandMetricsUpdateHandler(promhttp.Handler()))
 	go func() {
 		log.Panicln(srv.ListenAndServe())
 	}()
