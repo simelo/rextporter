@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"container/list"
 	"errors"
 	"fmt"
 	"log"
@@ -94,6 +95,29 @@ func (conf RootConfig) FilterLinksByHost(host Host) []Link {
 		}
 	}
 	return links
+}
+
+// FilterLinksByMetricType will return all the links who match whit the type parameter.
+func FilterLinksByMetricType(links []Link, t string) ([]Link, error) {
+	const generalScopeErr = "error filtering links by metric type"
+	tmpLinks := list.New()
+	for _, link := range links {
+		mt, err := link.FindMetricType()
+		if err != nil {
+			errCause := fmt.Sprintln("can not find metric type: ", err.Error())
+			return []Link{}, common.ErrorFromThisScope(errCause, generalScopeErr)
+		}
+		if strings.Compare(t, mt) == 0 {
+			tmpLinks.PushBack(link)
+		}
+	}
+	retLinks := make([]Link, tmpLinks.Len())
+	idxLink := 0
+	for it := tmpLinks.Front(); it != nil; it = it.Next() {
+		retLinks[idxLink] = it.Value.(Link)
+		idxLink++
+	}
+	return retLinks, nil
 }
 
 // findMetricByRef will return a metric where you can match the metric.Ref with the ref parameter
