@@ -26,7 +26,7 @@ func (host Host) URIToGetMetric(metricInHost Link) string {
 
 // URIToGetToken build the URI from where you will to get the token
 func (host Host) URIToGetToken() string {
-	return fmt.Sprintf("%s:%d%s", host.Location, host.Port, host.TokenKeyFromEndpoint)
+	return fmt.Sprintf("%s:%d%s", host.Location, host.Port, host.GenTokenEndpoint)
 }
 
 func (host Host) validate() (errs []error) {

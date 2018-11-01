@@ -29,7 +29,7 @@ func newTokenClient(host config.Host) (client *TokenClient, err error) {
 }
 
 func (client *TokenClient) getRemoteInfo() (data []byte, err error) {
-	const generalScopeErr = "error making a server request to get metric from remote endpoint"
+	const generalScopeErr = "error making a server request to get token from remote endpoint"
 	httpClient := &http.Client{}
 	var resp *http.Response
 	if resp, err = httpClient.Do(client.req); err != nil {

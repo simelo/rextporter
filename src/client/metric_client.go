@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 
@@ -14,6 +13,7 @@ import (
 )
 
 type token struct {
+	// FIXME(denisacostaq@gmail.com): you are just decoding with this key and ignoring the configured 'TokenKeyFromEndpoint'
 	CsrfToken string `json:"csrf_token"`
 }
 
@@ -69,6 +69,10 @@ func (client *MetricClient) resetToken() (err error) {
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	client.token = tk.CsrfToken
+	if strings.Compare(client.token, "") == 0 {
+		errCause := fmt.Sprintln("unable the get a not null(empty) token")
+		return common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
 	return nil
 }
 
@@ -113,7 +117,7 @@ func (client *MetricClient) GetMetric() (val interface{}, err error) {
 	}
 	var jsonData interface{}
 	if err = json.Unmarshal(data, &jsonData); err != nil {
-		errCause := fmt.Sprintln("can not decode the body: ", string(data), err.Error())
+		errCause := fmt.Sprintln("can not decode the body: ", string(data), " ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	jpath := "$" + strings.Replace(client.link.Path, "/", ".", -1)
