@@ -145,8 +145,8 @@ func (conf RootConfig) validate() {
 	for _, metric := range conf.Metrics {
 		errs = append(errs, metric.validate()...)
 	}
-	for _, mhost := range conf.MetricsForHost {
-		errs = append(errs, mhost.validate()...)
+	for _, mHost := range conf.MetricsForHost {
+		errs = append(errs, mHost.validate()...)
 	}
 	if len(errs) != 0 {
 		log.Println("some errors found")
