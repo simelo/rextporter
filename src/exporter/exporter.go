@@ -12,48 +12,63 @@ import (
 	"github.com/simelo/rextporter/src/config"
 )
 
-// Metric interface allow you to put all the metrics in a container an update all of them.
-type Metric interface {
-	update()
-	prometheusMetric() prometheus.Collector
+// SkycoinCollector has the metrics to be exposed
+type SkycoinCollector struct {
+	Counters []CounterMetric
+	Gauges   []GaugeMetric
 }
 
-// ExportableCounterMetric has the necessary http client to get and updated value for the counter metric
-type ExportableCounterMetric struct {
-	Client  *client.MetricClient
-	Counter prometheus.Counter
-}
-
-func (metric ExportableCounterMetric) update() {
-	log.Println("Update")
-	val, err := metric.Client.GetMetric()
+func newSkycoinCollector() (collector *SkycoinCollector, err error) {
+	const generalScopeErr = "error creating collector"
+	var counters []CounterMetric
+	counters, err = createCounters()
 	if err != nil {
-		log.Fatal("can not get the data", err)
+		errCause := fmt.Sprintln("error creating counters: ", err.Error())
+		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	// FIXME(denisacostaq@gmail.com): reset to zero and add the fix value. metric.Counter.
-	metric.Counter.Add(val.(float64))
-}
-
-func (metric ExportableCounterMetric) prometheusMetric() prometheus.Collector {
-	return metric.Counter
-}
-
-// ExportableGaugeMetric has the necessary http client to get and updated value for the counter metric
-type ExportableGaugeMetric struct {
-	Client *client.MetricClient
-	Gauge  prometheus.Gauge
-}
-
-func (metric ExportableGaugeMetric) update() {
-	val, err := metric.Client.GetMetric()
+	var gauges []GaugeMetric
+	gauges, err = createGauges()
 	if err != nil {
-		log.Fatal("can not get the data", err)
+		errCause := fmt.Sprintln("error creating gauges: ", err.Error())
+		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	metric.Gauge.Set(val.(float64))
+	collector = &SkycoinCollector{
+		Counters: counters,
+		Gauges:   gauges,
+	}
+	return collector, err
 }
 
-func (metric ExportableGaugeMetric) prometheusMetric() prometheus.Collector {
-	return metric.Gauge
+// Describe writes all the descriptors to the prometheus desc channel.
+func (collector *SkycoinCollector) Describe(ch chan<- *prometheus.Desc) {
+	for _, counter := range collector.Counters {
+		ch <- counter.Desc
+	}
+	for _, gauge := range collector.Gauges {
+		ch <- gauge.Desc
+	}
+}
+
+//Collect update all the descriptors is values
+func (collector *SkycoinCollector) Collect(ch chan<- prometheus.Metric) {
+	for _, counter := range collector.Counters {
+		val, err := counter.Client.GetMetric()
+		if err != nil {
+			log.Fatal("can not get the data", err)
+		}
+		typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this
+		log.Println("getting typedVal:", typedVal)
+		ch <- prometheus.MustNewConstMetric(counter.Desc, prometheus.CounterValue, typedVal)
+	}
+	for _, gauge := range collector.Gauges {
+		val, err := gauge.Client.GetMetric()
+		if err != nil {
+			log.Fatal("can not get the data", err)
+		}
+		typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this
+		log.Println("getting typedVal:", typedVal)
+		ch <- prometheus.MustNewConstMetric(gauge.Desc, prometheus.GaugeValue, typedVal)
+	}
 }
 
 func createMetricCommonStages(link config.Link) (metricClient *client.MetricClient, description string, err error) {
