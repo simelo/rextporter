@@ -149,11 +149,10 @@ func (conf RootConfig) validate() {
 		errs = append(errs, mHost.validate()...)
 	}
 	if len(errs) != 0 {
-		log.Println("some errors found")
+		defer log.Panicln("some errors found")
 		for _, err := range errs {
 			log.Println(err.Error())
 		}
-		log.Panicln()
 	}
 }
 
