@@ -90,7 +90,7 @@ func (client *MetricClient) getRemoteInfo() (data []byte, err error) {
 	}
 	var resp *http.Response
 	if resp, err = doRequest(); err != nil {
-		log.Println("can not do the request:", err.Error(), "trying with a new token...")
+		// log.Println("can not do the request:", err.Error(), "trying with a new token...")
 		if err = client.resetToken(); err != nil {
 			errCause := fmt.Sprintln("can not reset the token: ", err.Error())
 			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)

@@ -38,31 +38,43 @@ func newSkycoinCollector() (collector *SkycoinCollector, err error) {
 // Describe writes all the descriptors to the prometheus desc channel.
 func (collector *SkycoinCollector) Describe(ch chan<- *prometheus.Desc) {
 	for _, counter := range collector.Counters {
-		ch <- counter.Desc
+		ch <- counter.MetricDesc
 	}
 	for _, gauge := range collector.Gauges {
-		ch <- gauge.Desc
+		ch <- gauge.MetricDesc
+	}
+}
+
+func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) {
+	for _, counter := range collector.Counters {
+		val, err := counter.Client.GetMetric()
+		if err != nil {
+			log.Println("can not get the data:", err)
+			ch <- prometheus.MustNewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 0)
+		} else {
+			typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this
+			ch <- prometheus.MustNewConstMetric(counter.MetricDesc, prometheus.CounterValue, typedVal)
+			ch <- prometheus.MustNewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 1)
+		}
+	}
+}
+
+func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
+	for _, gauge := range collector.Gauges {
+		val, err := gauge.Client.GetMetric()
+		if err != nil {
+			log.Println("can not get the data", err)
+			ch <- prometheus.MustNewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 0)
+		} else {
+			typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this
+			ch <- prometheus.MustNewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, typedVal)
+			ch <- prometheus.MustNewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 1)
+		}
 	}
 }
 
 //Collect update all the descriptors is values
 func (collector *SkycoinCollector) Collect(ch chan<- prometheus.Metric) {
-	for _, counter := range collector.Counters {
-		val, err := counter.Client.GetMetric()
-		if err != nil {
-			log.Fatal("can not get the data", err)
-		}
-		typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this
-		log.Println("getting typedVal:", typedVal)
-		ch <- prometheus.MustNewConstMetric(counter.Desc, prometheus.CounterValue, typedVal)
-	}
-	for _, gauge := range collector.Gauges {
-		val, err := gauge.Client.GetMetric()
-		if err != nil {
-			log.Fatal("can not get the data", err)
-		}
-		typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this
-		log.Println("getting typedVal:", typedVal)
-		ch <- prometheus.MustNewConstMetric(gauge.Desc, prometheus.GaugeValue, typedVal)
-	}
+	collector.collectCounters(ch)
+	collector.collectGauges(ch)
 }

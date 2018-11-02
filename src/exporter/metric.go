@@ -24,8 +24,9 @@ func createMetricCommonStages(link config.Link) (metricClient *client.MetricClie
 
 // CounterMetric has the necessary http client to get and updated value for the counter metric
 type CounterMetric struct {
-	Client *client.MetricClient
-	Desc   *prometheus.Desc
+	Client     *client.MetricClient
+	MetricDesc *prometheus.Desc
+	StatusDesc *prometheus.Desc
 }
 
 func createCounter(link config.Link) (metric CounterMetric, err error) {
@@ -37,8 +38,9 @@ func createCounter(link config.Link) (metric CounterMetric, err error) {
 		return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metric = CounterMetric{
-		Client: metricClient,
-		Desc:   prometheus.NewDesc(link.MetricRef, description, nil, nil),
+		Client:     metricClient,
+		MetricDesc: prometheus.NewDesc(link.MetricName(), description, nil, nil),
+		StatusDesc: prometheus.NewDesc(link.MetricName()+"_up", "Says if the same name metric("+link.MetricName()+") was success updated, 1 for ok, 0 for failed.", nil, nil),
 	}
 	return metric, err
 }
@@ -65,8 +67,9 @@ func createCounters() ([]CounterMetric, error) {
 
 // GaugeMetric has the necessary http client to get and updated value for the counter metric
 type GaugeMetric struct {
-	Client *client.MetricClient
-	Desc   *prometheus.Desc
+	Client     *client.MetricClient
+	MetricDesc *prometheus.Desc
+	StatusDesc *prometheus.Desc
 }
 
 func createGauge(link config.Link) (metric GaugeMetric, err error) {
@@ -78,8 +81,9 @@ func createGauge(link config.Link) (metric GaugeMetric, err error) {
 		return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metric = GaugeMetric{
-		Client: metricClient,
-		Desc:   prometheus.NewDesc(link.MetricRef, description, nil, nil),
+		Client:     metricClient,
+		MetricDesc: prometheus.NewDesc(link.MetricName(), description, nil, nil),
+		StatusDesc: prometheus.NewDesc(link.MetricName()+"_up", "Says if the same name metric("+link.MetricName()+") was success updated, 1 for ok, 0 for failed.", nil, nil),
 	}
 	return metric, err
 }

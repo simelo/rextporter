@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/common"
 )
 
@@ -20,7 +21,7 @@ type Link struct {
 
 // MetricName will return a name for a metric in a host
 func (link Link) MetricName() string {
-	return link.HostRef + "_" + link.MetricRef
+	return prometheus.BuildFQName("skycoin", link.HostRef, link.MetricRef)
 }
 
 // MetricDescription will look for the metric associated trough ref and return the description
@@ -62,7 +63,7 @@ func (link Link) validate() (errs []error) {
 		errs = append(errs, errors.New("HostRef is required in Link(metric fo host)"))
 	}
 	if len(link.MetricRef) == 0 {
-		errs = append(errs, errors.New("HostRef is required in Link(metric fo host)"))
+		errs = append(errs, errors.New("MetricRef is required in Link(metric fo host)"))
 	}
 	if len(link.URL) == 0 {
 		errs = append(errs, errors.New("url is required"))
