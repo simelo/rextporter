@@ -131,7 +131,7 @@ func (conf RootConfig) findMetricByRef(ref string) (metric Metric, err error) {
 		}
 	}
 	if !found {
-		errCause := fmt.Sprintln("can not find a host for Ref: ", ref)
+		errCause := fmt.Sprintln("can not find a metric for Ref: ", ref)
 		err = errors.New(errCause)
 	}
 	return Metric{}, err
