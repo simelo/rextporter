@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -141,10 +140,4 @@ func (suite *LinkConfigSuit) TestCanNotFindMetricByRef() {
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Len(linkConf.validate(), 1)
-}
-
-func printErrors(errs []error) {
-	for _, err := range errs {
-		fmt.Println("log: ", err.Error())
-	}
 }

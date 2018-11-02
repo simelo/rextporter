@@ -23,7 +23,7 @@ func (suite *hostConfSuit) SetupTest() {
 	}
 }
 
-func TesthostConfSuit(t *testing.T) {
+func TestHostConfSuit(t *testing.T) {
 	suite.Run(t, new(hostConfSuit))
 }
 
