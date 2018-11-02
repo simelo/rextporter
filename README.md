@@ -8,3 +8,9 @@ This is the executable entry point for the server.
 $ cd $GOPATH/src/github.com/simelo/rextporter/cmd/rextporter
 $ go install ./...
 ```
+
+## Run
+
+```bash
+rextporter -config your/config/file/path
+```
