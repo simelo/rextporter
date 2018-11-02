@@ -4,18 +4,21 @@
 test: ## Run test with GOARCH=Default
 	# go test  -timeout=5m ./src/...
 	# go test  -timeout=5m ./cmd/...
+	go test -count=1 github.com/simelo/rextporter/test/config
 	go test -count=1 github.com/simelo/rextporter/src/client
 	go test -count=1 github.com/simelo/rextporter/test/integration
 
 test-386: ## Run tests  with GOARCH=386
 	# GOARCH=386 go test ./cmd/... -timeout=5m
 	# GOARCH=386 go test ./src/... -timeout=5m
+	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/config
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/client
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/test/integration
 
 test-amd64: ## Run tests with GOARCH=amd64
 	# GOARCH=amd64  go test ./cmd/... -timeout=5m
 	# GOARCH=amd64  go test ./src/... -timeout=5m
+	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/src/config
 	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/src/client
 	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/test/integration
 

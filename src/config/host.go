@@ -12,7 +12,7 @@ import (
 type Host struct {
 	Ref                  string
 	Location             string `json:"location"`
-	Port                 int    `json:"port"`
+	Port                 uint16 `json:"port"`
 	AuthType             string `json:"auth_type"`
 	TokenHeaderKey       string `json:"token_header_key"`
 	GenTokenEndpoint     string `json:"gen_token_endpoint"`
@@ -42,17 +42,17 @@ func (host Host) validate() (errs []error) {
 	if !isValidURL(host.URIToGetToken()) {
 		errs = append(errs, errors.New("location + port can not form a valid uri in host"))
 	}
-	if host.Port < 0 || host.Port > 65535 {
-		errs = append(errs, errors.New("port number should be between 0 and 65535 in host"))
-	}
+	// if host.Port < 0 || host.Port > 65535 {
+	// 	errs = append(errs, errors.New("port number should be between 0 and 65535 in host"))
+	// }
 	if strings.Compare(host.AuthType, "CSRF") == 0 && len(host.TokenHeaderKey) == 0 {
 		errs = append(errs, errors.New("TokenHeaderKey is required if you are using CSRF"))
 	}
-	if strings.Compare(host.AuthType, "CSRF") == 0 && len(host.GenTokenEndpoint) == 0 {
-		errs = append(errs, errors.New("GenTokenEndpoint is required if you are using CSRF"))
-	}
 	if strings.Compare(host.AuthType, "CSRF") == 0 && len(host.TokenKeyFromEndpoint) == 0 {
 		errs = append(errs, errors.New("TokenKeyFromEndpoint is required if you are using CSRF"))
+	}
+	if strings.Compare(host.AuthType, "CSRF") == 0 && len(host.GenTokenEndpoint) == 0 {
+		errs = append(errs, errors.New("GenTokenEndpoint is required if you are using CSRF"))
 	}
 	return errs
 }
