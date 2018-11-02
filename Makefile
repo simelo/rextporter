@@ -4,7 +4,14 @@
 test: ## Run test with GOARCH=Default
 	# go test  -timeout=5m ./src/...
 	# go test  -timeout=5m ./cmd/...
+<<<<<<< Updated upstream
 	go test github.com/simelo/rextporter/src/client
+=======
+	@mkdir -p coverage/
+	go test -count=1 github.com/simelo/rextporter/test/config
+	go test -count=1 -coverpkg="github.com/simelo/rextporter/src/client" -coverprofile=coverage/go-test-cclient.coverage.out github.com/simelo/rextporter/src/client
+	go test -count=1 github.com/simelo/rextporter/test/integration
+>>>>>>> Stashed changes
 
 test-386: ## Run tests  with GOARCH=386
 	# GOARCH=386 go test ./cmd/... -timeout=5m
@@ -21,6 +28,12 @@ lint: ## Run linters. Use make install-linters first.
 	golangci-lint run -c .golangci.yml ./...
 	# The govet version in golangci-lint is out of date and has spurious warnings, run it separately
 	go vet -all ./...
+
+check:
+	test integration-test-enable-seed-api
+
+integration-test-enable-seed-api: ## Run enable seed api integration test
+	GOCACHE=off COIN=$(COIN) ./ci-scripts/integration-test-enable-seed-api.sh
 
 install-linters: ## Install linters
 	go get -u github.com/FiloSottile/vendorcheck

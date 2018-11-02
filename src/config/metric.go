@@ -1,11 +1,20 @@
 package config
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 // Metric keep the metric name as an instance of MetricOptions
 type Metric struct {
-	Name    string        `json:"name"`
-	Options MetricOptions `json:"options"`
+	Name             string           `json:"name"`
+	Options          MetricOptions    `json:"options"`
+	HistogramOptions HistogramOptions `json:"histogram_options"`
+}
+
+func (metric Metric) isHistogram() bool {
+	hasBuckets := len(metric.HistogramOptions.ExponentialBuckets) != 0 || len(metric.HistogramOptions.Buckets) != 0
+	return hasBuckets || strings.Compare(metric.Options.Type, "Histogram") == 0
 }
 
 // MetricOptions keep information you about the metric, mostly the type(Counter, Gauge, Summary, and Histogram)
@@ -18,7 +27,13 @@ func (metric Metric) validate() (errs []error) {
 	if len(metric.Name) == 0 {
 		errs = append(errs, errors.New("name is required in metric"))
 	}
+	if strings.Compare(metric.HistogramOptions.inferType(), "Histogram") == 0 && strings.Compare(metric.Options.Type, "Histogram") != 0 {
+		errs = append(errs, errors.New("if you define the buckets, the type should be histogram"))
+	}
 	errs = append(errs, metric.Options.validate()...)
+	if metric.isHistogram() {
+		errs = append(errs, metric.HistogramOptions.validate()...)
+	}
 	return errs
 }
 
@@ -27,4 +42,35 @@ func (mo MetricOptions) validate() (errs []error) {
 		errs = append(errs, errors.New("type is required in metric"))
 	}
 	return errs
+}
+
+// HistogramOptions allows you to define the histogram is buckets.
+type HistogramOptions struct {
+	Buckets []float64 `json:"buckets"`
+
+	// ExponentialBuckets is a len three array where:
+	// - The first value is the low bound start bucket.
+	// - The second vale is the growing factor.
+	// - The three one is the buckets amount.
+	ExponentialBuckets []float64 `json:"exponential_buckets"`
+}
+
+func (ho HistogramOptions) validate() (errs []error) {
+	if len(ho.Buckets) > 0 && len(ho.ExponentialBuckets) > 0 {
+		errs = append(errs, errors.New("You should define only one betwen the 'buckets' and the 'exponentialBuckets'"))
+	}
+	if len(ho.Buckets) == 0 && len(ho.ExponentialBuckets) == 0 {
+		errs = append(errs, errors.New("At least one should be defined the 'buckets' or the 'exponentialBuckets'"))
+	}
+	if len(ho.ExponentialBuckets) != 0 && len(ho.ExponentialBuckets) != 3 {
+		errs = append(errs, errors.New("'exponentialBuckets' should have an exact length of 3(start, factor, amount)"))
+	}
+	return errs
+}
+
+func (ho HistogramOptions) inferType() (t string) {
+	if len(ho.Buckets) != 0 || len(ho.ExponentialBuckets) != 0 {
+		t = "Histogram"
+	}
+	return t
 }
