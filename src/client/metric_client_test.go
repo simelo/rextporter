@@ -1,13 +1,13 @@
 package client
 
 import (
-	"log"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/simelo/rextporter/src/config"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -57,7 +57,7 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 	//}
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte(jsonResponse)); err != nil {
-		log.Panicln(err)
+		log.WithError(err).Panicln("unable to write response")
 	}
 }
 
@@ -82,7 +82,7 @@ func TestSkycoinStatsSuit(t *testing.T) {
 func stubSkycoin() *httptest.Server {
 	l, err := net.Listen("tcp", "127.0.0.1:8080")
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Fatal("unable to create listenner")
 	}
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(httpHandler))
 	testServer.Listener.Close()

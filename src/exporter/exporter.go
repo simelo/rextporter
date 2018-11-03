@@ -2,22 +2,22 @@ package exporter
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/simelo/rextporter/src/config"
+	log "github.com/sirupsen/logrus"
 )
 
 // ExportMetrics will read the config file from the CLI parammeter `-config` if any
 // or use a default one.
 func ExportMetrics(configFile string, listenPort uint16) (srv *http.Server) {
 	if err := config.NewConfigFromFilePath(configFile); err != nil {
-		log.Fatalln("can not open the config file", err.Error())
+		log.WithError(err).Fatalln("can not open the config file")
 	}
 	if collector, err := newSkycoinCollector(); err != nil {
-		log.Panicln("Can not create metrics:", err)
+		log.WithError(err).Panicln("Can not create metrics")
 	} else {
 		prometheus.MustRegister(collector)
 	}
@@ -25,7 +25,7 @@ func ExportMetrics(configFile string, listenPort uint16) (srv *http.Server) {
 	srv = &http.Server{Addr: port}
 	http.Handle("/metrics", promhttp.Handler())
 	go func() {
-		log.Panicln(srv.ListenAndServe())
+		log.WithError(srv.ListenAndServe()).Panicln("unable to start the server")
 	}()
 	return srv
 }
