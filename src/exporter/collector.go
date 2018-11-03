@@ -2,10 +2,10 @@ package exporter
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/common"
+	log "github.com/sirupsen/logrus"
 )
 
 // SkycoinCollector has the metrics to be exposed
@@ -49,7 +49,7 @@ func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) 
 	for _, counter := range collector.Counters {
 		val, err := counter.Client.GetMetric()
 		if err != nil {
-			log.Println("can not get the data:", err)
+			log.WithError(err).Errorln("can not get the data")
 			ch <- prometheus.MustNewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 0)
 		} else {
 			typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this
@@ -63,7 +63,7 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 	for _, gauge := range collector.Gauges {
 		val, err := gauge.Client.GetMetric()
 		if err != nil {
-			log.Println("can not get the data", err)
+			log.WithError(err).Errorln("can not get the data")
 			ch <- prometheus.MustNewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 0)
 		} else {
 			typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this

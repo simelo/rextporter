@@ -5,11 +5,11 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"strings"
 
 	"github.com/simelo/rextporter/src/common"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -151,7 +151,7 @@ func (conf RootConfig) validate() {
 	if len(errs) != 0 {
 		defer log.Panicln("some errors found")
 		for _, err := range errs {
-			log.Println(err.Error())
+			log.WithError(err).Errorln("Error")
 		}
 	}
 }
