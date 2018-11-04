@@ -2,10 +2,10 @@
 [[hosts]]
 ref = "hostname1"
 location = "http://127.0.0.1"
-port = 8080
+port = 8000
 authType = "CSRF"
 tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
+genTokenEndpoint = "/api/v1/csrf.json"
 tokenKeyFromEndpoint = "csrf_token"
 
 # [[hosts]]
@@ -35,12 +35,40 @@ name = "seq"
   type = "Counter"
   description = "I am running since"
 
-[[metrics]]
-name = "openConnections"
+# [[metrics]]
+# name = "openConnections"
 
-  [metrics.options]
-  type = "Gauge"
-  description = "Track the open connections in the system"
+#   [metrics.options]
+#   type = "Gauge"
+#   description = "Track the open connections in the system"
+
+# [[metrics]]
+# name = "resquestTimeHistogram"
+  
+#   [metrics.histogramOptions]
+#   buckets = [
+#     12.4,
+#     13.2,
+#     4.5
+#   ]
+
+#   [metrics.options]
+#   type = "Histogram"
+#   description = "Track the open connections in the system"
+
+# [[metrics]]
+# name = "resquestTimeHistogram2"
+  
+#   [metrics.histogramOptions]
+#   exponentialBuckets = [
+#     100,
+#     2,
+#     5
+#   ]
+
+#   [metrics.options]
+#   type = "Histogram"
+#   description = "Track the open connections in the system"
 
 # [[metrics]]
 # name = "cpu_temp"
@@ -54,16 +82,23 @@ name = "openConnections"
 [[metricsForHost]]
 hostRef = "hostname1"
 metricRef = "seq"
-url = "/api/v1/health"
+url = "/api/v1/health.json"
 httpMethod = "GET"
 path = "/blockchain/head/seq"
 
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "openConnections"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "open_connections"
+# [[metricsForHost]]
+# hostRef = "hostname1"
+# metricRef = "resquestTimeHistogram"
+# url = "/api/v1/network/connections"
+# httpMethod = "GET"
+# path = "connections"
+
+# [[metricsForHost]]
+# hostRef = "hostname1"
+# metricRef = "resquestTimeHistogram2"
+# url = "/api/v1/network/connections"
+# httpMethod = "GET"
+# path = "connections"
 
 # [[metricsForHost]]
 # hostRef = "hostname1"
