@@ -25,6 +25,7 @@ func ExportMetrics(configFile string, listenPort uint16) (srv *http.Server) {
 	srv = &http.Server{Addr: port}
 	http.Handle("/metrics", promhttp.Handler())
 	go func() {
+		log.Infoln(fmt.Sprintf("Starting server in port %d, path /metrics ...", listenPort))
 		log.WithError(srv.ListenAndServe()).Panicln("unable to start the server")
 	}()
 	return srv
