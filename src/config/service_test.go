@@ -6,16 +6,18 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type hostConfSuit struct {
+type serviceConfSuite struct {
 	suite.Suite
-	HostConf Host
+	ServiceConf Service
 }
 
-func (suite *hostConfSuit) SetupTest() {
-	suite.HostConf = Host{
-		Ref:                  "MySupperServer",
-		Location:             "https://my.supper.server",
+func (suite *serviceConfSuite) SetupTest() {
+	suite.ServiceConf = Service{
+		Name:                 "MySupperServer",
+		Scheme:               "http",
+		Location:             Server{Location: "http://localhost:8080"},
 		Port:                 8080,
+		BasePath:             "/skycoin/node",
 		AuthType:             "CSRF",
 		TokenHeaderKey:       "X-CSRF-Token",
 		GenTokenEndpoint:     "/api/v1/csrf",
@@ -23,87 +25,78 @@ func (suite *hostConfSuit) SetupTest() {
 	}
 }
 
-func TestHostConfSuit(t *testing.T) {
-	suite.Run(t, new(hostConfSuit))
+func TestServiceConfSuite(t *testing.T) {
+	suite.Run(t, new(serviceConfSuite))
 }
 
-func (suite *hostConfSuit) TestEnsureDefaultSuitHostConfIsValid() {
+func (suite *serviceConfSuite) TestEnsureDefaultSuiteServiceConfIsValid() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	// default
-	hostConf := suite.HostConf
+	serviceConf := suite.ServiceConf
 
 	// NOTE(denisacostaq@gmail.com): When
 	// test start
 
 	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Len(hostConf.validate(), 0)
+	suite.Len(serviceConf.validate(), 0)
 }
 
-func (suite *hostConfSuit) TestNotEmptyRef() {
+func (suite *serviceConfSuite) TestNotEmptyName() {
 	// NOTE(denisacostaq@gmail.com): Giving
-	var hostConf = suite.HostConf
-	hostConf.Ref = string("")
+	var serviceConf = suite.ServiceConf
+	serviceConf.Name = string("")
 
 	// NOTE(denisacostaq@gmail.com): When
 
 	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Len(hostConf.validate(), 1)
+	suite.Len(serviceConf.validate(), 1)
 }
 
-func (suite *hostConfSuit) TestNotEmptyLocation() {
+func (suite *serviceConfSuite) TestValidateLocation() {
 	// NOTE(denisacostaq@gmail.com): Giving
-	var hostConf = suite.HostConf
-	hostConf.Location = string("")
+	var serviceConf = suite.ServiceConf
+	serviceConf.Location.Location = string("")
 
 	// NOTE(denisacostaq@gmail.com): When
 
 	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Len(hostConf.validate(), 3) // empty, invalid and url + port invalid
+	suite.NotEmpty(serviceConf.validate()) // empty, invalid and url + port invalid
 }
 
-func (suite *hostConfSuit) TestValidUrlLocation() {
+// TODO(denisacostaq@gmail.com): validate port if change type from uint16 to ...
+
+func (suite *serviceConfSuite) TestCsrfAuthButEmptyTokenKeyFromEndpoint() {
 	// NOTE(denisacostaq@gmail.com): Giving
-	var hostConf = suite.HostConf
-	hostConf.Location = string("invalid.url")
+	var serviceConf = suite.ServiceConf
+	serviceConf.AuthType = "CSRF"
+	serviceConf.TokenKeyFromEndpoint = ""
 
 	// NOTE(denisacostaq@gmail.com): When
 
 	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Len(hostConf.validate(), 1)
+	suite.Len(serviceConf.validate(), 1)
 }
 
-func (suite *hostConfSuit) TestCsrfAuthButEmptyTokenKeyFromEndpoint() {
+func (suite *serviceConfSuite) TestCsrfAuthButEmptyTokenHeaderKey() {
 	// NOTE(denisacostaq@gmail.com): Giving
-	var hostConf = suite.HostConf
-	hostConf.AuthType = "CSRF"
-	hostConf.TokenKeyFromEndpoint = ""
+	var serviceConf = suite.ServiceConf
+	serviceConf.AuthType = "CSRF"
+	serviceConf.TokenHeaderKey = ""
 
 	// NOTE(denisacostaq@gmail.com): When
 
 	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Len(hostConf.validate(), 1)
+	suite.Len(serviceConf.validate(), 1)
 }
 
-func (suite *hostConfSuit) TestCsrfAuthButEmptyTokenHeaderKey() {
+func (suite *serviceConfSuite) TestCsrfAuthButEmptyGenTokenEndpoint() {
 	// NOTE(denisacostaq@gmail.com): Giving
-	var hostConf = suite.HostConf
-	hostConf.AuthType = "CSRF"
-	hostConf.TokenHeaderKey = ""
+	var serviceConf = suite.ServiceConf
+	serviceConf.AuthType = "CSRF"
+	serviceConf.GenTokenEndpoint = ""
 
 	// NOTE(denisacostaq@gmail.com): When
 
 	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Len(hostConf.validate(), 1)
-}
-
-func (suite *hostConfSuit) TestCsrfAuthButEmptyGenTokenEndpoint() {
-	// NOTE(denisacostaq@gmail.com): Giving
-	var hostConf = suite.HostConf
-	hostConf.AuthType = "CSRF"
-	hostConf.GenTokenEndpoint = ""
-
-	// NOTE(denisacostaq@gmail.com): When
-
-	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Len(hostConf.validate(), 1)
+	suite.Len(serviceConf.validate(), 1)
 }

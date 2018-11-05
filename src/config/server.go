@@ -13,7 +13,8 @@ func (server Server) validate() (errs []error) {
 		errs = append(errs, errors.New("location is required in server"))
 	}
 	if !isValidURL(server.Location) {
-		errs = append(errs, errors.New("location is not a valid url in server"))
+		// TODO(denisacostaq@gmail.com): how to do this?
+		// errs = append(errs, errors.New("location is not a valid url in server"))
 	}
 	return errs
 }
