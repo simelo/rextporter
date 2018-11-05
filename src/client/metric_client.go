@@ -12,11 +12,6 @@ import (
 	"github.com/simelo/rextporter/src/config"
 )
 
-type token struct {
-	// FIXME(denisacostaq@gmail.com): you are just decoding with this key and ignoring the configured 'TokenKeyFromEndpoint'
-	CsrfToken string `json:"csrf_token"`
-}
-
 // BaseClient have common data to be shared through embedded struct in those type who implement the
 // client.Client interface
 type BaseClient struct {
@@ -60,12 +55,23 @@ func (client *MetricClient) resetToken() (err error) {
 		errCause := fmt.Sprintln("can make the request to get a token: ", err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	var tk token
-	if err = json.Unmarshal(data, &tk); err != nil {
-		errCause := fmt.Sprintln("error decoding the server response: ", err.Error())
+	var jsonData interface{}
+	if err = json.Unmarshal(data, &jsonData); err != nil {
+		errCause := fmt.Sprintln("can not decode the body: ", string(data), " ", err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	client.token = tk.CsrfToken
+	var val interface{}
+	jPath := "$" + strings.Replace(client.service.TokenKeyFromEndpoint, "/", ".", -1)
+	if val, err = jsonpath.JsonPathLookup(jsonData, jPath); err != nil {
+		errCause := fmt.Sprintln("can not locate the path: ", err.Error())
+		return common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	tk, ok := val.(string)
+	if !ok {
+		errCause := fmt.Sprintln("unable the get the token as a string value")
+		return common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	client.token = tk
 	if strings.Compare(client.token, "") == 0 {
 		errCause := fmt.Sprintln("unable the get a not null(empty) token")
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
