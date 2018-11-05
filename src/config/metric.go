@@ -19,8 +19,11 @@ const (
 // Metric keep the metric name as an instance of MetricOptions
 type Metric struct {
 	Name             string           `json:"name"`
-	Options          MetricOptions    `json:"options"`
+	Options          MetricOptions `json:"options"`
 	HistogramOptions HistogramOptions `json:"histogram_options"`
+	URL              string        `json:"url"`
+	HTTPMethod       string        `json:"http_method"`
+	Path             string        `json:"path,omitempty"`
 }
 
 func (metric Metric) isHistogram() bool {

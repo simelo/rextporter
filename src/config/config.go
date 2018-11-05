@@ -3,22 +3,21 @@ package config
 import (
 	"bytes"
 	"container/list"
-	"errors"
 	"fmt"
 	"net/url"
 	"strings"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/common"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-// RootConfig is the top level node for the config tree, it has a list of hosts, a list of metrics
-// and a list of links(MetricsForHost, says how a metric is mapped in a host).
+// RootConfig is the top level node for the config tree, it has a list of metrics and a
+// service from which get this metrics.
 type RootConfig struct {
-	Hosts          []Host   `json:"hosts"`
-	Metrics        []Metric `json:"metrics"`
-	MetricsForHost []Link   `json:"metrics_for_host"`
+	Service Service  `json:"service"`
+	Metrics []Metric `json:"metrics"`
 }
 
 var rootConfig RootConfig
@@ -53,7 +52,12 @@ func NewConfigFromRawString(strConf string) error {
 	return nil
 }
 
-// NewConfigFromFilePath TODO(denisacostaq@gmail.com): Fill some data structures for efficient lookup from ref to host for example
+// MetricName returns a promehteus style name for the giving metric name.
+func (conf RootConfig) MetricName(metricName string) string {
+	return prometheus.BuildFQName("skycoin", conf.Service.Name, metricName)
+}
+
+// NewConfigFromFilePath desserialize from the configured values in the toml file in to the config data structure
 func NewConfigFromFilePath(path string) error {
 	const generalScopeErr = "error creating a config instance"
 	viper.SetConfigFile(path)
@@ -69,84 +73,31 @@ func NewConfigFromFilePath(path string) error {
 	return nil
 }
 
-// FindHostByRef will return a host where you can match the host.Ref with the ref parameter
-// or an error if not found.
-func (conf RootConfig) FindHostByRef(ref string) (host Host, err error) {
-	found := false
-	for _, host = range conf.Hosts {
-		found = strings.Compare(host.Ref, ref) == 0
-		if found {
-			return
+// FilterMetricsByType will return all the metrics who match whit the 't' parameter.
+func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
+	tmpMetrics := list.New()
+	for _, metric := range conf.Metrics {
+		if strings.Compare(metric.Options.Type, t) == 0 {
+			tmpMetrics.PushBack(metric)
 		}
 	}
-	if !found {
-		errCause := fmt.Sprintln("can not find a host for Ref: ", ref)
-		err = errors.New(errCause)
-	}
-	return Host{}, err
-}
-
-// FilterLinksByHost will return all links where you can match the host.Ref with link.HostRef
-func (conf RootConfig) FilterLinksByHost(host Host) []Link {
-	var links []Link
-	for _, link := range conf.MetricsForHost {
-		if strings.Compare(host.Ref, link.HostRef) == 0 {
-			links = append(links, link)
-		}
-	}
-	return links
-}
-
-// FilterLinksByMetricType will return all the links who match whit the type parameter.
-func FilterLinksByMetricType(links []Link, t string) ([]Link, error) {
-	const generalScopeErr = "error filtering links by metric type"
-	tmpLinks := list.New()
-	for _, link := range links {
-		mt, err := link.FindMetricType()
-		if err != nil {
-			errCause := fmt.Sprintln("can not find metric type: ", err.Error())
-			return []Link{}, common.ErrorFromThisScope(errCause, generalScopeErr)
-		}
-		if strings.Compare(t, mt) == 0 {
-			tmpLinks.PushBack(link)
-		}
-	}
-	retLinks := make([]Link, tmpLinks.Len())
+	metrics = make([]Metric, tmpMetrics.Len())
 	idxLink := 0
-	for it := tmpLinks.Front(); it != nil; it = it.Next() {
-		retLinks[idxLink] = it.Value.(Link)
+	for it := tmpMetrics.Front(); it != nil; it = it.Next() {
+		metrics[idxLink] = it.Value.(Metric)
 		idxLink++
 	}
-	return retLinks, nil
-}
-
-// findMetricByRef will return a metric where you can match the metric.Ref with the ref parameter
-// or an error if not found.
-func (conf RootConfig) findMetricByRef(ref string) (metric Metric, err error) {
-	found := false
-	for _, metric = range conf.Metrics {
-		found = strings.Compare(metric.Name, ref) == 0
-		if found {
-			return
-		}
-	}
-	if !found {
-		errCause := fmt.Sprintln("can not find a metric for Ref: ", ref)
-		err = errors.New(errCause)
-	}
-	return Metric{}, err
+	return metrics
 }
 
 func (conf RootConfig) validate() {
 	var errs []error
-	for _, host := range conf.Hosts {
-		errs = append(errs, host.validate()...)
-	}
+	errs = append(errs, conf.Service.validate()...)
 	for _, metric := range conf.Metrics {
 		errs = append(errs, metric.validate()...)
 	}
-	for _, mHost := range conf.MetricsForHost {
-		errs = append(errs, mHost.validate()...)
+	for _, metric := range conf.Metrics {
+		errs = append(errs, metric.validate()...)
 	}
 	if len(errs) != 0 {
 		defer log.Panicln("some errors found")
