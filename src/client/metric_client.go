@@ -37,7 +37,7 @@ type MetricClient struct {
 func NewMetricClient(metric config.Metric, conf config.RootConfig) (client *MetricClient, err error) {
 	const generalScopeErr = "error creating a client to get a metric from remote endpoint"
 	client = new(MetricClient)
-	client.service = conf.Service
+	client.BaseClient.service = conf.Service
 	client.metricJPath = metric.Path
 	client.BaseClient.req, err = http.NewRequest(metric.HTTPMethod, client.service.URIToGetMetric(metric), nil)
 	if err != nil {

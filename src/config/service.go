@@ -23,40 +23,40 @@ type Service struct {
 }
 
 // URIToGetMetric build the URI from where you will to get metric information
-func (s Service) URIToGetMetric(metric Metric) string {
-	return fmt.Sprintf("%s://%s:%d%s%s", s.Scheme, s.Location.Location, s.Port, s.BasePath, metric.URL)
+func (srv Service) URIToGetMetric(metric Metric) string {
+	return fmt.Sprintf("%s://%s:%d%s%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath, metric.URL)
 }
 
 // URIToGetToken build the URI from where you will to get the token
-func (s Service) URIToGetToken() string {
-	return fmt.Sprintf("%s://%s:%d%s%s", s.Scheme, s.Location.Location, s.Port, s.BasePath, s.GenTokenEndpoint)
+func (srv Service) URIToGetToken() string {
+	return fmt.Sprintf("%s://%s:%d%s%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath, srv.GenTokenEndpoint)
 }
 
-func (service Service) validate() (errs []error) {
-	if len(service.Name) == 0 {
+func (srv Service) validate() (errs []error) {
+	if len(srv.Name) == 0 {
 		errs = append(errs, errors.New("name is required in service"))
 	}
-	if len(service.Scheme) == 0 {
+	if len(srv.Scheme) == 0 {
 		errs = append(errs, errors.New("scheme is required in service"))
 	}
-	if service.Port < 1 || service.Port > 65535 {
+	if srv.Port < 1 || srv.Port > 65535 {
 		errs = append(errs, errors.New("port must be betwen 1 and 65535"))
 	}
-	if len(service.BasePath) == 0 {
-		// TODO(denisacosta): What make sense in this?
+	// if len(srv.BasePath) == 0 {
+	// 	// TODO(denisacosta): What make sense in this?
+	// }
+	if !isValidURL(srv.URIToGetToken()) {
+		errs = append(errs, errors.New("can not create a valid url to get token: "+srv.URIToGetToken()))
 	}
-	if !isValidURL(service.URIToGetToken()) {
-		errs = append(errs, errors.New("can not create a valid url to get token: "+service.URIToGetToken()))
-	}
-	if strings.Compare(service.AuthType, "CSRF") == 0 && len(service.TokenHeaderKey) == 0 {
+	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.TokenHeaderKey) == 0 {
 		errs = append(errs, errors.New("TokenHeaderKey is required if you are using CSRF"))
 	}
-	if strings.Compare(service.AuthType, "CSRF") == 0 && len(service.TokenKeyFromEndpoint) == 0 {
+	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.TokenKeyFromEndpoint) == 0 {
 		errs = append(errs, errors.New("TokenKeyFromEndpoint is required if you are using CSRF"))
 	}
-	if strings.Compare(service.AuthType, "CSRF") == 0 && len(service.GenTokenEndpoint) == 0 {
+	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.GenTokenEndpoint) == 0 {
 		errs = append(errs, errors.New("GenTokenEndpoint is required if you are using CSRF"))
 	}
-	errs = append(errs, service.Location.validate()...)
+	errs = append(errs, srv.Location.validate()...)
 	return errs
 }

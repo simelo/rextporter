@@ -47,5 +47,6 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.ListenAndServe(":8080", http.HandlerFunc(httpHandler))
+	handler := http.HandlerFunc(httpHandler)
+	log.WithError(http.ListenAndServe(":8080", handler)).Errorln("server fail")
 }
