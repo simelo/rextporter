@@ -39,29 +39,51 @@ func (collector *SkycoinCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) {
+	onCollectFail := func(counter CounterMetric, fch chan<- prometheus.Metric) {
+		fch <- prometheus.MustNewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 1)
+		fch <- prometheus.MustNewConstMetric(counter.MetricDesc, prometheus.CounterValue, counter.lastSuccessValue)
+	}
+	onCollectSuccess := func(counter CounterMetric, fch chan<- prometheus.Metric, val float64) {
+		fch <- prometheus.MustNewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 0)
+		fch <- prometheus.MustNewConstMetric(counter.MetricDesc, prometheus.CounterValue, val)
+	}
 	for _, counter := range collector.Counters {
-		val, err := counter.Client.GetMetric()
-		if err != nil {
+		if val, err := counter.Client.GetMetric(); err != nil {
 			log.WithError(err).Errorln("can not get the data")
-			ch <- prometheus.MustNewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 0)
+			onCollectFail(counter, ch)
 		} else {
-			typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this, can be a string for example and panic
-			ch <- prometheus.MustNewConstMetric(counter.MetricDesc, prometheus.CounterValue, typedVal)
-			ch <- prometheus.MustNewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 1)
+			typedVal, ok := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this, negative panic
+			if ok {
+				onCollectSuccess(counter, ch, typedVal)
+			} else {
+				log.WithField("val", val).Errorln("unable to get value as float64")
+				onCollectFail(counter, ch)
+			}
 		}
 	}
 }
 
 func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
+	onCollectFail := func(gauge GaugeMetric, fch chan<- prometheus.Metric) {
+		fch <- prometheus.MustNewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 1)
+		fch <- prometheus.MustNewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, gauge.lastSuccessValue)
+	}
+	onCollectSuccess := func(gauge GaugeMetric, fch chan<- prometheus.Metric, val float64) {
+		fch <- prometheus.MustNewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 0)
+		fch <- prometheus.MustNewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, val)
+	}
 	for _, gauge := range collector.Gauges {
-		val, err := gauge.Client.GetMetric()
-		if err != nil {
+		if val, err := gauge.Client.GetMetric(); err != nil {
 			log.WithError(err).Errorln("can not get the data")
-			ch <- prometheus.MustNewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 0)
+			onCollectFail(gauge, ch)
 		} else {
-			typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this, can be a string for example and panic
-			ch <- prometheus.MustNewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, typedVal)
-			ch <- prometheus.MustNewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 1)
+			typedVal, ok := val.(float64)
+			if ok {
+				onCollectSuccess(gauge, ch, typedVal)
+			} else {
+				log.WithField("val", val).Errorln("unable to get value as float64")
+				onCollectFail(gauge, ch)
+			}
 		}
 	}
 }

@@ -11,9 +11,10 @@ import (
 
 // CounterMetric has the necessary http client to get and updated value for the counter metric
 type CounterMetric struct {
-	Client     *client.MetricClient
-	MetricDesc *prometheus.Desc
-	StatusDesc *prometheus.Desc
+	Client           *client.MetricClient
+	lastSuccessValue float64
+	MetricDesc       *prometheus.Desc
+	StatusDesc       *prometheus.Desc
 }
 
 func createCounter(metricConf config.Metric, conf config.RootConfig) (metric CounterMetric, err error) {
@@ -49,9 +50,10 @@ func createCounters() ([]CounterMetric, error) {
 
 // GaugeMetric has the necessary http client to get and updated value for the counter metric
 type GaugeMetric struct {
-	Client     *client.MetricClient
-	MetricDesc *prometheus.Desc
-	StatusDesc *prometheus.Desc
+	Client           *client.MetricClient
+	lastSuccessValue float64
+	MetricDesc       *prometheus.Desc
+	StatusDesc       *prometheus.Desc
 }
 
 func createGauge(metricConf config.Metric, conf config.RootConfig) (metric GaugeMetric, err error) {
