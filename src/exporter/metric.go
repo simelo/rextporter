@@ -9,19 +9,6 @@ import (
 	"github.com/simelo/rextporter/src/config"
 )
 
-func createMetricCommonStages(link config.Link) (metricClient *client.MetricClient, description string, err error) {
-	const generalScopeErr = "error initializing metric creation scope"
-	if metricClient, err = client.NewMetricClient(link); err != nil {
-		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
-		return metricClient, description, common.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	if description, err = link.MetricDescription(); err != nil {
-		errCause := fmt.Sprintln("can not build the description: ", err.Error())
-		return metricClient, description, common.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	return metricClient, description, err
-}
-
 // CounterMetric has the necessary http client to get and updated value for the counter metric
 type CounterMetric struct {
 	Client     *client.MetricClient
@@ -29,38 +16,33 @@ type CounterMetric struct {
 	StatusDesc *prometheus.Desc
 }
 
-func createCounter(link config.Link) (metric CounterMetric, err error) {
-	generalScopeErr := "can not create metric " + link.MetricRef
+func createCounter(metricConf config.Metric, conf config.RootConfig) (metric CounterMetric, err error) {
+	generalScopeErr := "can not create metric " + metricConf.Name
 	var metricClient *client.MetricClient
-	var description string
-	if metricClient, description, err = createMetricCommonStages(link); err != nil {
-		errCause := fmt.Sprintln("can not get parameters for counter creation stage: ", err.Error())
+	if metricClient, err = client.NewMetricClient(metricConf, conf); err != nil {
+		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metric = CounterMetric{
 		Client:     metricClient,
-		MetricDesc: prometheus.NewDesc(link.MetricName(), description, nil, nil),
-		StatusDesc: prometheus.NewDesc(link.MetricName()+"_up", "Says if the same name metric("+link.MetricName()+") was success updated, 1 for ok, 0 for failed.", nil, nil),
+		MetricDesc: prometheus.NewDesc(conf.MetricName(metricConf.Name), metricConf.Options.Description, nil, nil),
+		StatusDesc: prometheus.NewDesc(conf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+conf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
 	}
 	return metric, err
 }
 
 func createCounters() ([]CounterMetric, error) {
 	generalScopeErr := "can not create counters"
-	conf := config.Config()
-	links, err := config.FilterLinksByMetricType(conf.MetricsForHost, config.KeyTypeCounter)
-	if err != nil {
-		errCause := fmt.Sprintln("can not filter links by type type: ", config.KeyTypeCounter, " ", err.Error())
-		return []CounterMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	counters := make([]CounterMetric, len(links))
-	for idx, link := range links {
-		counter, err := createCounter(link)
-		if err != nil {
-			errCause := fmt.Sprintln("error creating counter: ", err.Error())
+	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
+	metrics := conf.FilterMetricsByType(config.KeyTypeCounter)
+	counters := make([]CounterMetric, len(metrics))
+	for idx, metric := range metrics {
+		if counter, err := createCounter(metric, conf); err == nil {
+			counters[idx] = counter
+		} else {
+			errCause := "error creating counter: " + err.Error()
 			return []CounterMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		counters[idx] = counter
 	}
 	return counters, nil
 }
@@ -72,33 +54,28 @@ type GaugeMetric struct {
 	StatusDesc *prometheus.Desc
 }
 
-func createGauge(link config.Link) (metric GaugeMetric, err error) {
-	generalScopeErr := "can not create metric " + link.MetricRef
+func createGauge(metricConf config.Metric, conf config.RootConfig) (metric GaugeMetric, err error) {
+	generalScopeErr := "can not create metric " + metricConf.Name
 	var metricClient *client.MetricClient
-	var description string
-	if metricClient, description, err = createMetricCommonStages(link); err != nil {
-		errCause := fmt.Sprintln("can not get parameters for gauge creation stage: ", err.Error())
+	if metricClient, err = client.NewMetricClient(metricConf, conf); err != nil {
+		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metric = GaugeMetric{
 		Client:     metricClient,
-		MetricDesc: prometheus.NewDesc(link.MetricName(), description, nil, nil),
-		StatusDesc: prometheus.NewDesc(link.MetricName()+"_up", "Says if the same name metric("+link.MetricName()+") was success updated, 1 for ok, 0 for failed.", nil, nil),
+		MetricDesc: prometheus.NewDesc(conf.MetricName(metricConf.Name), metricConf.Options.Description, nil, nil),
+		StatusDesc: prometheus.NewDesc(conf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+conf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
 	}
 	return metric, err
 }
 
 func createGauges() ([]GaugeMetric, error) {
 	generalScopeErr := "can not create gauges"
-	conf := config.Config()
-	links, err := config.FilterLinksByMetricType(conf.MetricsForHost, config.KeyTypeGauge)
-	if err != nil {
-		errCause := fmt.Sprintln("can not filter links by type type: ", config.KeyTypeGauge, " ", err.Error())
-		return []GaugeMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	gauges := make([]GaugeMetric, len(links))
-	for idx, link := range links {
-		gauge, err := createGauge(link)
+	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
+	metrics := conf.FilterMetricsByType(config.KeyTypeGauge)
+	gauges := make([]GaugeMetric, len(metrics))
+	for idx, metric := range metrics {
+		gauge, err := createGauge(metric, conf)
 		if err != nil {
 			errCause := fmt.Sprintln("error creating gauge: ", err.Error())
 			return []GaugeMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)

@@ -17,11 +17,12 @@ type TokenClient struct {
 	BaseClient
 }
 
-func newTokenClient(host config.Host) (client *TokenClient, err error) {
+func newTokenClient(service config.Service) (client *TokenClient, err error) {
 	const generalScopeErr = "error creating a client to get a toke from remote endpoint for making future requests"
 	client = new(TokenClient)
-	client.host = host
-	if client.req, err = http.NewRequest("GET", client.host.URIToGetToken(), nil); err != nil {
+	client.service = service
+	// FIXME(denisacostaq@gmail.com): make the "GET" configurable.
+	if client.req, err = http.NewRequest("GET", client.service.URIToGetToken(), nil); err != nil {
 		errCause := fmt.Sprintln("can not create the request: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}

@@ -16,21 +16,14 @@ type SkycoinCollector struct {
 
 func newSkycoinCollector() (collector *SkycoinCollector, err error) {
 	const generalScopeErr = "error creating collector"
-	var counters []CounterMetric
-	counters, err = createCounters()
-	if err != nil {
+	collector = &SkycoinCollector{}
+	if collector.Counters, err = createCounters(); err != nil {
 		errCause := fmt.Sprintln("error creating counters: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	var gauges []GaugeMetric
-	gauges, err = createGauges()
-	if err != nil {
+	if collector.Gauges, err = createGauges(); err != nil {
 		errCause := fmt.Sprintln("error creating gauges: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	collector = &SkycoinCollector{
-		Counters: counters,
-		Gauges:   gauges,
 	}
 	return collector, err
 }
@@ -52,7 +45,7 @@ func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) 
 			log.WithError(err).Errorln("can not get the data")
 			ch <- prometheus.MustNewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 0)
 		} else {
-			typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this
+			typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this, can be a string for example and panic
 			ch <- prometheus.MustNewConstMetric(counter.MetricDesc, prometheus.CounterValue, typedVal)
 			ch <- prometheus.MustNewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 1)
 		}
@@ -66,7 +59,7 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 			log.WithError(err).Errorln("can not get the data")
 			ch <- prometheus.MustNewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 0)
 		} else {
-			typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this
+			typedVal := val.(float64) // FIXME(denisacostaq@gmail.com): make more assertion on this, can be a string for example and panic
 			ch <- prometheus.MustNewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, typedVal)
 			ch <- prometheus.MustNewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 1)
 		}

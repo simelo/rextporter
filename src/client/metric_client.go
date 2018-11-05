@@ -20,8 +20,8 @@ type token struct {
 // BaseClient have common data to be shared through embedded struct in those type who implement the
 // client.Client interface
 type BaseClient struct {
-	req  *http.Request
-	host config.Host
+	req     *http.Request
+	service config.Service
 }
 
 // MetricClient implements the getRemoteInfo method from `client.Client` interface by using some `.toml` config parameters
@@ -29,20 +29,17 @@ type BaseClient struct {
 // sa NewMetricClient method.
 type MetricClient struct {
 	BaseClient
-	link  config.Link
-	token string
+	token       string
+	metricJPath string
 }
 
-// NewMetricClient will put a lot of parameters in the data structure based on the `.toml` config file values.
-func NewMetricClient(link config.Link) (client *MetricClient, err error) {
+// NewMetricClient will put all the required info to be able to do http requests to get the remote data.
+func NewMetricClient(metric config.Metric, conf config.RootConfig) (client *MetricClient, err error) {
 	const generalScopeErr = "error creating a client to get a metric from remote endpoint"
 	client = new(MetricClient)
-	client.link = link
-	if client.BaseClient.host, err = config.Config().FindHostByRef(link.HostRef); err != nil {
-		errCause := fmt.Sprintln("can not find a host: ", err.Error())
-		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	client.BaseClient.req, err = http.NewRequest(link.HTTPMethod, client.BaseClient.host.URIToGetMetric(link), nil)
+	client.service = conf.Service
+	client.metricJPath = metric.Path
+	client.BaseClient.req, err = http.NewRequest(metric.HTTPMethod, client.service.URIToGetMetric(metric), nil)
 	if err != nil {
 		errCause := fmt.Sprintln("can not create the request: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
@@ -54,7 +51,7 @@ func (client *MetricClient) resetToken() (err error) {
 	const generalScopeErr = "error making resetting the token"
 	client.token = ""
 	var clientToken *TokenClient
-	if clientToken, err = newTokenClient(client.BaseClient.host); err != nil {
+	if clientToken, err = newTokenClient(client.service); err != nil {
 		errCause := fmt.Sprintln("can not find a host: ", err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -78,7 +75,7 @@ func (client *MetricClient) resetToken() (err error) {
 
 func (client *MetricClient) getRemoteInfo() (data []byte, err error) {
 	const generalScopeErr = "error making a server request to get metric from remote endpoint"
-	client.req.Header.Set(client.BaseClient.host.TokenHeaderKey, client.token)
+	client.req.Header.Set(client.service.TokenHeaderKey, client.token)
 	doRequest := func() (*http.Response, error) {
 		httpClient := &http.Client{}
 		var resp *http.Response
@@ -120,8 +117,8 @@ func (client *MetricClient) GetMetric() (val interface{}, err error) {
 		errCause := fmt.Sprintln("can not decode the body: ", string(data), " ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	jpath := "$" + strings.Replace(client.link.Path, "/", ".", -1)
-	if val, err = jsonpath.JsonPathLookup(jsonData, jpath); err != nil {
+	jPath := "$" + strings.Replace(client.metricJPath, "/", ".", -1)
+	if val, err = jsonpath.JsonPathLookup(jsonData, jPath); err != nil {
 		errCause := fmt.Sprintln("can not locate the path: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
