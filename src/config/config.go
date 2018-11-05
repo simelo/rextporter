@@ -96,9 +96,6 @@ func (conf RootConfig) validate() {
 	for _, metric := range conf.Metrics {
 		errs = append(errs, metric.validate()...)
 	}
-	for _, metric := range conf.Metrics {
-		errs = append(errs, metric.validate()...)
-	}
 	if len(errs) != 0 {
 		defer log.Panicln("some errors found")
 		for _, err := range errs {

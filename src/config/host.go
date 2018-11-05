@@ -1,6 +1,10 @@
 package config
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
 
 // Service is a concept to grab information about a running server, for example:
 // where is it http://localhost:1234 (Location + : + Port), what auth kind you need to use?
@@ -29,29 +33,30 @@ func (s Service) URIToGetToken() string {
 }
 
 func (service Service) validate() (errs []error) {
-	// 	if len(service.Ref) == 0 {
-	// 		errs = append(errs, errors.New("ref is required in service"))
-	// 	}
-	// 	if len(service.Location) == 0 {
-	// 		errs = append(errs, errors.New("location is required in host"))
-	// 	}
-	// 	if !isValidURL(host.Location) {
-	// 		errs = append(errs, errors.New("location is not a valid url in host"))
-	// 	}
-	// 	if !isValidURL(host.URIToGetToken()) {
-	// 		errs = append(errs, errors.New("location + port can not form a valid uri in host"))
-	// 	}
-	// 	// if host.Port < 0 || host.Port > 65535 {
-	// 	// 	errs = append(errs, errors.New("port number should be between 0 and 65535 in host"))
-	// 	// }
-	// 	if strings.Compare(host.AuthType, "CSRF") == 0 && len(host.TokenHeaderKey) == 0 {
-	// 		errs = append(errs, errors.New("TokenHeaderKey is required if you are using CSRF"))
-	// 	}
-	// 	if strings.Compare(host.AuthType, "CSRF") == 0 && len(host.TokenKeyFromEndpoint) == 0 {
-	// 		errs = append(errs, errors.New("TokenKeyFromEndpoint is required if you are using CSRF"))
-	// 	}
-	// 	if strings.Compare(host.AuthType, "CSRF") == 0 && len(host.GenTokenEndpoint) == 0 {
-	// 		errs = append(errs, errors.New("GenTokenEndpoint is required if you are using CSRF"))
-	// 	}
+	if len(service.Name) == 0 {
+		errs = append(errs, errors.New("name is required in service"))
+	}
+	if len(service.Scheme) == 0 {
+		errs = append(errs, errors.New("scheme is required in service"))
+	}
+	if service.Port < 1 || service.Port > 65535 {
+		errs = append(errs, errors.New("port must be betwen 1 and 65535"))
+	}
+	if len(service.BasePath) == 0 {
+		// TODO(denisacosta): What make sense in this?
+	}
+	if !isValidURL(service.URIToGetToken()) {
+		errs = append(errs, errors.New("can not create a valid url to get token: "+service.URIToGetToken()))
+	}
+	if strings.Compare(service.AuthType, "CSRF") == 0 && len(service.TokenHeaderKey) == 0 {
+		errs = append(errs, errors.New("TokenHeaderKey is required if you are using CSRF"))
+	}
+	if strings.Compare(service.AuthType, "CSRF") == 0 && len(service.TokenKeyFromEndpoint) == 0 {
+		errs = append(errs, errors.New("TokenKeyFromEndpoint is required if you are using CSRF"))
+	}
+	if strings.Compare(service.AuthType, "CSRF") == 0 && len(service.GenTokenEndpoint) == 0 {
+		errs = append(errs, errors.New("GenTokenEndpoint is required if you are using CSRF"))
+	}
+	errs = append(errs, service.Location.validate()...)
 	return errs
 }

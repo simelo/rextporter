@@ -19,11 +19,11 @@ const (
 // Metric keep the metric name as an instance of MetricOptions
 type Metric struct {
 	Name             string           `json:"name"`
-	Options          MetricOptions `json:"options"`
+	URL              string           `json:"url"`
+	HTTPMethod       string           `json:"http_method"`
+	Path             string           `json:"path,omitempty"`
+	Options          MetricOptions    `json:"options"`
 	HistogramOptions HistogramOptions `json:"histogram_options"`
-	URL              string        `json:"url"`
-	HTTPMethod       string        `json:"http_method"`
-	Path             string        `json:"path,omitempty"`
 }
 
 func (metric Metric) isHistogram() bool {
@@ -35,8 +35,20 @@ func (metric Metric) validate() (errs []error) {
 	if len(metric.Name) == 0 {
 		errs = append(errs, errors.New("name is required in metric"))
 	}
+	if len(metric.URL) == 0 {
+		errs = append(errs, errors.New("url is required in metric"))
+	}
+	if !isValidURL(Config().Service.URIToGetMetric(metric)) {
+		errs = append(errs, errors.New("can not create a valid url to get metric: "+Config().Service.URIToGetMetric(metric)))
+	}
+	if len(metric.HTTPMethod) == 0 {
+		errs = append(errs, errors.New("HttpMethod is required in metric"))
+	}
+	if len(metric.Path) == 0 {
+		errs = append(errs, errors.New("path is required in metric"))
+	}
 	if strings.Compare(metric.HistogramOptions.inferType(), "Histogram") == 0 && strings.Compare(metric.Options.Type, "Histogram") != 0 {
-		errs = append(errs, errors.New("if you define the buckets, the type should be histogram"))
+		errs = append(errs, errors.New("the buckets, only apply for metrics of type histogram"))
 	}
 	errs = append(errs, metric.Options.validate()...)
 	if metric.isHistogram() {
