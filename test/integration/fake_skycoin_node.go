@@ -48,5 +48,5 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	handler := http.HandlerFunc(httpHandler)
-	log.WithError(http.ListenAndServe(":8080", handler)).Errorln("server fail")
+	log.WithError(http.ListenAndServe(":8080", handler)).Fatalln("server fail")
 }
