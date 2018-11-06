@@ -57,29 +57,49 @@ func (conf RootConfig) MetricName(metricName string) string {
 	return prometheus.BuildFQName("skycoin", conf.Service.Name, metricName)
 }
 
-// NewConfigFromFilePath desserialize from the configured values in the toml file in to the config data structure
-func NewConfigFromFilePath(path string) error {
-	const generalScopeErr = "error creating a config instance"
+// newMetricsConfig desserialize a metrics config from the 'toml' file path
+func newMetricsConfig(path string) (metricsConf []Metric, err error) {
+	const generalScopeErr = "error reading metrics config"
 	viper.SetConfigFile(path)
 	if err := viper.ReadInConfig(); err != nil {
 		errCause := fmt.Sprintln("error reading config file: ", path, err.Error())
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return metricsConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err := viper.Unmarshal(&(rootConfig)); err != nil {
+	var root RootConfig
+	if err := viper.Unmarshal(&root); err != nil {
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return metricsConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	viper.SetConfigFile("/usr/share/gocode/src/github.com/simelo/rextporter/conf/default/skycoin/service.toml")
-	if err := viper.ReadInConfig(); err != nil {
-		errCause := fmt.Sprintln("error reading config file: ", path, err.Error())
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+	return root.Metrics, nil
+}
+
+// newServiceConfigFromFile desserialize a service config from the 'toml' file path
+func newServiceConfigFromFile(path string) (serviceConf Service, err error) {
+	const generalScopeErr = "error reading service config"
+	serviceConfReader := NewServiceConfigFromFile(path)
+	if serviceConf, err = serviceConfReader.GetConfig(); err != nil {
+		errCause := "error reading service config"
+		return serviceConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err := viper.Unmarshal(&(rootConfig.Service)); err != nil {
-		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+	return serviceConf, err
+}
+
+// NewConfigFromFileSystem will read the config from the file system, you should send the
+// metric config file path and service config file path into metricsPath, servicePath respectively.
+// This function can cause a panic.
+// TODO(denisacostaq@gmail.com): make this a singleton
+func NewConfigFromFileSystem(metricsPath, servicePath string) {
+	const generalScopeErr = "error getting config values from file system"
+	var err error
+	if rootConfig.Metrics, err = newMetricsConfig(metricsPath); err != nil {
+		errCause := "error reading metrics config: " + err.Error()
+		panic(common.ErrorFromThisScope(errCause, generalScopeErr))
+	}
+	if rootConfig.Service, err = newServiceConfigFromFile(servicePath); err != nil {
+		errCause := "root cause: " + err.Error()
+		panic(common.ErrorFromThisScope(errCause, generalScopeErr))
 	}
 	rootConfig.validate()
-	return nil
 }
 
 // FilterMetricsByType will return all the metrics who match whit the 't' parameter.
