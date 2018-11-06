@@ -10,7 +10,7 @@ import (
 
 func main() {
 	gopath := os.Getenv("GOPATH")
-	defaultConfigFilePath := filepath.Join(gopath, "", "src", "github.com", "simelo", "rextporter", "conf", "default", "skycoin.toml")
+	defaultConfigFilePath := filepath.Join(gopath, "", "src", "github.com", "simelo", "rextporter", "conf", "default", "skycoin", "metrics.toml")
 	configFile := flag.String("config", defaultConfigFilePath, "Config file path.")
 	defaultListenPort := 8080
 	listenPort := flag.Uint("port", uint(defaultListenPort), "Listen port.")
