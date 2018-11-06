@@ -65,7 +65,16 @@ func NewConfigFromFilePath(path string) error {
 		errCause := fmt.Sprintln("error reading config file: ", path, err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err := viper.Unmarshal(&rootConfig); err != nil {
+	if err := viper.Unmarshal(&(rootConfig)); err != nil {
+		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
+		return common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	viper.SetConfigFile("/usr/share/gocode/src/github.com/simelo/rextporter/conf/default/skycoin/service.toml")
+	if err := viper.ReadInConfig(); err != nil {
+		errCause := fmt.Sprintln("error reading config file: ", path, err.Error())
+		return common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	if err := viper.Unmarshal(&(rootConfig.Service)); err != nil {
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
