@@ -1,0 +1,10 @@
+# All metrics to be measured.
+[[metrics]]
+  name = "open_connections_is_a_fake_name_for_test_purpose"
+  url = "/api/v1/health"
+  httpMethod = "GET"
+  path = "open_connections"
+
+  [metrics.options]
+  type = "Gauge"
+  description = "Track the open connections in the system"

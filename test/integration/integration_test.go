@@ -20,8 +20,9 @@ type HealthSuit struct {
 func (suite *HealthSuit) SetupSuite() {
 	require := require.New(suite.T())
 	gopath := os.Getenv("GOPATH")
-	configFilePath := gopath + "/src/github.com/simelo/rextporter/test/integration/simple.toml"
-	suite.srv = exporter.ExportMetrics(configFilePath, 8081)
+	metricsConfFilePath := gopath + "/src/github.com/simelo/rextporter/test/integration/metrics.toml"
+	serviceConfFilePath := gopath + "/src/github.com/simelo/rextporter/test/integration/service.toml"
+	suite.srv = exporter.ExportMetrics(metricsConfFilePath, serviceConfFilePath, 8081)
 	require.NotNil(suite.srv)
 }
 

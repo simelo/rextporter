@@ -1,0 +1,12 @@
+# Service configuration.
+name = "myMonitoredServer"
+scheme = "http"
+port = 8080
+basePath = ""
+authType = "CSRF"
+tokenHeaderKey = "X-CSRF-Token"
+genTokenEndpoint = "/api/v1/csrf"
+tokenKeyFromEndpoint = "csrf_token"
+
+[location]
+  location = "localhost"
