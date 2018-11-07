@@ -88,14 +88,19 @@ func newServiceConfigFromFile(path string) (serviceConf Service, err error) {
 // metric config file path and service config file path into metricsPath, servicePath respectively.
 // This function can cause a panic.
 // TODO(denisacostaq@gmail.com): make this a singleton
-func NewConfigFromFileSystem(metricsPath, servicePath string) {
+func NewConfigFromFileSystem(mainConfigPath string) {
 	const generalScopeErr = "error getting config values from file system"
+	var conf mainConfigData
 	var err error
-	if rootConfig.Metrics, err = newMetricsConfig(metricsPath); err != nil {
+	if conf, err = newMainConfigData(mainConfigPath); err != nil {
+		errCause := "error reading metrics config: " + err.Error()
+		panic(errCause)
+	}
+	if rootConfig.Metrics, err = newMetricsConfig(conf.MetricsConfigPath()); err != nil {
 		errCause := "error reading metrics config: " + err.Error()
 		panic(common.ErrorFromThisScope(errCause, generalScopeErr))
 	}
-	if rootConfig.Service, err = newServiceConfigFromFile(servicePath); err != nil {
+	if rootConfig.Service, err = newServiceConfigFromFile(conf.ServiceConfigPath()); err != nil {
 		errCause := "root cause: " + err.Error()
 		panic(common.ErrorFromThisScope(errCause, generalScopeErr))
 	}
