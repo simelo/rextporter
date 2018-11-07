@@ -329,6 +329,7 @@ func defaultTmplData(conf *configdir.Config) (tmplData templateData) {
 func tmplDataFromMainFile(mainConfigFilePath string) (tmpl templateData, err error) {
 	generalScopeErr := "error filling template data"
 	viper.SetConfigFile(mainConfigFilePath)
+	viper.SetConfigType("toml")
 	if err := viper.ReadInConfig(); err != nil {
 		errCause := fmt.Sprintln("error reading config file: ", mainConfigFilePath, err.Error())
 		return tmpl, common.ErrorFromThisScope(errCause, generalScopeErr)
