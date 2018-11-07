@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/alecthomas/template"
-	"github.com/denisacostaq/rextporter/src/common"
+	"github.com/simelo/rextporter/src/common"
 	"github.com/simelo/rextporter/src/exporter"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
