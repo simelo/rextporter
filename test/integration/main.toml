@@ -1,0 +1,5 @@
+
+serviceConfigTransport = "file" # "file" | "consulCatalog"
+# render a template with a portable path
+serviceConfigPath = "/usr/share/gocode/src/github.com/simelo/rextporter/test/integration/service.toml"
+metricsConfigPath = "/usr/share/gocode/src/github.com/simelo/rextporter/test/integration/metrics.toml"
