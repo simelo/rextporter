@@ -10,10 +10,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ExportMetrics will read the config file from the CLI parammeter `-config` if any
-// or use a default one.
-func ExportMetrics(metricsConfFile, serviceConfFile string, listenPort uint16) (srv *http.Server) {
-	config.NewConfigFromFileSystem(metricsConfFile, serviceConfFile)
+// ExportMetrics will read the config from mainConfigFile if any or use a default one.
+func ExportMetrics(mainConfigFile string, listenPort uint16) (srv *http.Server) {
+	config.NewConfigFromFileSystem(mainConfigFile)
 	if collector, err := newSkycoinCollector(); err != nil {
 		log.WithError(err).Panicln("Can not create metrics")
 	} else {
