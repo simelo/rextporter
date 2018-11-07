@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	mainConfigFile := flag.String("config-path", "", "Metrics main config file path.")
+	mainConfigFile := flag.String("config", "", "Metrics main config file path.")
 	defaultListenPort := 8080
 	listenPort := flag.Uint("port", uint(defaultListenPort), "Listen port.")
 	defaultHandlerEndpint := "/metrics"
