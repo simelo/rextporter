@@ -41,7 +41,7 @@ func createCounters() ([]CounterMetric, error) {
 	for idxService, service := range conf.Services {
 		for idxMetric, metric := range metrics {
 			if counter, err := createCounter(metric, service); err == nil {
-				counters[idxService*len(conf.Services)+idxMetric] = counter
+				counters[idxService*len(conf.Metrics)+idxMetric] = counter
 			} else {
 				errCause := "error creating counter: " + err.Error()
 				return []CounterMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
@@ -78,7 +78,7 @@ func createGauges() ([]GaugeMetric, error) {
 	generalScopeErr := "can not create gauges"
 	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
 	metrics := conf.FilterMetricsByType(config.KeyTypeGauge)
-	gauges := make([]GaugeMetric, len(metrics))
+	gauges := make([]GaugeMetric, len(metrics)*len(conf.Services))
 	for idxService, service := range conf.Services {
 		for idxMetric, metric := range metrics {
 			gauge, err := createGauge(metric, service)
@@ -86,7 +86,7 @@ func createGauges() ([]GaugeMetric, error) {
 				errCause := fmt.Sprintln("error creating gauge: ", err.Error())
 				return []GaugeMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
 			}
-			gauges[idxService*len(conf.Services)+idxMetric] = gauge
+			gauges[idxService*len(conf.Metrics)+idxMetric] = gauge
 		}
 	}
 	return gauges, nil
