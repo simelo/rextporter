@@ -119,6 +119,23 @@ func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
 	return metrics
 }
 
+// FilterServicesByType will return all the services who match whit the 't' parameter.
+func (conf RootConfig) FilterServicesByType(t string) (services []Service) {
+	tmpServices := list.New()
+	for _, service := range conf.Services {
+		if strings.Compare(service.Mode, t) == 0 {
+			tmpServices.PushBack(service)
+		}
+	}
+	services = make([]Service, tmpServices.Len())
+	idxLink := 0
+	for it := tmpServices.Front(); it != nil; it = it.Next() {
+		services[idxLink] = it.Value.(Service)
+		idxLink++
+	}
+	return services
+}
+
 func (conf RootConfig) validate() {
 	var errs []error
 	for _, service := range conf.Services {
