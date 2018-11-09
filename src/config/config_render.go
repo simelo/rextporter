@@ -44,17 +44,18 @@ metricsConfigPath = "{{.MetricsConfigPath}}"
 
 const serviceConfigFileContentTemplate = `
 # Service configuration.
-name = "wallet"
-scheme = "http"
-port = 8000
-basePath = ""
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf.json"
-tokenKeyFromEndpoint = "csrf_token"
+[[services]]
+  name = "wallet1"
+  scheme = "http"
+  port = 8000
+  basePath = ""
+  authType = "CSRF"
+  tokenHeaderKey = "X-CSRF-Token"
+  genTokenEndpoint = "/api/v1/csrf.json"
+  tokenKeyFromEndpoint = "csrf_token"
 
-[location]
-  location = "localhost"
+  [services.location]
+    location = "localhost"
 `
 const metricsConfigFileContentTemplate = `
 # All metrics to be measured.
@@ -230,32 +231,6 @@ func homeConfigFolder() (*configdir.Config, error) {
 	return folders[0], nil
 }
 
-// func (mainConf mainConfigData) createFullStructure() (err error) {
-// 	generalScopeErr := "create full config structure"
-// 	var homeConfig *configdir.Config
-// 	if homeConfig, err = homeConfigFolder(); err != nil {
-// 		errCause := "error getting home config dir: " + err.Error()
-// 		return common.ErrorFromThisScope(errCause, generalScopeErr)
-// 	}
-// 	if err := homeConfig.MkdirAll(); err != nil {
-// 		errCause := "error creating full path: " + err.Error()
-// 		return common.ErrorFromThisScope(errCause, generalScopeErr)
-// 	}
-// 	if err = mainConf.createMainConfigFile(homeConfig); err != nil {
-// 		errCause := "error creating main config file: " + err.Error()
-// 		return common.ErrorFromThisScope(errCause, generalScopeErr)
-// 	}
-// 	if err = mainConf.createServiceConfigFile(); err != nil {
-// 		errCause := "error creating service config file: " + err.Error()
-// 		return common.ErrorFromThisScope(errCause, generalScopeErr)
-// 	}
-// 	if err = mainConf.createMetricsConfigFile(); err != nil {
-// 		errCause := "error creating metrics config file: " + err.Error()
-// 		return common.ErrorFromThisScope(errCause, generalScopeErr)
-// 	}
-// 	return err
-// }
-
 func fileDefaultConfigPath(fileName string, homeConf *configdir.Config) (path string) {
 	return filepath.Join(homeConf.Path, fileName)
 }
@@ -279,52 +254,6 @@ func defaultTmplData(conf *configdir.Config) (tmplData templateData) {
 	}
 	return tmplData
 }
-
-// func createDefaultMainConfigFile(conf *configdir.Config) (path string, tmplData templateData, err error) {
-// 	generalScopeErr := "error creating main config file"
-// 	tmpl := template.New("mainConfig")
-// 	var templateEngine *template.Template
-// 	if templateEngine, err = tmpl.Parse(mainConfigFileContentemplate); err != nil {
-// 		errCause := "error parsing main config: " + err.Error()
-// 		return path, tmplData, common.ErrorFromThisScope(errCause, generalScopeErr)
-// 	}
-// 	if err = homeConf.MkdirAll(); err != nil {
-// 		errCause := "error creating full path under home config: " + err.Error()
-// 		return path, tmplData, common.ErrorFromThisScope(errCause, generalScopeErr)
-// 	}
-// 	var mainConfigFile *os.File
-// 	if mainConfigFile, err = homeConf.Create(mainConfigFileName); err != nil {
-// 		errCause := "error creating main config file: " + err.Error()
-// 		return path, tmplData, common.ErrorFromThisScope(errCause, generalScopeErr)
-// 	}
-// 	path = filepath.Join(homeConf.Path, mainConfigFileName)
-// 	// TODO(denisacostaq@gmail.com): handle mainConfigFile.Close() error
-// 	defer mainConfigFile.Close()
-// 	tmplData = defaultTmplData(homeConf)
-// 	if err = templateEngine.Execute(mainConfigFile, tmplData); err != nil {
-// 		errCause := "error writing main config file: " + err.Error()
-// 		return path, tmplData, common.ErrorFromThisScope(errCause, generalScopeErr)
-// 	}
-// 	return path, tmplData, err
-// }
-
-// func mainDefaultConfigPath() (path string, tmplData templateData, err error) {
-// 	generalScopeErr := "error looking for main config file default path"
-// 	var homeConf *configdir.Config
-// 	if homeConf, err = homeConfigFolder(); err != nil {
-// 		errCause := "error looking for main config file path under user home: " + err.Error()
-// 		return path, tmplData, common.ErrorFromThisScope(errCause, generalScopeErr)
-// 	}
-// 	if homeConf.Exists(mainConfigFileName) {
-// 		path = filepath.Join(homeConf.Path, mainConfigFileName)
-// 	} else {
-// 		if path, tmplData, err = createDefaultMainConfigFile(homeConf); err != nil {
-// 			errCause := "error creating main config file path under user home: " + err.Error()
-// 			return path, tmplData, common.ErrorFromThisScope(errCause, generalScopeErr)
-// 		}
-// 	}
-// 	return path, tmplData, err
-// }
 
 func tmplDataFromMainFile(mainConfigFilePath string) (tmpl templateData, err error) {
 	generalScopeErr := "error filling template data"

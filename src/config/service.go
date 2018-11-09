@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Service is a concept to grab information about a running server, for example:
@@ -20,6 +22,11 @@ type Service struct {
 	GenTokenEndpoint     string `json:"genTokenEndpoint"`
 	TokenKeyFromEndpoint string `json:"tokenKeyFromEndpoint"`
 	Location             Server `json:"location"`
+}
+
+// MetricName returns a promehteus style name for the giving metric name.
+func (service Service) MetricName(metricName string) string {
+	return prometheus.BuildFQName("skycoin", service.Name, metricName)
 }
 
 // URIToGetMetric build the URI from where you will to get metric information
@@ -47,6 +54,11 @@ func (srv Service) validate() (errs []error) {
 	// }
 	if !isValidURL(srv.URIToGetToken()) {
 		errs = append(errs, errors.New("can not create a valid url to get token: "+srv.URIToGetToken()))
+	}
+	for _, metric := range Config().Metrics {
+		if !isValidURL(srv.URIToGetMetric(metric)) {
+			errs = append(errs, errors.New("can not create a valid url to get metric: "+srv.URIToGetMetric(metric)))
+		}
 	}
 	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.TokenHeaderKey) == 0 {
 		errs = append(errs, errors.New("TokenHeaderKey is required if you are using CSRF"))

@@ -29,10 +29,10 @@ type MetricClient struct {
 }
 
 // NewMetricClient will put all the required info to be able to do http requests to get the remote data.
-func NewMetricClient(metric config.Metric, conf config.RootConfig) (client *MetricClient, err error) {
+func NewMetricClient(metric config.Metric, service config.Service) (client *MetricClient, err error) {
 	const generalScopeErr = "error creating a client to get a metric from remote endpoint"
 	client = new(MetricClient)
-	client.BaseClient.service = conf.Service
+	client.BaseClient.service = service
 	client.metricJPath = metric.Path
 	client.BaseClient.req, err = http.NewRequest(metric.HTTPMethod, client.service.URIToGetMetric(metric), nil)
 	if err != nil {

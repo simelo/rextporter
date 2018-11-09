@@ -38,9 +38,6 @@ func (metric Metric) validate() (errs []error) {
 	if len(metric.URL) == 0 {
 		errs = append(errs, errors.New("url is required in metric"))
 	}
-	if !isValidURL(Config().Service.URIToGetMetric(metric)) {
-		errs = append(errs, errors.New("can not create a valid url to get metric: "+Config().Service.URIToGetMetric(metric)))
-	}
 	if len(metric.HTTPMethod) == 0 {
 		errs = append(errs, errors.New("HttpMethod is required in metric"))
 	}

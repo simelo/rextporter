@@ -12,16 +12,18 @@ type metricConfSuit struct {
 }
 
 func (suite *metricConfSuit) SetupTest() {
-	rootConfig.Service = Service{
-		Name:                 "MySupperServer",
-		Scheme:               "http",
-		Location:             Server{Location: "http://localhost:8080"},
-		Port:                 8080,
-		BasePath:             "/skycoin/node",
-		AuthType:             "CSRF",
-		TokenHeaderKey:       "X-CSRF-Token",
-		GenTokenEndpoint:     "/api/v1/csrf",
-		TokenKeyFromEndpoint: "csrf_token",
+	rootConfig.Services = []Service{
+		Service{
+			Name:                 "MySupperServer",
+			Scheme:               "http",
+			Location:             Server{Location: "http://localhost:8080"},
+			Port:                 8080,
+			BasePath:             "/skycoin/node",
+			AuthType:             "CSRF",
+			TokenHeaderKey:       "X-CSRF-Token",
+			GenTokenEndpoint:     "/api/v1/csrf",
+			TokenKeyFromEndpoint: "csrf_token",
+		},
 	}
 	rootConfig.Metrics = []Metric{
 		Metric{

@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/common"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -16,8 +15,8 @@ import (
 // RootConfig is the top level node for the config tree, it has a list of metrics and a
 // service from which get this metrics.
 type RootConfig struct {
-	Service Service  `json:"service"`
-	Metrics []Metric `json:"metrics"`
+	Services []Service `json:"services"`
+	Metrics  []Metric  `json:"metrics"`
 }
 
 var rootConfig RootConfig
@@ -52,11 +51,6 @@ func NewConfigFromRawString(strConf string) error {
 	return nil
 }
 
-// MetricName returns a promehteus style name for the giving metric name.
-func (conf RootConfig) MetricName(metricName string) string {
-	return prometheus.BuildFQName("skycoin", conf.Service.Name, metricName)
-}
-
 // newMetricsConfig desserialize a metrics config from the 'toml' file path
 func newMetricsConfig(path string) (metricsConf []Metric, err error) {
 	const generalScopeErr = "error reading metrics config"
@@ -70,18 +64,19 @@ func newMetricsConfig(path string) (metricsConf []Metric, err error) {
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
 		return metricsConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	return root.Metrics, nil
+	metricsConf = root.Metrics
+	return metricsConf, nil
 }
 
 // newServiceConfigFromFile desserialize a service config from the 'toml' file path
-func newServiceConfigFromFile(path string) (serviceConf Service, err error) {
+func newServiceConfigFromFile(path string) (servicesConf []Service, err error) {
 	const generalScopeErr = "error reading service config"
 	serviceConfReader := NewServiceConfigFromFile(path)
-	if serviceConf, err = serviceConfReader.GetConfig(); err != nil {
+	if servicesConf, err = serviceConfReader.GetConfig(); err != nil {
 		errCause := "error reading service config"
-		return serviceConf, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return servicesConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	return serviceConf, err
+	return servicesConf, err
 }
 
 // NewConfigFromFileSystem will read the config from the file system, you should send the
@@ -100,7 +95,7 @@ func NewConfigFromFileSystem(mainConfigPath string) {
 		errCause := "error reading metrics config: " + err.Error()
 		panic(common.ErrorFromThisScope(errCause, generalScopeErr))
 	}
-	if rootConfig.Service, err = newServiceConfigFromFile(conf.ServiceConfigPath()); err != nil {
+	if rootConfig.Services, err = newServiceConfigFromFile(conf.ServiceConfigPath()); err != nil {
 		errCause := "root cause: " + err.Error()
 		panic(common.ErrorFromThisScope(errCause, generalScopeErr))
 	}
@@ -126,7 +121,9 @@ func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
 
 func (conf RootConfig) validate() {
 	var errs []error
-	errs = append(errs, conf.Service.validate()...)
+	for _, service := range conf.Services {
+		errs = append(errs, service.validate()...)
+	}
 	for _, metric := range conf.Metrics {
 		errs = append(errs, metric.validate()...)
 	}
