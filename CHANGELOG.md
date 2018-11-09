@@ -12,6 +12,9 @@ The format is based on [Keep a Changelog](http://www.keepachangelog.com/en/1.0.0
  * [\#19](https://github.com/simelo/rextporter/issues/19)
    - Multiple services definition to be monitored.
 
+ * [\#18](https://github.com/simelo/rextporter/issues/18)
+   - Define a service type, `apiRest` (get values trough API and make this the metrics as defined in metric conf), or `proxy` (forward some exposed metrics with the original metric name changed with the service name as prefix).
+
  * [\#14](https://github.com/simelo/rextporter/issues/14)
    - Use a default configuration file path and initialize it if not exist.
    

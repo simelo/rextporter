@@ -9,6 +9,26 @@ import (
 	"github.com/simelo/rextporter/src/config"
 )
 
+// MetricMidleware has the necessary http client to get exposed metric from a service
+type MetricMidleware struct {
+	client *client.ProxyMetricClient
+}
+
+func createMetricsMidleware() (metricsMidleware []MetricMidleware, err error) {
+	generalScopeErr := "can not create metrics midleware"
+	conf := config.Config()
+	services := conf.FilterServicesByType(config.ServiceTypeProxy)
+	for _, service := range services {
+		var cl *client.ProxyMetricClient
+		if cl, err = client.NewProxyMetricClient(service); err != nil {
+			errCause := fmt.Sprintln("error creating metric client: ", err.Error())
+			return metricsMidleware, common.ErrorFromThisScope(errCause, generalScopeErr)
+		}
+		metricsMidleware = append(metricsMidleware, MetricMidleware{client: cl})
+	}
+	return metricsMidleware, err
+}
+
 // CounterMetric has the necessary http client to get and updated value for the counter metric
 type CounterMetric struct {
 	Client           *client.MetricClient
