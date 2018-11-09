@@ -13,6 +13,7 @@ import (
 // what is the header key you in which you need to send the token, and so on.
 type Service struct {
 	Name string `json:"name"`
+	Mode string `json:"mode"`
 	// Scheme is http or https
 	Scheme               string `json:"scheme"`
 	Port                 uint16 `json:"port"`
@@ -29,9 +30,14 @@ func (srv Service) MetricName(metricName string) string {
 	return prometheus.BuildFQName("skycoin", srv.Name, metricName)
 }
 
-// URIToGetMetric build the URI from where you will to get metric information
+// URIToGetMetric build the URI from where you will to get metric information.
 func (srv Service) URIToGetMetric(metric Metric) string {
 	return fmt.Sprintf("%s://%s:%d%s%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath, metric.URL)
+}
+
+// URIToGetMetric build the URI from where you will to get the exposed metrics.
+func (srv Service) URIToGetExposedMetric() string {
+	return fmt.Sprintf("%s://%s:%d%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath)
 }
 
 // URIToGetToken build the URI from where you will to get the token
