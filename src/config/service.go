@@ -45,19 +45,14 @@ func (srv Service) URIToGetToken() string {
 	return fmt.Sprintf("%s://%s:%d%s%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath, srv.GenTokenEndpoint)
 }
 
-func (srv Service) validate() (errs []error) {
-	if len(srv.Name) == 0 {
-		errs = append(errs, errors.New("name is required in service"))
+func (srv Service) validateProxy() (errs []error) {
+	if !isValidURL(srv.URIToGetExposedMetric()) {
+		errs = append(errs, errors.New("can not create a valid url to get the exposed metric."))
 	}
-	if len(srv.Scheme) == 0 {
-		errs = append(errs, errors.New("scheme is required in service"))
-	}
-	if srv.Port < 1 || srv.Port > 65535 {
-		errs = append(errs, errors.New("port must be betwen 1 and 65535"))
-	}
-	// if len(srv.BasePath) == 0 {
-	// 	// TODO(denisacosta): What make sense in this?
-	// }
+	return errs
+}
+
+func (srv Service) validateApiRest() (errs []error) {
 	if !isValidURL(srv.URIToGetToken()) {
 		errs = append(errs, errors.New("can not create a valid url to get token: "+srv.URIToGetToken()))
 	}
@@ -74,6 +69,34 @@ func (srv Service) validate() (errs []error) {
 	}
 	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.GenTokenEndpoint) == 0 {
 		errs = append(errs, errors.New("GenTokenEndpoint is required if you are using CSRF"))
+	}
+	return errs
+}
+
+func (srv Service) validate() (errs []error) {
+	if len(srv.Name) == 0 {
+		errs = append(errs, errors.New("name is required in service"))
+	}
+	if len(srv.Scheme) == 0 {
+		errs = append(errs, errors.New("scheme is required in service"))
+	}
+	if srv.Port < 1 || srv.Port > 65535 {
+		errs = append(errs, errors.New("port must be betwen 1 and 65535"))
+	}
+	// if len(srv.BasePath) == 0 {
+	// 	// TODO(denisacosta): What make sense in this?
+	// }
+	switch srv.Mode {
+	case "proxy":
+		errs = append(errs, srv.validateProxy()...)
+	case "apiRest":
+		errs = append(errs, srv.validateApiRest()...)
+	default:
+		if len(srv.Mode) == 0 {
+			errs = append(errs, errors.New("mode is required in service"))
+		} else if strings.Compare(srv.Mode, "proxy") != 0 && strings.Compare(srv.Mode, "apiRest") != 0 {
+			errs = append(errs, errors.New("mode should be proxy or apiRest"))
+		}
 	}
 	errs = append(errs, srv.Location.validate()...)
 	return errs
