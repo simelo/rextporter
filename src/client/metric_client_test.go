@@ -94,7 +94,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadSeq() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -104,7 +104,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadSeq() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 	
-		[service.location]
+		[services.location]
 			location = "localhost"
 		
 	# All metrics to be measured.
@@ -122,7 +122,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadSeq() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -138,7 +139,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadBlockHash() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -148,7 +149,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadBlockHash() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 	
-		[service.location]
+		[services.location]
 			location = "localhost"
 		
 	# All metrics to be measured.
@@ -166,7 +167,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadBlockHash() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -182,7 +184,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -192,7 +194,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 	
-		[service.location]
+		[services.location]
 			location = "localhost"
 		
 	# All metrics to be measured.
@@ -210,7 +212,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -226,7 +229,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTimestamp() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -236,7 +239,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTimestamp() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -254,7 +257,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTimestamp() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -270,7 +274,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadFee() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -280,7 +284,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadFee() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -298,7 +302,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadFee() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -314,7 +319,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadVersion() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -324,7 +329,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadVersion() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -342,7 +347,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadVersion() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -358,7 +364,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -368,7 +374,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -386,7 +392,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -402,7 +409,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadUxHash() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -412,7 +419,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadUxHash() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -430,7 +437,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadUxHash() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -446,7 +454,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnspens() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -456,7 +464,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnspens() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -474,7 +482,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnspens() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -490,7 +499,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnconfirmed() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -500,7 +509,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnconfirmed() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -518,7 +527,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnconfirmed() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -534,7 +544,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -544,7 +554,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -562,7 +572,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -578,7 +589,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionVersion() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -588,7 +599,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionVersion() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -606,7 +617,8 @@ func (suite *SkycoinStatsSuit) TestMetricVersionVersion() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -622,7 +634,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionCommit() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -632,7 +644,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionCommit() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -650,7 +662,8 @@ func (suite *SkycoinStatsSuit) TestMetricVersionCommit() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -666,7 +679,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionBranch() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -676,7 +689,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionBranch() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -694,7 +707,8 @@ func (suite *SkycoinStatsSuit) TestMetricVersionBranch() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -710,7 +724,7 @@ func (suite *SkycoinStatsSuit) TestMetricOpenConnections() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -720,7 +734,7 @@ func (suite *SkycoinStatsSuit) TestMetricOpenConnections() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -738,7 +752,8 @@ func (suite *SkycoinStatsSuit) TestMetricOpenConnections() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -754,7 +769,7 @@ func (suite *SkycoinStatsSuit) TestMetricUptime() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -764,7 +779,7 @@ func (suite *SkycoinStatsSuit) TestMetricUptime() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -782,7 +797,8 @@ func (suite *SkycoinStatsSuit) TestMetricUptime() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -798,7 +814,7 @@ func (suite *SkycoinStatsSuit) TestMetricCsrfEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -808,7 +824,7 @@ func (suite *SkycoinStatsSuit) TestMetricCsrfEnabled() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -826,7 +842,8 @@ func (suite *SkycoinStatsSuit) TestMetricCsrfEnabled() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -842,7 +859,7 @@ func (suite *SkycoinStatsSuit) TestMetricCspEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -852,7 +869,7 @@ func (suite *SkycoinStatsSuit) TestMetricCspEnabled() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -870,7 +887,8 @@ func (suite *SkycoinStatsSuit) TestMetricCspEnabled() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -886,7 +904,7 @@ func (suite *SkycoinStatsSuit) TestMetricWalletApiEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -896,7 +914,7 @@ func (suite *SkycoinStatsSuit) TestMetricWalletApiEnabled() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -914,7 +932,8 @@ func (suite *SkycoinStatsSuit) TestMetricWalletApiEnabled() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -930,7 +949,7 @@ func (suite *SkycoinStatsSuit) TestMetricGuiEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -940,7 +959,7 @@ func (suite *SkycoinStatsSuit) TestMetricGuiEnabled() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -958,7 +977,8 @@ func (suite *SkycoinStatsSuit) TestMetricGuiEnabled() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -974,7 +994,7 @@ func (suite *SkycoinStatsSuit) TestMetricUnversionedApiEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -984,7 +1004,7 @@ func (suite *SkycoinStatsSuit) TestMetricUnversionedApiEnabled() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -1002,7 +1022,8 @@ func (suite *SkycoinStatsSuit) TestMetricUnversionedApiEnabled() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1018,7 +1039,7 @@ func (suite *SkycoinStatsSuit) TestMetricJsonRpcEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
-	[service]
+	[[services]]
 		name = "wallet"
 		scheme = "http"
 		port = 8080
@@ -1028,7 +1049,7 @@ func (suite *SkycoinStatsSuit) TestMetricJsonRpcEnabled() {
 		genTokenEndpoint = "/api/v1/csrf"
 		tokenKeyFromEndpoint = "csrf_token"
 
-		[service.location]
+		[services.location]
 			location = "localhost"
 
 	# All metrics to be measured.
@@ -1046,7 +1067,8 @@ func (suite *SkycoinStatsSuit) TestMetricJsonRpcEnabled() {
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
 	require.Len(conf.Metrics, 1)
-	mc, err := NewMetricClient(conf.Metrics[0], conf)
+	require.Len(conf.Services, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When

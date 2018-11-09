@@ -57,17 +57,18 @@ func createServiceConfig(tmplContent, path string) (err error) {
 func createServiceConfigPaths(serviceConfigPath string) (err error) {
 	const serviceConfigFileContenTemplate = `
 	# Service configuration.
-	name = "myMonitoredServer"
-	scheme = "http"
-	port = 8080
-	basePath = ""
-	authType = "CSRF"
-	tokenHeaderKey = "X-CSRF-Token"
-	genTokenEndpoint = "/api/v1/csrf"
-	tokenKeyFromEndpoint = "csrf_token"
-	
-	[location]
-		location = "localhost"
+	[[services]]
+		name = "myMonitoredServer"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
+		
+		[services.location]
+			location = "localhost"
 `
 	return createServiceConfig(serviceConfigFileContenTemplate, serviceConfigPath)
 }
