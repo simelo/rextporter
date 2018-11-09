@@ -45,7 +45,8 @@ metricsConfigPath = "{{.MetricsConfigPath}}"
 const serviceConfigFileContentTemplate = `
 # Service configuration.
 [[services]]
-  name = "wallet1"
+	name = "wallet1"
+	mode="apiRest"
   scheme = "http"
   port = 8000
   basePath = ""
