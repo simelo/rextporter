@@ -8,6 +8,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	// ServiceTypeApiRest is the key you should define in the config file for a service who request remote data
+	// and uses this to build the metrics.
+	ServiceTypeApiRest = "apiRest"
+	// ServiceTypeProxy is the key you should define in the config file for a service to work like a middleware/proxy.
+	ServiceTypeProxy = "proxy"
+)
+
 // Service is a concept to grab information about a running server, for example:
 // where is it http://localhost:1234 (Location + : + Port), what auth kind you need to use?
 // what is the header key you in which you need to send the token, and so on.
@@ -87,15 +95,15 @@ func (srv Service) validate() (errs []error) {
 	// 	// TODO(denisacosta): What make sense in this?
 	// }
 	switch srv.Mode {
-	case "proxy":
+	case ServiceTypeProxy:
 		errs = append(errs, srv.validateProxy()...)
-	case "apiRest":
+	case ServiceTypeApiRest:
 		errs = append(errs, srv.validateApiRest()...)
 	default:
 		if len(srv.Mode) == 0 {
 			errs = append(errs, errors.New("mode is required in service"))
-		} else if strings.Compare(srv.Mode, "proxy") != 0 && strings.Compare(srv.Mode, "apiRest") != 0 {
-			errs = append(errs, errors.New("mode should be proxy or apiRest"))
+		} else {
+			errs = append(errs, errors.New(fmt.Sprintf("mode should be %s or %s.", ServiceTypeProxy, ServiceTypeApiRest)))
 		}
 	}
 	errs = append(errs, srv.Location.validate()...)
