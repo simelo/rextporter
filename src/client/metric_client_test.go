@@ -96,6 +96,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadSeq() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -141,6 +142,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadBlockHash() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -186,6 +188,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -231,6 +234,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTimestamp() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -276,6 +280,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadFee() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -321,6 +326,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadVersion() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -366,6 +372,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -411,6 +418,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadUxHash() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -456,6 +464,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnspens() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -501,6 +510,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnconfirmed() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -546,6 +556,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -591,6 +602,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionVersion() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -636,6 +648,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionCommit() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -681,6 +694,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionBranch() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -726,6 +740,7 @@ func (suite *SkycoinStatsSuit) TestMetricOpenConnections() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -771,6 +786,7 @@ func (suite *SkycoinStatsSuit) TestMetricUptime() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -816,6 +832,7 @@ func (suite *SkycoinStatsSuit) TestMetricCsrfEnabled() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -861,6 +878,7 @@ func (suite *SkycoinStatsSuit) TestMetricCspEnabled() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -906,6 +924,7 @@ func (suite *SkycoinStatsSuit) TestMetricWalletApiEnabled() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -951,6 +970,7 @@ func (suite *SkycoinStatsSuit) TestMetricGuiEnabled() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -996,6 +1016,7 @@ func (suite *SkycoinStatsSuit) TestMetricUnversionedApiEnabled() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""
@@ -1041,6 +1062,7 @@ func (suite *SkycoinStatsSuit) TestMetricJsonRpcEnabled() {
 	# Service configuration.
 	[[services]]
 		name = "wallet"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""

@@ -59,6 +59,7 @@ func createServiceConfigPaths(serviceConfigPath string) (err error) {
 	# Service configuration.
 	[[services]]
 		name = "myMonitoredServer"
+		mode = "apiRest"
 		scheme = "http"
 		port = 8080
 		basePath = ""

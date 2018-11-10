@@ -15,6 +15,7 @@ func (suite *metricConfSuit) SetupTest() {
 	rootConfig.Services = []Service{
 		Service{
 			Name:                 "MySupperServer",
+			Mode:                 "apiRest",
 			Scheme:               "http",
 			Location:             Server{Location: "http://localhost:8080"},
 			Port:                 8080,

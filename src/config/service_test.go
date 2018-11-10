@@ -14,6 +14,7 @@ type serviceConfSuite struct {
 func (suite *serviceConfSuite) SetupTest() {
 	suite.ServiceConf = Service{
 		Name:                 "MySupperServer",
+		Mode:                 "apiRest",
 		Scheme:               "http",
 		Location:             Server{Location: "http://localhost:8080"},
 		Port:                 8080,
