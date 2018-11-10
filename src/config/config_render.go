@@ -52,7 +52,7 @@ const serviceConfigFileContentTemplate = `
   basePath = ""
   authType = "CSRF"
   tokenHeaderKey = "X-CSRF-Token"
-  genTokenEndpoint = "/api/v1/csrf.json"
+  genTokenEndpoint = "/api/v1/csrf"
   tokenKeyFromEndpoint = "csrf_token"
 
   [services.location]
@@ -62,7 +62,7 @@ const metricsConfigFileContentTemplate = `
 # All metrics to be measured.
 [[metrics]]
   name = "seq"
-  url = "/api/v1/health.json"
+  url = "/api/v1/health"
   httpMethod = "GET"
   path = "/blockchain/head/seq"
 
