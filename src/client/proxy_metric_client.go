@@ -15,6 +15,7 @@ import (
 // like for example: where is the host. It get the exposed metrics from a service as is.
 type ProxyMetricClient struct {
 	BaseClient
+	Name string
 }
 
 // NewProxyMetricClient will put all the required info to be able to do http requests to get the remote data.
@@ -25,6 +26,7 @@ func NewProxyMetricClient(service config.Service) (client *ProxyMetricClient, er
 	}
 	client = new(ProxyMetricClient)
 	client.BaseClient.service = service
+	client.Name = service.Name
 	client.BaseClient.req, err = http.NewRequest("GET", service.URIToGetExposedMetric(), nil)
 	if err != nil {
 		errCause := fmt.Sprintln("can not create the request: ", err.Error())
@@ -41,9 +43,20 @@ func (client *ProxyMetricClient) getRemoteInfo() (data []byte, err error) {
 		errCause := fmt.Sprintln("can not do the request: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	// FIXME(denisacostaq@gmail.com): if resp.Header.Get("Content-Type") is compressed, decompress it to plain text
+  // write an integration test for plain text anf compressed content
 	if data, err = ioutil.ReadAll(resp.Body); err != nil {
 		errCause := fmt.Sprintln("can not read the body: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	return data, nil
+}
+
+// GetExposedMetrics returns the metrics in the defined service.
+func (client *ProxyMetricClient) GetExposedMetrics() (data []byte, err error) {
+	const generalScopeErr = "error getting metrics data"
+	if data, err = client.getRemoteInfo(); err != nil {
+		return data, common.ErrorFromThisScope(err.Error(), generalScopeErr)
 	}
 	return data, nil
 }
