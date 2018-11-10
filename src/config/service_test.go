@@ -53,6 +53,28 @@ func (suite *serviceConfSuite) TestNotEmptyName() {
 	suite.Len(serviceConf.validate(), 1)
 }
 
+func (suite *serviceConfSuite) TestNotEmptyMode() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	var serviceConf = suite.ServiceConf
+	serviceConf.Mode = string("")
+
+	// NOTE(denisacostaq@gmail.com): When
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Len(serviceConf.validate(), 1)
+}
+
+func (suite *serviceConfSuite) TestNotValidMode() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	var serviceConf = suite.ServiceConf
+	serviceConf.Mode = "acere"
+
+	// NOTE(denisacostaq@gmail.com): When
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Len(serviceConf.validate(), 1)
+}
+
 func (suite *serviceConfSuite) TestValidateLocation() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var serviceConf = suite.ServiceConf
