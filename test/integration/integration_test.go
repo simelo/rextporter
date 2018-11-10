@@ -18,10 +18,6 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type HealthSuit struct {
-	suite.Suite
-}
-
 func createConfigFile(tmplContent, path string, data interface{}) (err error) {
 	generalScopeErr := "error creating config file for integration test"
 	if strings.Compare(tmplContent, "") == 0 || strings.Compare(path, "") == 0 {
@@ -150,6 +146,27 @@ metricsConfigPath = "{{.MetricsConfigPath}}"
 		createMainConfig(mainConfigFileContenTemplate, mainConfFilePath, metricsConfigPath, serviceConfigPath)
 }
 
+func createMainConfigCustomPaths() (mainConfFilePath string, err error) {
+	const mainConfigFileContenTemplate = `
+serviceConfigTransport = "file"
+# render a template with a portable path
+serviceConfigPath = "{{.ServiceConfigPath}}"
+metricsConfigPath = "{{.MetricsConfigPath}}"
+`
+	mainConfigDir := filepath.Join(os.TempDir(), "sdsds", "675656", "aa")
+	if err = os.MkdirAll(mainConfigDir, 0750); err != nil {
+		return mainConfFilePath, err
+	}
+	mainConfFilePath = filepath.Join(mainConfigDir, "rrrr")
+	serviceConfigPath := filepath.Join(os.TempDir(), "sdsds", "epe.toml")
+	return mainConfFilePath,
+		createMainConfig(mainConfigFileContenTemplate, mainConfFilePath, "", serviceConfigPath)
+}
+
+type HealthSuit struct {
+	suite.Suite
+}
+
 func TestSkycoinHealthSuit(t *testing.T) {
 	suite.Run(t, new(HealthSuit))
 }
@@ -178,23 +195,6 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 	suite.Contains(string(data), "open_connections_is_a_fake_name_for_test_purpose")
 	var usingAVariableToMakeLinterHappy = context.Context(nil)
 	require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
-}
-
-func createMainConfigCustomPaths() (mainConfFilePath string, err error) {
-	const mainConfigFileContenTemplate = `
-serviceConfigTransport = "file"
-# render a template with a portable path
-serviceConfigPath = "{{.ServiceConfigPath}}"
-metricsConfigPath = "{{.MetricsConfigPath}}"
-`
-	mainConfigDir := filepath.Join(os.TempDir(), "sdsds", "675656", "aa")
-	if err = os.MkdirAll(mainConfigDir, 0750); err != nil {
-		return mainConfFilePath, err
-	}
-	mainConfFilePath = filepath.Join(mainConfigDir, "rrrr")
-	serviceConfigPath := filepath.Join(os.TempDir(), "sdsds", "epe.toml")
-	return mainConfFilePath,
-		createMainConfig(mainConfigFileContenTemplate, mainConfFilePath, "", serviceConfigPath)
 }
 
 func (suite *HealthSuit) TestConfigWorks() {
