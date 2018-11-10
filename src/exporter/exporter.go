@@ -36,7 +36,7 @@ func appendPrefixForMetrics(prefix []byte, metricsData []byte) (prefixedMetricsD
 	for _, metricName := range metricsName {
 		newName := append(prefix, []byte("_")...)
 		newName = append(newName, metricName...)
-		prefixedMetricsData = bytes.Replace(prefixedMetricsData, metricName, newName, -1)
+		prefixedMetricsData = bytes.Replace(prefixedMetricsData, append(metricName, []byte(" ")...), append(newName, []byte(" ")...), -1)
 	}
 	return prefixedMetricsData
 }
@@ -53,7 +53,7 @@ func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler htt
 				w.Write(prefixed)
 			}
 		}
-  // TODO(denisacostaq@gmail.com): compre all the content and use the promhttp.Handler() who wrte compressed content
+		// TODO(denisacostaq@gmail.com): compre all the content and use the promhttp.Handler() who wrte compressed content
 	})
 }
 
