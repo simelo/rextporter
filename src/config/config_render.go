@@ -116,7 +116,7 @@ const skycoinMetricsConfigFileContentTemplate = `
 
 const metricsForServiceMappingConfFileContentTemplate = `
 serviceNameToMetricsConfPath = [{{range $key, $value := .}}
-	{ "{{$key}}" = "{{$value}}" },{{end}}
+	{ {{$key}} = "{{$value}}" },{{end}}
 ]
 `
 
@@ -331,7 +331,7 @@ func defaultMetricsForServiceTmplData(conf *configdir.Config) (tmplData metricsF
 		TmplData: metricsForServiceTemplateData{
 			ServiceNameToMetricsConfPath: map[string]string{
 				"skycoin": skycoinMetricsConfigPath(conf),
-				"wallet":  walletMetricsConfigPath(conf),
+				"wallet1": walletMetricsConfigPath(conf),
 			},
 		},
 	}
