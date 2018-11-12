@@ -53,6 +53,10 @@ func NewConfigFromRawString(strConf string) error {
 // newMetricsConfig desserialize a metrics config from the 'toml' file path
 func newMetricsConfig(path string) (metricsConf []Metric, err error) {
 	const generalScopeErr = "error reading metrics config"
+	if strings.Compare(path, "") == 0 {
+		errCause := "path should not be null"
+		return metricsConf, common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
 	viper.SetConfigFile(path)
 	if err := viper.ReadInConfig(); err != nil {
 		errCause := fmt.Sprintln("error reading config file: ", path, err.Error())
