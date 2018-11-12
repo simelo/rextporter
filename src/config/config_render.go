@@ -15,7 +15,6 @@ import (
 
 type templateData struct {
 	ServiceConfigPath      string
-	MetricsConfigPath      string
 	MetricsForServicesPath string
 }
 
@@ -37,12 +36,19 @@ func (confData mainConfigData) ServiceConfigPath() string {
 	return confData.tmplData.ServiceConfigPath
 }
 
+// func (confData mainConfigData) metricsForServicesPaths() (paths []string) {
+// 	for _, path := range confData.metricsForServiceConfigTmplData.tmplData.serviceNameToMetricsConfPath {
+// 		paths = append(paths, path)
+// 	}
+// 	return paths
+// }
+
 func (confData mainConfigData) metricsForServicesPath() string {
 	return confData.tmplData.MetricsForServicesPath
 }
 
-func (confData mainConfigData) MetricsConfigPath() string {
-	return confData.tmplData.MetricsConfigPath
+func (confData mainConfigData) MetricsConfigPath(serviceName string) string {
+	return confData.metricsForServiceConfigTmplData.TmplData.ServiceNameToMetricsConfPath[serviceName]
 }
 
 func (confData mainConfigData) MainConfigPath() string {
@@ -53,7 +59,6 @@ const mainConfigFileContentTemplate = `
 serviceConfigTransport = "file" # "file" | "consulCatalog"
 # render a template with a portable path
 serviceConfigPath = "{{.ServiceConfigPath}}"
-metricsConfigPath = "{{.MetricsConfigPath}}"
 metricsForServicesPath = "{{.MetricsForServicesPath}}"
 `
 
@@ -72,7 +77,7 @@ const serviceConfigFileContentTemplate = `
   [services.location]
     location = "localhost"
 `
-const metricsConfigFileContentTemplate = `
+const skycoinMetricsConfigFileContentTemplate = `
 # All metrics to be measured.
 [[metrics]]
   name = "seq"
@@ -120,7 +125,6 @@ var (
 	systemProgramName                = "rextporter"
 	mainConfigFileName               = "main.toml"
 	serviceConfigFileName            = "service.toml"
-	metricsConfigFileName            = "metrics.toml"
 	skycoinMetricsConfigFileName     = "skycoinMetrics.toml"
 	walletMetricsConfigFileName      = "walletMetrics.toml"
 	metricsForServicesConfigFileName = "metricsForServices.toml"
@@ -134,6 +138,15 @@ func creteFullPathForFile(filePath string) (err error) {
 	dir, _ := filepath.Split(filePath)
 	return createFullPath(dir)
 }
+
+// func creteFullPathForFiles(filePaths []string) (err error) {
+// 	for _, path := range filePaths {
+// 		if err = creteFullPathForFile(path); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
 
 // isADirectoryPath get info about the path string not about a phisical resource in the filesystem.
 // return true if the path is a directory path
@@ -180,29 +193,29 @@ func (confData mainConfigData) createServiceConfigFile() (err error) {
 	return err
 }
 
-func (confData mainConfigData) existMetricsConfigFile() bool {
-	return existFile(confData.tmplData.MetricsConfigPath)
-}
+// func (confData mainConfigData) existMetricsConfigFile() bool {
+// 	return existFile(confData.tmplData.MetricsConfigPath)
+// }
 
 // createMetricsConfigFile creates the metrics file or return an error if any,
 // if the file already exist does no thin.
-func (confData mainConfigData) createMetricsConfigFile() (err error) {
+func createMetricsConfigFile(metricConfPath string) (err error) {
 	generalScopeErr := "error creating metrics config file"
-	if confData.existMetricsConfigFile() {
+	if existFile(metricConfPath) {
 		return nil
 	}
 	tmpl := template.New("metricsConfig")
 	var templateEngine *template.Template
-	if templateEngine, err = tmpl.Parse(metricsConfigFileContentTemplate); err != nil {
+	if templateEngine, err = tmpl.Parse(skycoinMetricsConfigFileContentTemplate); err != nil {
 		errCause := "error parsing metrics config: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = creteFullPathForFile(confData.MetricsConfigPath()); err != nil {
+	if err = creteFullPathForFile(metricConfPath); err != nil {
 		errCause := "error creating directory for metrics file: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var metricsConfigFile *os.File
-	if metricsConfigFile, err = os.Create(confData.MetricsConfigPath()); err != nil {
+	if metricsConfigFile, err = os.Create(metricConfPath); err != nil {
 		errCause := "error creating metrics config file: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -212,6 +225,44 @@ func (confData mainConfigData) createMetricsConfigFile() (err error) {
 	}
 	return err
 }
+
+// func (confData mainConfigData) existAllMetricsForServiceConfigFile() bool {
+// 	for _, path := range confData.metricsForServicesPaths() {
+// 		if !existFile(path) {
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }
+
+// // createMetricsForServiceConfFile creates the metrics for service file or return an error if any,
+// // if the file already exist does no thin.
+// func (confData mainConfigData) createMetricsForServiceConfFile() (err error) {
+// 	generalScopeErr := "error creating metrics for service config file"
+// 	if confData.existAllMetricsForServiceConfigFile() {
+// 		return nil
+// 	}
+// 	tmpl := template.New("metricsForServiceConfig")
+// 	var templateEngine *template.Template
+// 	if templateEngine, err = tmpl.Parse(metricsForServiceMappingConfFileContentTemplate); err != nil {
+// 		errCause := "error parsing metrics for service config: " + err.Error()
+// 		return common.ErrorFromThisScope(errCause, generalScopeErr)
+// 	}
+// 	if err = creteFullPathForFiles(confData.metricsForServicesPaths()); err != nil {
+// 		errCause := "error creating directory for metrics for service file: " + err.Error()
+// 		return common.ErrorFromThisScope(errCause, generalScopeErr)
+// 	}
+// 	var metricsForServiceConfigFile *os.File
+// 	if metricsForServiceConfigFile, err = os.Create(confData.MetricsForServicesPath()); err != nil {
+// 		errCause := "error creating metrics for service config file: " + err.Error()
+// 		return common.ErrorFromThisScope(errCause, generalScopeErr)
+// 	}
+// 	if err = templateEngine.Execute(metricsForServiceConfigFile, confData.metricsForServiceConfigTmplData); err != nil {
+// 		errCause := "error writing metrics for service config file: " + err.Error()
+// 		return common.ErrorFromThisScope(errCause, generalScopeErr)
+// 	}
+// 	return err
+// }
 
 func (confData mainConfigData) existMetricsForServicesConfigFile() bool {
 	return existFile(confData.tmplData.MetricsForServicesPath)
@@ -243,11 +294,17 @@ func (confData mainConfigData) createMetricsForServicesConfFile() (err error) {
 		errCause := "error writing metrics for services config file: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	for key, val := range confData.metricsForServiceConfigTmplData.TmplData.ServiceNameToMetricsConfPath {
+		if err = createMetricsConfigFile(val); err != nil {
+			errCause := fmt.Sprintf("error creating metrics config file for service %s: %s", key, err.Error())
+			return common.ErrorFromThisScope(errCause, generalScopeErr)
+		}
+	}
 	return err
 }
 
 func (confData mainConfigData) existMainConfigFile() bool {
-	return existFile(confData.MetricsConfigPath())
+	return existFile(confData.MainConfigPath())
 }
 
 // createMainConfigFile creates the main file or return an error if any,
@@ -292,10 +349,6 @@ func fileDefaultConfigPath(fileName string, homeConf *configdir.Config) (path st
 	return filepath.Join(homeConf.Path, fileName)
 }
 
-func metricsDefaultConfigPath(conf *configdir.Config) (path string) {
-	return fileDefaultConfigPath(metricsConfigFileName, conf)
-}
-
 func serviceDefaultConfigPath(conf *configdir.Config) (path string) {
 	return fileDefaultConfigPath(serviceConfigFileName, conf)
 }
@@ -319,7 +372,6 @@ func walletMetricsConfigPath(conf *configdir.Config) (path string) {
 func defaultTmplData(conf *configdir.Config) (tmplData templateData) {
 	tmplData = templateData{
 		ServiceConfigPath:      serviceDefaultConfigPath(conf),
-		MetricsConfigPath:      metricsDefaultConfigPath(conf),
 		MetricsForServicesPath: metricsForServicesDefaultConfigPath(conf),
 	}
 	return tmplData
@@ -350,7 +402,7 @@ func tmplDataFromMainFile(mainConfigFilePath string) (tmpl templateData, err err
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
 		return tmpl, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	tmpl.ServiceConfigPath, tmpl.MetricsConfigPath, tmpl.MetricsForServicesPath = mainConf.ServiceConfigPath, mainConf.MetricsConfigPath, mainConf.MetricsForServicesPath
+	tmpl.ServiceConfigPath, tmpl.MetricsForServicesPath = mainConf.ServiceConfigPath, mainConf.MetricsForServicesPath
 	return tmpl, err
 }
 
@@ -400,7 +452,7 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 			return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	}
-	if strings.Compare(tmplData.ServiceConfigPath, "") == 0 || strings.Compare(tmplData.MetricsConfigPath, "") == 0 || strings.Compare(tmplData.MetricsForServicesPath, "") == 0 {
+	if strings.Compare(tmplData.ServiceConfigPath, "") == 0 || strings.Compare(tmplData.MetricsForServicesPath, "") == 0 {
 		var homeConf *configdir.Config
 		if homeConf, err = homeConfigFolder(); err != nil {
 			errCause := "error looking for config folder under home: " + err.Error()
@@ -409,9 +461,6 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 		tmpTmplData := defaultTmplData(homeConf)
 		if strings.Compare(tmplData.ServiceConfigPath, "") == 0 {
 			tmplData.ServiceConfigPath = tmpTmplData.ServiceConfigPath
-		}
-		if strings.Compare(tmplData.MetricsConfigPath, "") == 0 {
-			tmplData.MetricsConfigPath = tmpTmplData.MetricsConfigPath
 		}
 		if strings.Compare(tmplData.MetricsForServicesPath, "") == 0 {
 			tmplData.MetricsForServicesPath = tmpTmplData.MetricsForServicesPath
@@ -427,16 +476,12 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 		errCause := "error creating main config file: " + err.Error()
 		return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = mainConf.createMetricsConfigFile(); err != nil {
-		errCause := "error creating metrics config file: " + err.Error()
+	if err = mainConf.createServiceConfigFile(); err != nil {
+		errCause := "error creating service config file: " + err.Error()
 		return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err = mainConf.createMetricsForServicesConfFile(); err != nil {
 		errCause := "error creating metrics for services config file: " + err.Error()
-		return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	if err = mainConf.createServiceConfigFile(); err != nil {
-		errCause := "error creating service config file: " + err.Error()
 		return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 
