@@ -9,26 +9,6 @@ import (
 	"github.com/simelo/rextporter/src/config"
 )
 
-// MetricMidleware has the necessary http client to get exposed metric from a service
-type MetricMidleware struct {
-	client *client.ProxyMetricClient
-}
-
-func createMetricsMidleware() (metricsMidleware []MetricMidleware, err error) {
-	generalScopeErr := "can not create metrics midleware"
-	conf := config.Config()
-	services := conf.FilterServicesByType(config.ServiceTypeProxy)
-	for _, service := range services {
-		var cl *client.ProxyMetricClient
-		if cl, err = client.NewProxyMetricClient(service); err != nil {
-			errCause := fmt.Sprintln("error creating metric client: ", err.Error())
-			return metricsMidleware, common.ErrorFromThisScope(errCause, generalScopeErr)
-		}
-		metricsMidleware = append(metricsMidleware, MetricMidleware{client: cl})
-	}
-	return metricsMidleware, err
-}
-
 // CounterMetric has the necessary http client to get and updated value for the counter metric
 type CounterMetric struct {
 	Client           *client.MetricClient
@@ -54,21 +34,20 @@ func createCounter(metricConf config.Metric, service config.Service) (metric Cou
 }
 
 func createCounters() ([]CounterMetric, error) {
-	// generalScopeErr := "can not create counters"
+	generalScopeErr := "can not create counters"
 	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
 	metrics := conf.FilterMetricsByType(config.KeyTypeCounter)
-	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
-	counters := make([]CounterMetric, len(metrics)*len(services))
-	// for idxService, service := range services {
-	// 	for idxMetric, metric := range metrics {
-	// 		// if counter, err := createCounter(metric, service); err == nil {
-	// 		// 	counters[idxService*len(conf.Metrics)+idxMetric] = counter
-	// 		// } else {
-	// 		// 	errCause := "error creating counter: " + err.Error()
-	// 		// 	return []CounterMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
-	// 		// }
-	// 	}
-	// }
+	counters := make([]CounterMetric, len(metrics)*len(conf.Services))
+	for idxService, service := range conf.Services {
+		for idxMetric, metric := range metrics {
+			if counter, err := createCounter(metric, service); err == nil {
+				counters[idxService*len(conf.Services)+idxMetric] = counter
+			} else {
+				errCause := "error creating counter: " + err.Error()
+				return []CounterMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
+			}
+		}
+	}
 	return counters, nil
 }
 
@@ -96,20 +75,19 @@ func createGauge(metricConf config.Metric, service config.Service) (metric Gauge
 }
 
 func createGauges() ([]GaugeMetric, error) {
-	// generalScopeErr := "can not create gauges"
+	generalScopeErr := "can not create gauges"
 	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
 	metrics := conf.FilterMetricsByType(config.KeyTypeGauge)
-	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
-	gauges := make([]GaugeMetric, len(metrics)*len(services))
-	// for idxService, service := range services {
-	// 	for idxMetric, metric := range metrics {
-	// 		gauge, err := createGauge(metric, service)
-	// 		if err != nil {
-	// 			errCause := fmt.Sprintln("error creating gauge: ", err.Error())
-	// 			return []GaugeMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
-	// 		}
-	// 		gauges[idxService*len(conf.Metrics)+idxMetric] = gauge
-	// 	}
-	// }
+	gauges := make([]GaugeMetric, len(metrics))
+	for idxService, service := range conf.Services {
+		for idxMetric, metric := range metrics {
+			gauge, err := createGauge(metric, service)
+			if err != nil {
+				errCause := fmt.Sprintln("error creating gauge: ", err.Error())
+				return []GaugeMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
+			}
+			gauges[idxService*len(conf.Services)+idxMetric] = gauge
+		}
+	}
 	return gauges, nil
 }
