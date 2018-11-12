@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	// ServiceTypeApiRest is the key you should define in the config file for a service who request remote data
+	// ServiceTypeAPIRest is the key you should define in the config file for a service who request remote data
 	// and uses this to build the metrics.
-	ServiceTypeApiRest = "apiRest"
+	ServiceTypeAPIRest = "apiRest"
 	// ServiceTypeProxy is the key you should define in the config file for a service to work like a middleware/proxy.
 	ServiceTypeProxy = "proxy"
 )
@@ -43,7 +43,7 @@ func (srv Service) URIToGetMetric(metric Metric) string {
 	return fmt.Sprintf("%s://%s:%d%s%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath, metric.URL)
 }
 
-// URIToGetMetric build the URI from where you will to get the exposed metrics.
+// URIToGetExposedMetric build the URI from where you will to get the exposed metrics.
 func (srv Service) URIToGetExposedMetric() string {
 	return fmt.Sprintf("%s://%s:%d%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath)
 }
@@ -55,12 +55,12 @@ func (srv Service) URIToGetToken() string {
 
 func (srv Service) validateProxy() (errs []error) {
 	if !isValidURL(srv.URIToGetExposedMetric()) {
-		errs = append(errs, errors.New("can not create a valid url to get the exposed metric."))
+		errs = append(errs, errors.New("can not create a valid url to get the exposed metric"))
 	}
 	return errs
 }
 
-func (srv Service) validateApiRest() (errs []error) {
+func (srv Service) validateAPIRest() (errs []error) {
 	if !isValidURL(srv.URIToGetToken()) {
 		errs = append(errs, errors.New("can not create a valid url to get token: "+srv.URIToGetToken()))
 	}
@@ -97,13 +97,13 @@ func (srv Service) validate() (errs []error) {
 	switch srv.Mode {
 	case ServiceTypeProxy:
 		errs = append(errs, srv.validateProxy()...)
-	case ServiceTypeApiRest:
-		errs = append(errs, srv.validateApiRest()...)
+	case ServiceTypeAPIRest:
+		errs = append(errs, srv.validateAPIRest()...)
 	default:
 		if len(srv.Mode) == 0 {
-			errs = append(errs, errors.New("mode is required in service"))
+			errs = append(errs, fmt.Errorf("mode is required in service"))
 		} else {
-			errs = append(errs, errors.New(fmt.Sprintf("mode should be %s or %s.", ServiceTypeProxy, ServiceTypeApiRest)))
+			errs = append(errs, fmt.Errorf("mode should be %s or %s", ServiceTypeProxy, ServiceTypeAPIRest))
 		}
 	}
 	errs = append(errs, srv.Location.validate()...)

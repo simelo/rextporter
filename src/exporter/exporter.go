@@ -50,7 +50,18 @@ func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler htt
 				log.WithError(err).Error("error getting metrics from service " + cl.client.Name)
 			} else {
 				prefixed := appendPrefixForMetrics([]byte(cl.client.Name), exposedMetricsData)
-				w.Write(prefixed)
+				var count int
+				if count, err = w.Write(prefixed); err != nil || count != len(prefixed) {
+					if err != nil {
+						log.WithError(err).Errorln("error writing prefixed content")
+					}
+					if count != len(prefixed) {
+						log.WithFields(log.Fields{
+							"wrote":    count,
+							"required": len(prefixed),
+						}).Errorln("no enough content wrote")
+					}
+				}
 			}
 		}
 		// TODO(denisacostaq@gmail.com): compre all the content and use the promhttp.Handler() who wrte compressed content

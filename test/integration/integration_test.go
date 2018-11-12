@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-const serviceApiRestConfigFileContenTemplate = `
+const serviceAPIRestConfigFileContenTemplate = `
 	# Service configuration.
 	[[services]]
 		name = "myMonitoredServer"
@@ -233,7 +233,7 @@ func metricHealthIsOk(metricName, metricData string) bool {
 func (suite *HealthSuit) TestMetricMonitorHealth() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	require := require.New(suite.T())
-	mainConfFilePath, err := createMainConfigTestPaths(serviceApiRestConfigFileContenTemplate)
+	mainConfFilePath, err := createMainConfigTestPaths(serviceAPIRestConfigFileContenTemplate)
 	require.Nil(err)
 	srv := exporter.ExportMetrics(mainConfFilePath, "/metrics", 8081)
 	require.NotNil(srv)
@@ -296,7 +296,7 @@ func (suite *HealthSuit) TestMetricMonitorAsProxy() {
 func (suite *HealthSuit) TestConfigWorks() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	require := require.New(suite.T())
-	mainConfFilePath, err := createMainConfigCustomPaths(serviceApiRestConfigFileContenTemplate)
+	mainConfFilePath, err := createMainConfigCustomPaths(serviceAPIRestConfigFileContenTemplate)
 	require.Nil(err)
 	log.Errorln("mainConfFilePath", mainConfFilePath)
 	srv := exporter.ExportMetrics(mainConfFilePath, "/metrics2", 8082)

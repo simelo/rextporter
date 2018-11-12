@@ -57,7 +57,7 @@ func createCounters() ([]CounterMetric, error) {
 	generalScopeErr := "can not create counters"
 	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
 	metrics := conf.FilterMetricsByType(config.KeyTypeCounter)
-	services := conf.FilterServicesByType(config.ServiceTypeApiRest)
+	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
 	counters := make([]CounterMetric, len(metrics)*len(services))
 	for idxService, service := range services {
 		for idxMetric, metric := range metrics {
@@ -99,7 +99,7 @@ func createGauges() ([]GaugeMetric, error) {
 	generalScopeErr := "can not create gauges"
 	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
 	metrics := conf.FilterMetricsByType(config.KeyTypeGauge)
-	services := conf.FilterServicesByType(config.ServiceTypeApiRest)
+	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
 	gauges := make([]GaugeMetric, len(metrics)*len(services))
 	for idxService, service := range services {
 		for idxMetric, metric := range metrics {

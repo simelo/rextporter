@@ -32,7 +32,7 @@ type MetricClient struct {
 // NewMetricClient will put all the required info to be able to do http requests to get the remote data.
 func NewMetricClient(metric config.Metric, service config.Service) (client *MetricClient, err error) {
 	const generalScopeErr = "error creating a client to get a metric from remote endpoint"
-	if strings.Compare(service.Mode, config.ServiceTypeApiRest) != 0 {
+	if strings.Compare(service.Mode, config.ServiceTypeAPIRest) != 0 {
 		return client, errors.New("can not create an api rest metric client from a service of type " + service.Mode)
 	}
 	client = new(MetricClient)
