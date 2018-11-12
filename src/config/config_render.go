@@ -13,33 +13,44 @@ import (
 	"github.com/spf13/viper"
 )
 
-type templateData struct {
-	ServiceConfigPath string
-	MetricsConfigPath string
+type serviceConfigTmplData struct {
+	metricsConfigPath string
+}
+
+type serviceConfigData struct {
+	serviceConfPath string
+	tmplData        serviceConfigTmplData
+}
+
+type mainConfigTmplData struct {
+	serviceConfData serviceConfigData
 }
 
 type mainConfigData struct {
-	mainConfigPath string
-	tmplData       templateData
+	mainConfPath string
+	tmplData     mainConfigTmplData
+}
+
+func (serviceData serviceConfigData) MetricsConfigPath() string {
+	return serviceData.serviceConfPath
+}
+
+func (mainConfData mainConfigData) MetricsConfigPath() string {
+	return mainConfData.tmplData.serviceConfData.MetricsConfigPath()
 }
 
 func (confData mainConfigData) ServiceConfigPath() string {
-	return confData.tmplData.ServiceConfigPath
-}
-
-func (confData mainConfigData) MetricsConfigPath() string {
-	return confData.tmplData.MetricsConfigPath
+	return confData.tmplData.serviceConfData.serviceConfPath
 }
 
 func (confData mainConfigData) MainConfigPath() string {
-	return confData.mainConfigPath
+	return confData.mainConfPath
 }
 
 const mainConfigFileContentTemplate = `
 serviceConfigTransport = "file" # "file" | "consulCatalog"
 # render a template with a portable path
 serviceConfigPath = "{{.ServiceConfigPath}}"
-metricsConfigPath = "{{.MetricsConfigPath}}"
 `
 
 const serviceConfigFileContentTemplate = `
@@ -55,7 +66,9 @@ const serviceConfigFileContentTemplate = `
   tokenKeyFromEndpoint = "csrf_token"
 
   [services.location]
-    location = "localhost"
+		location = "localhost"
+	[services.location]
+		location = "{{.MetricsConfigPath}}"
 `
 const metricsConfigFileContentTemplate = `
 # All metrics to be measured.
@@ -156,13 +169,13 @@ func (confData mainConfigData) createServiceConfigFile() (err error) {
 	return err
 }
 
-func (confData mainConfigData) existMetricsConfigFile() bool {
-	return existFile(confData.tmplData.MetricsConfigPath)
+func (confData serviceConfigData) existMetricsConfigFile() bool {
+	return existFile(confData.tmplData.metricsConfigPath)
 }
 
 // createMetricsConfigFile creates the metrics file or return an error if any,
 // if the file already exist does no thin.
-func (confData mainConfigData) createMetricsConfigFile() (err error) {
+func (confData serviceConfigData) createMetricsConfigFile() (err error) {
 	generalScopeErr := "error creating metrics config file"
 	if confData.existMetricsConfigFile() {
 		return nil
@@ -190,7 +203,7 @@ func (confData mainConfigData) createMetricsConfigFile() (err error) {
 }
 
 func (confData mainConfigData) existMainConfigFile() bool {
-	return existFile(confData.MetricsConfigPath())
+	return existFile(confData.mainConfPath)
 }
 
 // createMainConfigFile creates the main file or return an error if any,
@@ -247,15 +260,24 @@ func mainDefaultConfigPath(conf *configdir.Config) (path string) {
 	return fileDefaultConfigPath(mainConfigFileName, conf)
 }
 
-func defaultTmplData(conf *configdir.Config) (tmplData templateData) {
-	tmplData = templateData{
-		ServiceConfigPath: serviceDefaultConfigPath(conf),
-		MetricsConfigPath: metricsDefaultConfigPath(conf),
+func defaultMainConfigTmplData(conf *configdir.Config) (tmplData mainConfigTmplData) {
+	tmplData = mainConfigTmplData{
+		serviceConfData: serviceConfigData{
+			serviceConfPath: serviceDefaultConfigPath(conf),
+			tmplData:        defaultServiceTmplData(conf),
+		},
 	}
 	return tmplData
 }
 
-func tmplDataFromMainFile(mainConfigFilePath string) (tmpl templateData, err error) {
+func defaultServiceTmplData(conf *configdir.Config) (tmplData serviceConfigTmplData) {
+	tmplData = serviceConfigTmplData{
+		metricsConfigPath: metricsDefaultConfigPath(conf),
+	}
+	return tmplData
+}
+
+func tmplDataFromMainFile(mainConfigFilePath string) (tmpl serviceConfigTmplData, err error) {
 	generalScopeErr := "error filling template data"
 	viper.SetConfigFile(mainConfigFilePath)
 	viper.SetConfigType("toml")
@@ -263,12 +285,12 @@ func tmplDataFromMainFile(mainConfigFilePath string) (tmpl templateData, err err
 		errCause := fmt.Sprintln("error reading config file: ", mainConfigFilePath, err.Error())
 		return tmpl, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	var mainConf templateData
+	var mainConf mainConfigTmplData
 	if err := viper.Unmarshal(&mainConf); err != nil {
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
 		return tmpl, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	tmpl.ServiceConfigPath, tmpl.MetricsConfigPath = mainConf.ServiceConfigPath, mainConf.MetricsConfigPath
+	tmpl.metricsConfigPath = mainConf.serviceConfData.tmplData.metricsConfigPath
 	return tmpl, err
 }
 
@@ -277,7 +299,7 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 	if isADirectoryPath(path) {
 		path = filepath.Join(path, mainConfigFileName)
 	}
-	var tmplData templateData
+	var tmplData mainConfigTmplData
 	if strings.Compare(path, "") == 0 || !existFile(path) {
 		// TODO(denisacostaq@gmail.com): move homeConf to fn defaultTmplData
 		var homeConf *configdir.Config
@@ -286,36 +308,36 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 			return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		path = mainDefaultConfigPath(homeConf)
-		tmplData = defaultTmplData(homeConf)
+		tmplData = defaultMainConfigTmplData(homeConf)
 	} else {
-		if tmplData, err = tmplDataFromMainFile(path); err != nil {
+		if tmplData.serviceConfData.tmplData, err = tmplDataFromMainFile(path); err != nil {
 			errCause := "error reading template data from file: " + err.Error()
 			return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	}
-	if strings.Compare(tmplData.ServiceConfigPath, "") == 0 || strings.Compare(tmplData.MetricsConfigPath, "") == 0 {
+	if strings.Compare(tmplData.serviceConfData.serviceConfPath, "") == 0 || strings.Compare(tmplData.serviceConfData.tmplData.metricsConfigPath, "") == 0 {
 		var homeConf *configdir.Config
 		if homeConf, err = homeConfigFolder(); err != nil {
 			errCause := "error looking for config folder under home: " + err.Error()
 			return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		tmpTmplData := defaultTmplData(homeConf)
-		if strings.Compare(tmplData.ServiceConfigPath, "") == 0 {
-			tmplData.ServiceConfigPath = tmpTmplData.ServiceConfigPath
+		tmpTmplData := defaultMainConfigTmplData(homeConf)
+		if strings.Compare(tmplData.serviceConfData.serviceConfPath, "") == 0 {
+			tmplData.serviceConfData.serviceConfPath = tmpTmplData.serviceConfData.serviceConfPath
 		}
-		if strings.Compare(tmplData.MetricsConfigPath, "") == 0 {
-			tmplData.MetricsConfigPath = tmpTmplData.MetricsConfigPath
+		if strings.Compare(tmplData.serviceConfData.tmplData.metricsConfigPath, "") == 0 {
+			tmplData.serviceConfData.tmplData.metricsConfigPath = tmpTmplData.serviceConfData.tmplData.metricsConfigPath
 		}
 	}
 	mainConf = mainConfigData{
-		mainConfigPath: path,
-		tmplData:       tmplData,
+		mainConfPath: path,
+		tmplData:     tmplData,
 	}
 	if err = mainConf.createMainConfigFile(); err != nil {
 		errCause := "error creating main config file: " + err.Error()
 		return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = mainConf.createMetricsConfigFile(); err != nil {
+	if err = mainConf.tmplData.serviceConfData.createMetricsConfigFile(); err != nil {
 		errCause := "error creating metrics config file: " + err.Error()
 		return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}

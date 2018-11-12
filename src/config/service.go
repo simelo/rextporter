@@ -22,6 +22,7 @@ type Service struct {
 	GenTokenEndpoint     string `json:"genTokenEndpoint"`
 	TokenKeyFromEndpoint string `json:"tokenKeyFromEndpoint"`
 	Location             Server `json:"location"`
+	metrics              MetricsTemplate
 }
 
 // MetricName returns a promehteus style name for the giving metric name.
@@ -55,7 +56,7 @@ func (srv Service) validate() (errs []error) {
 	if !isValidURL(srv.URIToGetToken()) {
 		errs = append(errs, errors.New("can not create a valid url to get token: "+srv.URIToGetToken()))
 	}
-	for _, metric := range Config().Metrics {
+	for _, metric := range srv.metrics.metrics {
 		if !isValidURL(srv.URIToGetMetric(metric)) {
 			errs = append(errs, errors.New("can not create a valid url to get metric: "+srv.URIToGetMetric(metric)))
 		}
@@ -70,5 +71,8 @@ func (srv Service) validate() (errs []error) {
 		errs = append(errs, errors.New("GenTokenEndpoint is required if you are using CSRF"))
 	}
 	errs = append(errs, srv.Location.validate()...)
+	for _, metric := range srv.metrics.metrics {
+		errs = append(errs, metric.validate()...)
+	}
 	return errs
 }

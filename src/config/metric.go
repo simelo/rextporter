@@ -26,6 +26,11 @@ type Metric struct {
 	HistogramOptions HistogramOptions `json:"histogram_options"`
 }
 
+type MetricsTemplate struct {
+	metrics  []Metric
+	confPath string
+}
+
 func (metric Metric) isHistogram() bool {
 	hasBuckets := len(metric.HistogramOptions.ExponentialBuckets) != 0 || len(metric.HistogramOptions.Buckets) != 0
 	return hasBuckets || strings.Compare(metric.Options.Type, "Histogram") == 0
