@@ -252,6 +252,9 @@ func (suite *HealthSuit) TestDefaultGeneratedConfigWorks() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8081/metrics1")
+	defer func() {
+		suite.Nil(resp.Body.Close())
+	}()
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
 	suite.Equal(http.StatusOK, resp.StatusCode)
@@ -261,7 +264,7 @@ func (suite *HealthSuit) TestDefaultGeneratedConfigWorks() {
 	suite.require.Len(conf.Services, 1)
 	suite.require.Len(conf.Services[0].Metrics, 1)
 	metricName := "skycoin_" + conf.Services[0].Name + "_" + conf.Services[0].Metrics[0].Name
-	suite.require.Equal(metricName, "skycoin_wallet1_seq")
+	suite.require.Equal(metricName, "skycoin_skycoin_seq")
 	suite.require.True(metricHealthIsOk(metricName, string(data)))
 	var usingAVariableToMakeLinterHappy = context.Context(nil)
 	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
@@ -292,6 +295,9 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8082/metrics2")
+	defer func() {
+		suite.Nil(resp.Body.Close())
+	}()
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
@@ -333,6 +339,9 @@ func (suite *HealthSuit) TestMetricMonitorHealthCanSetUpFlag() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8083/metrics3")
+	defer func() {
+		suite.Nil(resp.Body.Close())
+	}()
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
@@ -374,6 +383,9 @@ func (suite *HealthSuit) TestMetricMonitorAsProxy() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8084/metrics4")
+	defer func() {
+		suite.Nil(resp.Body.Close())
+	}()
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)

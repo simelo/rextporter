@@ -36,13 +36,6 @@ func (confData mainConfigData) ServiceConfigPath() string {
 	return confData.tmplData.ServiceConfigPath
 }
 
-// func (confData mainConfigData) metricsForServicesPaths() (paths []string) {
-// 	for _, path := range confData.metricsForServiceConfigTmplData.tmplData.serviceNameToMetricsConfPath {
-// 		paths = append(paths, path)
-// 	}
-// 	return paths
-// }
-
 func (confData mainConfigData) metricsForServicesPath() string {
 	return confData.tmplData.MetricsForServicesPath
 }
@@ -56,17 +49,16 @@ func (confData mainConfigData) MainConfigPath() string {
 }
 
 const mainConfigFileContentTemplate = `
-serviceConfigTransport = "file" # "file" | "consulCatalog"
-# render a template with a portable path
-serviceConfigPath = "{{.ServiceConfigPath}}"
+servicesConfigTransport = "file" # "file" | "consulCatalog"
+servicesConfigPath = "{{.ServiceConfigPath}}"
 metricsForServicesPath = "{{.MetricsForServicesPath}}"
 `
 
 const serviceConfigFileContentTemplate = `
-# Service configuration.
+# Services configuration.
 [[services]]
-	name = "wallet1"
-	mode = "apiRest"
+  name = "skycoin"
+  mode = "apiRest"
   scheme = "http"
   port = 8000
   basePath = ""
@@ -125,10 +117,10 @@ var (
 	systemVendorName                 = "simelo"
 	systemProgramName                = "rextporter"
 	mainConfigFileName               = "main.toml"
-	serviceConfigFileName            = "service.toml"
+	serviceConfigFileName            = "services.toml"
+	metricsForServicesConfigFileName = "metricsForServices.toml"
 	skycoinMetricsConfigFileName     = "skycoinMetrics.toml"
 	walletMetricsConfigFileName      = "walletMetrics.toml"
-	metricsForServicesConfigFileName = "metricsForServices.toml"
 )
 
 func createFullPath(path string) error {
@@ -332,7 +324,7 @@ func defaultMetricsForServiceTmplData(conf *configdir.Config) (tmplData metricsF
 		TmplData: metricsForServiceTemplateData{
 			ServiceNameToMetricsConfPath: map[string]string{
 				"skycoin": skycoinMetricsConfigPath(conf),
-				"wallet1": walletMetricsConfigPath(conf),
+				"wallet":  walletMetricsConfigPath(conf),
 			},
 		},
 	}
