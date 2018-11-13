@@ -23,14 +23,15 @@ type Service struct {
 	Name string `json:"name"`
 	Mode string `json:"mode"`
 	// Scheme is http or https
-	Scheme               string `json:"scheme"`
-	Port                 uint16 `json:"port"`
-	BasePath             string `json:"basePath"`
-	AuthType             string `json:"authType"`
-	TokenHeaderKey       string `json:"tokenHeaderKey"`
-	GenTokenEndpoint     string `json:"genTokenEndpoint"`
-	TokenKeyFromEndpoint string `json:"tokenKeyFromEndpoint"`
-	Location             Server `json:"location"`
+	Scheme               string   `json:"scheme"`
+	Port                 uint16   `json:"port"`
+	BasePath             string   `json:"basePath"`
+	AuthType             string   `json:"authType"`
+	TokenHeaderKey       string   `json:"tokenHeaderKey"`
+	GenTokenEndpoint     string   `json:"genTokenEndpoint"`
+	TokenKeyFromEndpoint string   `json:"tokenKeyFromEndpoint"`
+	Location             Server   `json:"location"`
+	Metrics              []Metric `json:"metrics"`
 }
 
 // MetricName returns a promehteus style name for the giving metric name.
@@ -38,7 +39,7 @@ func (srv Service) MetricName(metricName string) string {
 	return prometheus.BuildFQName("skycoin", srv.Name, metricName)
 }
 
-// URIToGetMetric build the URI from where you will to get metric information.
+// URIToGetMetric build the URI from where you will to get metric information
 func (srv Service) URIToGetMetric(metric Metric) string {
 	return fmt.Sprintf("%s://%s:%d%s%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath, metric.URL)
 }
@@ -64,7 +65,7 @@ func (srv Service) validateAPIRest() (errs []error) {
 	if !isValidURL(srv.URIToGetToken()) {
 		errs = append(errs, errors.New("can not create a valid url to get token: "+srv.URIToGetToken()))
 	}
-	for _, metric := range Config().Metrics {
+	for _, metric := range srv.Metrics {
 		if !isValidURL(srv.URIToGetMetric(metric)) {
 			errs = append(errs, errors.New("can not create a valid url to get metric: "+srv.URIToGetMetric(metric)))
 		}
@@ -105,6 +106,9 @@ func (srv Service) validate() (errs []error) {
 		} else {
 			errs = append(errs, fmt.Errorf("mode should be %s or %s", ServiceTypeProxy, ServiceTypeAPIRest))
 		}
+	}
+	for _, metric := range srv.Metrics {
+		errs = append(errs, metric.validate()...)
 	}
 	errs = append(errs, srv.Location.validate()...)
 	return errs

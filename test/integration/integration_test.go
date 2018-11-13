@@ -20,35 +20,9 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-const serviceAPIRestConfigFileContenTemplate = `
-	# Service configuration.
-	[[services]]
-		name = "myMonitoredServer"
-		mode = "apiRest"
-		scheme = "http"
-		port = 8080
-		basePath = ""
-		authType = "CSRF"
-		tokenHeaderKey = "X-CSRF-Token"
-		genTokenEndpoint = "/api/v1/csrf"
-		tokenKeyFromEndpoint = "csrf_token"
-		
-		[services.location]
-			location = "localhost"
-`
-
-const serviceProxyConfigFileContenTemplate = `
-	# Service configuration.
-	[[services]]
-		name = "myMonitoredServer"
-		mode = "proxy"
-		scheme = "http"
-		port = 8080
-		basePath = "/metrics"
-		
-		[services.location]
-			location = "localhost"
-`
+type HealthSuit struct {
+	suite.Suite
+}
 
 func createConfigFile(tmplContent, path string, data interface{}) (err error) {
 	generalScopeErr := "error creating config file for integration test"
@@ -73,17 +47,40 @@ func createConfigFile(tmplContent, path string, data interface{}) (err error) {
 	return err
 }
 
-func createServiceConfig(tmplContent, path string) (err error) {
+func createServicesConfPath(servicesConfPath string) (err error) {
+	const servicesConfigFileContenTemplate = `
+	# Service configuration.
+	[[services]]
+		name = "myMonitoredServer"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
+		
+		[services.location]
+			location = "localhost"
+`
 	generalScopeErr := "error creating service config file for integration test"
-	if err = createConfigFile(tmplContent, path, nil); err != nil {
+	if err = createConfigFile(servicesConfigFileContenTemplate, servicesConfPath, nil); err != nil {
 		errCause := "error writing service config file: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return err
 }
 
-func createServiceConfigPaths(serviceConfigPath, serviceContent string) (err error) {
-	return createServiceConfig(serviceContent, serviceConfigPath)
+func createMetricsForServicesConfPath(metricsForServicesConfPath string, metricsForServices map[string]string) (err error) {
+	const metricsForServicesConfFileContenTemplate = `
+	serviceNameToMetricsConfPath = [{{range $key, $value := .}}
+	{ {{$key}} = "{{$value}}" },{{end}}
+]
+`
+	return createConfigFile(
+		metricsForServicesConfFileContenTemplate,
+		metricsForServicesConfPath,
+		metricsForServices)
 }
 
 func createMetricsConfig(tmplContent, path string) (err error) {
@@ -105,82 +102,75 @@ func createMetricsConfigPaths(metricsConfigPath string) (err error) {
 		path = "open_connections"
 	
 		[metrics.options]
-		type = "Gauge"
-		description = "Track the open connections in the system"	
+			type = "Gauge"
+			description = "Track the open connections in the system"	
 `
 	return createMetricsConfig(metricsConfigFileContenTemplate, metricsConfigPath)
 }
 
-func createMainConfig(tmplContent, path, metricsConfigPath, serviceConfigPath, serviceContent string) (err error) {
+func createMainConfig(tmplContent, mainConfPath, servicesConfigPath, metricsForServicesConfPath, myMonitoredServerMetricsPath string) (err error) {
 	generalScopeErr := "error creating main config file for integration test"
 	type mainConfigData struct {
-		ServiceConfigPath string
-		MetricsConfigPath string
+		ServiceConfigPath      string
+		MetricsForServicesPath string
 	}
 	confData := mainConfigData{
-		MetricsConfigPath: metricsConfigPath,
-		ServiceConfigPath: serviceConfigPath,
+		ServiceConfigPath:      servicesConfigPath,
+		MetricsForServicesPath: metricsForServicesConfPath,
 	}
-	if err = createConfigFile(tmplContent, path, confData); err != nil {
+	if err = createConfigFile(tmplContent, mainConfPath, confData); err != nil {
 		errCause := "error writing main config file: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = createServiceConfigPaths(serviceConfigPath, serviceContent); err != nil {
-		errCause := "error writing service config file: " + err.Error()
+	if err = createServicesConfPath(servicesConfigPath); err != nil {
+		errCause := "error writing services config file: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = createMetricsConfigPaths(metricsConfigPath); err != nil {
-		errCause := "error writing metrics config file: " + err.Error()
+	if err = createMetricsConfigPaths(myMonitoredServerMetricsPath); err != nil {
+		errCause := "error writing my monitored server metrics config file: " + err.Error()
+		return common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	if err = createMetricsForServicesConfPath(metricsForServicesConfPath, map[string]string{"myMonitoredServer": myMonitoredServerMetricsPath}); err != nil {
+		errCause := "error writing metrics for service config file: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return err
 }
 
-func createMainConfigTestPaths(serviceContent string) (mainConfFilePath string, err error) {
+func createMainConfigTestPaths() (mainConfFilePath string, err error) {
 	const mainConfigFileContenTemplate = `
 serviceConfigTransport = "file"
 # render a template with a portable path
 serviceConfigPath = "{{.ServiceConfigPath}}"
-metricsConfigPath = "{{.MetricsConfigPath}}"
+metricsForServicesPath = "{{.MetricsForServicesPath}}"
 `
 	mainConfigDir := filepath.Join(os.TempDir(), "sdsds", "675656", "aa")
 	if err = os.MkdirAll(mainConfigDir, 0750); err != nil {
 		return mainConfFilePath, err
 	}
 	mainConfFilePath = filepath.Join(mainConfigDir, "rrrr")
-	serviceDir := filepath.Join(os.TempDir(), "test", "integration")
-	if err = os.MkdirAll(serviceDir, 0750); err != nil {
+	servicesDir := filepath.Join(os.TempDir(), "test", "integration")
+	if err = os.MkdirAll(servicesDir, 0750); err != nil {
 		return mainConfFilePath, err
 	}
-	serviceConfigPath := filepath.Join(serviceDir, "service.toml")
-	metricsDir := filepath.Join(os.TempDir(), "integration", "test")
-	if err = os.MkdirAll(metricsDir, 0750); err != nil {
+	servicesConfPath := filepath.Join(servicesDir, "servicezz.toml")
+	metricsForServicesDir := filepath.Join(os.TempDir(), "test", "trtr")
+	if err = os.MkdirAll(metricsForServicesDir, 0750); err != nil {
 		return mainConfFilePath, err
 	}
-	metricsConfigPath := filepath.Join(metricsDir, "metrics.toml")
+	metricsForServicesConfPath := filepath.Join(metricsForServicesDir, "met4services.toml")
+	myMonitoredServerMetricsDir := filepath.Join(os.TempDir(), "test", "integration")
+	if err = os.MkdirAll(myMonitoredServerMetricsDir, 0750); err != nil {
+		return mainConfFilePath, err
+	}
+	myMonitoredServerMetricsPath := filepath.Join(myMonitoredServerMetricsDir, "mymonitoredservermetri_s.toml")
 	return mainConfFilePath,
-		createMainConfig(mainConfigFileContenTemplate, mainConfFilePath, metricsConfigPath, serviceConfigPath, serviceContent)
-}
-
-func createMainConfigCustomPaths(serviceContent string) (mainConfFilePath string, err error) {
-	const mainConfigFileContenTemplate = `
-serviceConfigTransport = "file"
-# render a template with a portable path
-serviceConfigPath = "{{.ServiceConfigPath}}"
-metricsConfigPath = "{{.MetricsConfigPath}}"
-`
-	mainConfigDir := filepath.Join(os.TempDir(), "sdsds", "675656", "aa")
-	if err = os.MkdirAll(mainConfigDir, 0750); err != nil {
-		return mainConfFilePath, err
-	}
-	mainConfFilePath = filepath.Join(mainConfigDir, "rrrr")
-	serviceConfigPath := filepath.Join(os.TempDir(), "sdsds", "epe.toml")
-	return mainConfFilePath,
-		createMainConfig(mainConfigFileContenTemplate, mainConfFilePath, "", serviceConfigPath, serviceContent)
-}
-
-type HealthSuit struct {
-	suite.Suite
+		createMainConfig(
+			mainConfigFileContenTemplate,
+			mainConfFilePath,
+			servicesConfPath,
+			metricsForServicesConfPath,
+			myMonitoredServerMetricsPath)
 }
 
 func TestSkycoinHealthSuit(t *testing.T) {
@@ -233,11 +223,10 @@ func metricHealthIsOk(metricName, metricData string) bool {
 func (suite *HealthSuit) TestMetricMonitorHealth() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	require := require.New(suite.T())
-	mainConfFilePath, err := createMainConfigTestPaths(serviceAPIRestConfigFileContenTemplate)
+	mainConfFilePath, err := createMainConfigTestPaths()
 	require.Nil(err)
 	srv := exporter.ExportMetrics(mainConfFilePath, "/metrics", 8081)
 	require.NotNil(srv)
-	conf := config.Config()
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	t := time.NewTimer(time.Second * 2)
 	<-t.C
@@ -253,12 +242,29 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 	data, err = ioutil.ReadAll(resp.Body)
 	suite.Nil(err)
 	require.Len(conf.Services, 1)
-	require.Len(conf.Metrics, 1)
+	require.Len(conf.Services[0].Metrics, 1)
 	metricName := "skycoin_" + conf.Services[0].Name + "_" + conf.Metrics[0].Name
 	require.Equal(metricName, "skycoin_myMonitoredServer_open_connections_is_a_fake_name_for_test_purpose")
 	require.True(metricHealthIsOk(metricName, string(data)))
 	var usingAVariableToMakeLinterHappy = context.Context(nil)
 	require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
+}
+
+func createMainConfigCustomPaths() (mainConfFilePath string, err error) {
+	const mainConfigFileContenTemplate = `
+serviceConfigTransport = "file"
+# render a template with a portable path
+serviceConfigPath = "{{.ServiceConfigPath}}"
+metricsConfigPath = "{{.MetricsConfigPath}}"
+`
+	mainConfigDir := filepath.Join(os.TempDir(), "sdsds", "675656", "aa")
+	if err = os.MkdirAll(mainConfigDir, 0750); err != nil {
+		return mainConfFilePath, err
+	}
+	mainConfFilePath = filepath.Join(mainConfigDir, "rrrr")
+	serviceConfigPath := filepath.Join(os.TempDir(), "sdsds", "epe.toml")
+	return mainConfFilePath,
+		createMainConfig(mainConfigFileContenTemplate, mainConfFilePath, "", serviceConfigPath)
 }
 
 func (suite *HealthSuit) TestMetricMonitorAsProxy() {
@@ -296,20 +302,13 @@ func (suite *HealthSuit) TestMetricMonitorAsProxy() {
 func (suite *HealthSuit) TestConfigWorks() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	require := require.New(suite.T())
-	mainConfFilePath, err := createMainConfigCustomPaths(serviceAPIRestConfigFileContenTemplate)
-	require.Nil(err)
-	log.Errorln("mainConfFilePath", mainConfFilePath)
-	srv := exporter.ExportMetrics(mainConfFilePath, "/metrics2", 8082)
+	srv := exporter.ExportMetrics("", "/metrics2", 8082)
 	require.NotNil(srv)
-	conf := config.Config()
-	log.Errorln("services2", len(conf.Services))
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)
 
 	// NOTE(denisacostaq@gmail.com): When
-	var resp *http.Response
-	resp, err = http.Get("http://127.0.0.1:8082/metrics2")
-
+	resp, err := http.Get("http://127.0.0.1:8082/metrics2")
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
 	suite.Equal(http.StatusOK, resp.StatusCode)

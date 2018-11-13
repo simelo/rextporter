@@ -24,18 +24,18 @@ func (suite *metricConfSuit) SetupTest() {
 			TokenHeaderKey:       "X-CSRF-Token",
 			GenTokenEndpoint:     "/api/v1/csrf",
 			TokenKeyFromEndpoint: "csrf_token",
+			Metrics: []Metric{
+				Metric{
+					Name:             "MySupperMetric",
+					URL:              "/api/v1/health",
+					HTTPMethod:       "GET",
+					Path:             "/blockchain/head/seq",
+					Options:          MetricOptions{Type: KeyTypeCounter, Description: "It is all about ..."},
+					HistogramOptions: HistogramOptions{},
+				}},
 		},
 	}
-	rootConfig.Metrics = []Metric{
-		Metric{
-			Name:             "MySupperMetric",
-			URL:              "/api/v1/health",
-			HTTPMethod:       "GET",
-			Path:             "/blockchain/head/seq",
-			Options:          MetricOptions{Type: KeyTypeCounter, Description: "It is all about ..."},
-			HistogramOptions: HistogramOptions{},
-		}}
-	suite.MetricConf = &(rootConfig.Metrics[0])
+	suite.MetricConf = &(rootConfig.Services[0].Metrics[0])
 }
 
 func TestMetricConfSuit(t *testing.T) {
