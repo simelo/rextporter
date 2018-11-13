@@ -106,7 +106,9 @@ func (client *MetricClient) getRemoteInfo() (data []byte, err error) {
 			errCause := fmt.Sprintln("can not do the request after a token reset neither: ", err.Error())
 			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
+		// FIXME(denisacostaq@gmail.com): linter no allow me to write defer resp.Body.Close()
 	}
+	defer resp.Body.Close()
 	if data, err = ioutil.ReadAll(resp.Body); err != nil {
 		errCause := fmt.Sprintln("can not read the body: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
