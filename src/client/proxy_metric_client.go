@@ -43,6 +43,10 @@ func (client *ProxyMetricClient) getRemoteInfo() (data []byte, err error) {
 		errCause := fmt.Sprintln("can not do the request: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	if resp.StatusCode != http.StatusOK {
+		errCause := fmt.Sprintf("no success response, status %s", resp.Status)
+		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
 	defer resp.Body.Close()
 	// FIXME(denisacostaq@gmail.com): if resp.Header.Get("Content-Type") is compressed, decompress it to plain text
 	// FIXME(denisacostaq@gmail.com): write an integration test for plain text anf compressed content
