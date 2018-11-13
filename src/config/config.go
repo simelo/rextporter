@@ -114,10 +114,9 @@ func NewConfigFromFileSystem(mainConfigPath string) {
 func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
 	tmpMetrics := list.New()
 	for _, service := range conf.Services {
-		for _, metric := range service.Metrics {
-			if strings.Compare(metric.Options.Type, t) == 0 {
-				tmpMetrics.PushBack(metric)
-			}
+		metricsForService := service.FilterMetricsByType(t)
+		for _, metric := range metricsForService {
+			tmpMetrics.PushBack(metric)
 		}
 	}
 	metrics = make([]Metric, tmpMetrics.Len())

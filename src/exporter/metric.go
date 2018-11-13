@@ -56,13 +56,19 @@ func createCounter(metricConf config.Metric, service config.Service) (metric Cou
 func createCounters() ([]CounterMetric, error) {
 	generalScopeErr := "can not create counters"
 	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
-	metrics := conf.FilterMetricsByType(config.KeyTypeCounter)
 	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
-	counters := make([]CounterMetric, len(metrics)*len(services))
-	for idxService, service := range services {
-		for idxMetric, metric := range metrics {
+	var counterMetricsAmount = 0
+	for _, service := range services {
+		counterMetricsAmount += service.CountMetricsByType(config.KeyTypeCounter)
+	}
+	counters := make([]CounterMetric, counterMetricsAmount)
+	var idxMetric = 0
+	for _, service := range services {
+		metricsForService := service.FilterMetricsByType(config.KeyTypeCounter)
+		for _, metric := range metricsForService {
 			if counter, err := createCounter(metric, service); err == nil {
-				counters[idxService*len(conf.Metrics)+idxMetric] = counter
+				counters[idxMetric] = counter
+				idxMetric++
 			} else {
 				errCause := "error creating counter: " + err.Error()
 				return []CounterMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
@@ -98,17 +104,23 @@ func createGauge(metricConf config.Metric, service config.Service) (metric Gauge
 func createGauges() ([]GaugeMetric, error) {
 	generalScopeErr := "can not create gauges"
 	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
-	metrics := conf.FilterMetricsByType(config.KeyTypeGauge)
 	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
-	gauges := make([]GaugeMetric, len(metrics)*len(services))
-	for idxService, service := range services {
-		for idxMetric, metric := range metrics {
-			gauge, err := createGauge(metric, service)
-			if err != nil {
-				errCause := fmt.Sprintln("error creating gauge: ", err.Error())
+	var gaugeMetricsAmount = 0
+	for _, service := range services {
+		gaugeMetricsAmount += service.CountMetricsByType(config.KeyTypeGauge)
+	}
+	gauges := make([]GaugeMetric, gaugeMetricsAmount)
+	var idxMetric = 0
+	for _, service := range services {
+		metricsForService := service.FilterMetricsByType(config.KeyTypeGauge)
+		for _, metric := range metricsForService {
+			if gauge, err := createGauge(metric, service); err == nil {
+				gauges[idxMetric] = gauge
+				idxMetric++
+			} else {
+				errCause := "error creating gauge: " + err.Error()
 				return []GaugeMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
 			}
-			gauges[idxService*len(conf.Metrics)+idxMetric] = gauge
 		}
 	}
 	return gauges, nil

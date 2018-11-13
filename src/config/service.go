@@ -1,6 +1,7 @@
 package config
 
 import (
+	"container/list"
 	"errors"
 	"fmt"
 	"strings"
@@ -52,6 +53,33 @@ func (srv Service) URIToGetExposedMetric() string {
 // URIToGetToken build the URI from where you will to get the token
 func (srv Service) URIToGetToken() string {
 	return fmt.Sprintf("%s://%s:%d%s%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath, srv.GenTokenEndpoint)
+}
+
+// FilterMetricsByType will return all the metrics who match whit the 't' parameter in this service.
+func (srv Service) FilterMetricsByType(t string) (metrics []Metric) {
+	tmpMetrics := list.New()
+	for _, metric := range srv.Metrics {
+		if strings.Compare(metric.Options.Type, t) == 0 {
+			tmpMetrics.PushBack(metric)
+		}
+	}
+	metrics = make([]Metric, tmpMetrics.Len())
+	idxLink := 0
+	for it := tmpMetrics.Front(); it != nil; it = it.Next() {
+		metrics[idxLink] = it.Value.(Metric)
+		idxLink++
+	}
+	return metrics
+}
+
+// CountMetricsByType will return the number of metrics who match whit the 't' parameter in this service.
+func (srv Service) CountMetricsByType(t string) (amount int) {
+	for _, metric := range srv.Metrics {
+		if strings.Compare(metric.Options.Type, t) == 0 {
+			amount++
+		}
+	}
+	return
 }
 
 func (srv Service) validateProxy() (errs []error) {

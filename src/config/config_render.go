@@ -66,7 +66,7 @@ const serviceConfigFileContentTemplate = `
 # Service configuration.
 [[services]]
 	name = "wallet1"
-	mode="apiRest"
+	mode = "apiRest"
   scheme = "http"
   port = 8000
   basePath = ""
