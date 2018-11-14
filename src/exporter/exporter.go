@@ -49,7 +49,7 @@ func appendPrefixForMetrics(prefix []byte, metricsData []byte) (prefixedMetricsD
 
 func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		getCustomData := func() ([]byte, error) {
+		getCustomData := func() (data []byte, err error) {
 			recorder := httptest.NewRecorder()
 			for _, cl := range metricsMidleware {
 				if exposedMetricsData, err := cl.client.GetExposedMetrics(); err != nil {
@@ -70,12 +70,11 @@ func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler htt
 					}
 				}
 			}
-			if data, err := ioutil.ReadAll(recorder.Body); err != nil {
+			if data, err = ioutil.ReadAll(recorder.Body); err != nil {
 				log.WithError(err).Errorln("can not read recorded custom data")
 				return nil, err
-			} else {
-				return data, nil
 			}
+			return data, nil
 		}
 		getDefaultData := func() (data []byte, err error) {
 			generalScopeErr := "error reding default data"
@@ -97,9 +96,8 @@ func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler htt
 			if data, err = ioutil.ReadAll(reader); err != nil {
 				log.WithError(err).Errorln("can not read recorded default data")
 				return nil, err
-			} else {
-				return data, nil
 			}
+			return data, nil
 		}
 		var allData []byte
 		if defaultData, err := getDefaultData(); err != nil {
@@ -116,7 +114,17 @@ func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler htt
 		if allData == nil {
 			allData = []byte("a")
 		}
-		w.Write(allData)
+		if count, err := w.Write(allData); err != nil || count != len(allData) {
+			if err != nil {
+				log.WithError(err).Errorln("error writing data")
+			}
+			if count != len(allData) {
+				log.WithFields(log.Fields{
+					"wrote":    count,
+					"required": len(allData),
+				}).Errorln("no enough content wrote")
+			}
+		}
 	})
 }
 
