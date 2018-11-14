@@ -86,36 +86,34 @@ func (client *MetricClient) resetToken() (err error) {
 func (client *MetricClient) getRemoteInfo() (data []byte, err error) {
 	const generalScopeErr = "error making a server request to get metric from remote endpoint"
 	client.req.Header.Set(client.service.TokenHeaderKey, client.token)
-	doRequest := func() (*http.Response, error) {
+	getData := func() (data []byte, err error) {
 		httpClient := &http.Client{}
 		var resp *http.Response
 		if resp, err = httpClient.Do(client.req); err != nil {
 			errCause := fmt.Sprintln("can not do the request: ", err.Error())
 			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
+		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			errCause := fmt.Sprintf("no success response, status %s", resp.Status)
-			return resp, common.ErrorFromThisScope(errCause, generalScopeErr)
+			return data, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		return resp, nil
+		if data, err = ioutil.ReadAll(resp.Body); err != nil {
+			errCause := fmt.Sprintln("can not read the body: ", err.Error())
+			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+		}
+		return data, nil
 	}
-	var resp *http.Response
-	if resp, err = doRequest(); err != nil {
+	if data, err = getData(); err != nil {
 		// log.Println("can not do the request:", err.Error(), "trying with a new token...")
 		if err = client.resetToken(); err != nil {
 			errCause := fmt.Sprintln("can not reset the token: ", err.Error())
 			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		if resp, err = doRequest(); err != nil {
+		if data, err = getData(); err != nil {
 			errCause := fmt.Sprintln("can not do the request after a token reset neither: ", err.Error())
 			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		// FIXME(denisacostaq@gmail.com): linter no allow me to write defer resp.Body.Close()
-	}
-	defer resp.Body.Close()
-	if data, err = ioutil.ReadAll(resp.Body); err != nil {
-		errCause := fmt.Sprintln("can not read the body: ", err.Error())
-		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return data, nil
 }
