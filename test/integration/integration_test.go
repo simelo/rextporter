@@ -23,7 +23,7 @@ import (
 const mainConfigFileContenTemplate = `
 serviceConfigTransport = "file"
 # render a template with a portable path
-serviceConfigPath = "{{.ServiceConfigPath}}"
+servicesConfigPath = "{{.ServicesConfigPath}}"
 metricsForServicesPath = "{{.MetricsForServicesPath}}"
 `
 
@@ -160,11 +160,11 @@ func (suite *HealthSuit) createMetricsConfigPaths() (err error) {
 func (suite *HealthSuit) createMainConfig() {
 	generalScopeErr := "error creating main config file for integration test"
 	type mainConfigData struct {
-		ServiceConfigPath      string
+		ServicesConfigPath     string
 		MetricsForServicesPath string
 	}
 	confData := mainConfigData{
-		ServiceConfigPath:      suite.servicesConfFilePath,
+		ServicesConfigPath:     suite.servicesConfFilePath,
 		MetricsForServicesPath: suite.metricsForServicesConfFilePath,
 	}
 	if err := suite.createMainConfPath(confData); err != nil {
@@ -394,7 +394,7 @@ func (suite *HealthSuit) TestMetricMonitorAsProxy() {
 	data, err = ioutil.ReadAll(resp.Body)
 	suite.Nil(err)
 	suite.require.Len(conf.Services, 1)
-	suite.require.Len(conf.Services[0].Metrics, 1)
+	suite.require.Len(conf.Services[0].Metrics, 0)
 	metricName := conf.Services[0].Name + "_skycoin_wallet2_seq2"
 	suite.require.Equal(metricName, "myMonitoredAsProxyServer_skycoin_wallet2_seq2")
 	suite.require.True(metricHealthIsOk(metricName, string(data)))
