@@ -2,11 +2,17 @@ package exporter
 
 import (
 	"bytes"
+	"compress/gzip"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/simelo/rextporter/src/common"
 	"github.com/simelo/rextporter/src/config"
 	log "github.com/sirupsen/logrus"
 )
@@ -43,28 +49,74 @@ func appendPrefixForMetrics(prefix []byte, metricsData []byte) (prefixedMetricsD
 
 func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO(denisacostaq@gmail.com): Track all the data and write a header with Content-Length compressed
-		promHandler.ServeHTTP(w, r)
-		for _, cl := range metricsMidleware {
-			if exposedMetricsData, err := cl.client.GetExposedMetrics(); err != nil {
-				log.WithError(err).Error("error getting metrics from service " + cl.client.Name)
-			} else {
-				prefixed := appendPrefixForMetrics([]byte(cl.client.Name), exposedMetricsData)
-				var count int
-				if count, err = w.Write(prefixed); err != nil || count != len(prefixed) {
-					if err != nil {
-						log.WithError(err).Errorln("error writing prefixed content")
-					}
-					if count != len(prefixed) {
-						log.WithFields(log.Fields{
-							"wrote":    count,
-							"required": len(prefixed),
-						}).Errorln("no enough content wrote")
+		getCustomData := func() ([]byte, error) {
+			recorder := httptest.NewRecorder()
+			for _, cl := range metricsMidleware {
+				if exposedMetricsData, err := cl.client.GetExposedMetrics(); err != nil {
+					log.WithError(err).Error("error getting metrics from service " + cl.client.Name)
+				} else {
+					prefixed := appendPrefixForMetrics([]byte(cl.client.Name), exposedMetricsData)
+					var count int
+					if count, err = recorder.Write(prefixed); err != nil || count != len(prefixed) {
+						if err != nil {
+							log.WithError(err).Errorln("error writing prefixed content")
+						}
+						if count != len(prefixed) {
+							log.WithFields(log.Fields{
+								"wrote":    count,
+								"required": len(prefixed),
+							}).Errorln("no enough content wrote")
+						}
 					}
 				}
 			}
+			if data, err := ioutil.ReadAll(recorder.Body); err != nil {
+				log.WithError(err).Errorln("can not read recorded custom data")
+				return nil, err
+			} else {
+				return data, nil
+			}
 		}
-		// TODO(denisacostaq@gmail.com): compre all the content and use the promhttp.Handler() who wrte compressed content
+		getDefaultData := func() (data []byte, err error) {
+			generalScopeErr := "error reding default data"
+			recorder := httptest.NewRecorder()
+			promHandler.ServeHTTP(recorder, r)
+			var reader io.ReadCloser
+			// BUG(denisacostaq@gmail.com): close this reader.
+			// defer reader.Close()
+			switch recorder.Header().Get("Content-Encoding") {
+			case "gzip":
+				reader, err = gzip.NewReader(recorder.Body)
+				if err != nil {
+					errCause := fmt.Sprintln("can not create gzip reader.", err.Error())
+					return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+				}
+			default:
+				reader = ioutil.NopCloser(bytes.NewReader(recorder.Body.Bytes()))
+			}
+			if data, err = ioutil.ReadAll(reader); err != nil {
+				log.WithError(err).Errorln("can not read recorded default data")
+				return nil, err
+			} else {
+				return data, nil
+			}
+		}
+		var allData []byte
+		if defaultData, err := getDefaultData(); err != nil {
+			log.WithError(err).Errorln("error getting default data")
+		} else {
+			allData = append(allData, defaultData...)
+		}
+		if customData, err := getCustomData(); err != nil {
+			log.WithError(err).Errorln("error getting custom data")
+		} else {
+			allData = append(allData, customData...)
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		if allData == nil {
+			allData = []byte("a")
+		}
+		w.Write(allData)
 	})
 }
 
@@ -84,9 +136,9 @@ func ExportMetrics(mainConfigFile, handlerEndpint string, listenPort uint16) (sr
 	srv = &http.Server{Addr: port}
 	hdl := promhttp.InstrumentMetricHandler(
 		prometheus.DefaultRegisterer,
-		promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{DisableCompression: true}),
+		promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{DisableCompression: false}),
 	)
-	http.Handle(handlerEndpint, exposedMetricsMidleware(metricsMidleware, hdl))
+	http.Handle(handlerEndpint, gziphandler.GzipHandler(exposedMetricsMidleware(metricsMidleware, hdl)))
 	go func() {
 		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpint))
 		log.WithError(srv.ListenAndServe()).Errorln("unable to start the server")

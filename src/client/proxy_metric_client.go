@@ -1,8 +1,10 @@
 package client
 
 import (
+	"compress/gzip"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -48,9 +50,21 @@ func (client *ProxyMetricClient) getRemoteInfo() (data []byte, err error) {
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	defer resp.Body.Close()
-	// FIXME(denisacostaq@gmail.com): if resp.Header.Get("Content-Type") is compressed, decompress it to plain text
-	// FIXME(denisacostaq@gmail.com): write an integration test for plain text anf compressed content
-	if data, err = ioutil.ReadAll(resp.Body); err != nil {
+	var reader io.ReadCloser
+	// BUG(denisacostaq@gmail.com): close this reader.
+	// defer reader.Close()
+	switch resp.Header.Get("Content-Encoding") {
+	case "gzip":
+		reader, err = gzip.NewReader(resp.Body)
+		if err != nil {
+			errCause := fmt.Sprintln("can not create gzip reader.", err.Error())
+			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+		}
+	default:
+		reader = resp.Body
+	}
+	// FIXME(denisacostaq@gmail.com): write an integration test for plain text and compressed content
+	if data, err = ioutil.ReadAll(reader); err != nil {
 		errCause := fmt.Sprintln("can not read the body: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
