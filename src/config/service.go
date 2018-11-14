@@ -86,6 +86,9 @@ func (srv Service) validateProxy() (errs []error) {
 	if !isValidURL(srv.URIToGetExposedMetric()) {
 		errs = append(errs, errors.New("can not create a valid url to get the exposed metric"))
 	}
+	if len(srv.Metrics) != 0 {
+		errs = append(errs, fmt.Errorf("a proxy service should not have metrics defined,  but found %d", len(srv.Metrics)))
+	}
 	return errs
 }
 
@@ -97,6 +100,9 @@ func (srv Service) validateAPIRest() (errs []error) {
 		if !isValidURL(srv.URIToGetMetric(metric)) {
 			errs = append(errs, errors.New("can not create a valid url to get metric: "+srv.URIToGetMetric(metric)))
 		}
+	}
+	if strings.Compare(srv.AuthType, "") == 0 {
+		errs = append(errs, errors.New("AuthType is required if you are using consuming apiRest server"))
 	}
 	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.TokenHeaderKey) == 0 {
 		errs = append(errs, errors.New("TokenHeaderKey is required if you are using CSRF"))

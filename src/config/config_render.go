@@ -14,7 +14,7 @@ import (
 )
 
 type templateData struct {
-	ServiceConfigPath      string
+	ServicesConfigPath     string
 	MetricsForServicesPath string
 }
 
@@ -32,8 +32,8 @@ type mainConfigData struct {
 	metricsForServiceConfigTmplData metricsForServiceConfigTemplateData
 }
 
-func (confData mainConfigData) ServiceConfigPath() string {
-	return confData.tmplData.ServiceConfigPath
+func (confData mainConfigData) ServicesConfigPath() string {
+	return confData.tmplData.ServicesConfigPath
 }
 
 func (confData mainConfigData) metricsForServicesPath() string {
@@ -50,7 +50,7 @@ func (confData mainConfigData) MainConfigPath() string {
 
 const mainConfigFileContentTemplate = `
 servicesConfigTransport = "file" # "file" | "consulCatalog"
-servicesConfigPath = "{{.ServiceConfigPath}}"
+servicesConfigPath = "{{.ServicesConfigPath}}"
 metricsForServicesPath = "{{.MetricsForServicesPath}}"
 `
 
@@ -145,7 +145,7 @@ func existFile(path string) bool {
 }
 
 func (confData mainConfigData) existServiceConfigFile() bool {
-	return existFile(confData.ServiceConfigPath())
+	return existFile(confData.ServicesConfigPath())
 }
 
 // createServiceConfigFile creates the service file or return an error if any,
@@ -161,12 +161,12 @@ func (confData mainConfigData) createServiceConfigFile() (err error) {
 		errCause := "error parsing service config: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = creteFullPathForFile(confData.ServiceConfigPath()); err != nil {
+	if err = creteFullPathForFile(confData.ServicesConfigPath()); err != nil {
 		errCause := "error creating directory for service file: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var serviceConfigFile *os.File
-	if serviceConfigFile, err = os.Create(confData.ServiceConfigPath()); err != nil {
+	if serviceConfigFile, err = os.Create(confData.ServicesConfigPath()); err != nil {
 		errCause := "error creating service config file: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -215,6 +215,7 @@ func (confData mainConfigData) existMetricsForServicesConfigFile() bool {
 func (confData mainConfigData) createMetricsForServicesConfFile() (err error) {
 	generalScopeErr := "error creating metrics for services config file"
 	if confData.existMetricsForServicesConfigFile() {
+		// FIXME(denisacostaq@gmail.com): check each metric file and create one of not exist
 		return nil
 	}
 	tmpl := template.New("metricsForServiceConfig")
@@ -291,7 +292,7 @@ func fileDefaultConfigPath(fileName string, homeConf *configdir.Config) (path st
 	return filepath.Join(homeConf.Path, fileName)
 }
 
-func serviceDefaultConfigPath(conf *configdir.Config) (path string) {
+func servicesDefaultConfigPath(conf *configdir.Config) (path string) {
 	return fileDefaultConfigPath(serviceConfigFileName, conf)
 }
 
@@ -313,7 +314,7 @@ func walletMetricsConfigPath(conf *configdir.Config) (path string) {
 
 func defaultTmplData(conf *configdir.Config) (tmplData templateData) {
 	tmplData = templateData{
-		ServiceConfigPath:      serviceDefaultConfigPath(conf),
+		ServicesConfigPath:     servicesDefaultConfigPath(conf),
 		MetricsForServicesPath: metricsForServicesDefaultConfigPath(conf),
 	}
 	return tmplData
@@ -344,7 +345,7 @@ func tmplDataFromMainFile(mainConfigFilePath string) (tmpl templateData, err err
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
 		return tmpl, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	tmpl.ServiceConfigPath, tmpl.MetricsForServicesPath = mainConf.ServiceConfigPath, mainConf.MetricsForServicesPath
+	tmpl.ServicesConfigPath, tmpl.MetricsForServicesPath = mainConf.ServicesConfigPath, mainConf.MetricsForServicesPath
 	return tmpl, err
 }
 
@@ -389,20 +390,21 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 			errCause := "error reading template data from file: " + err.Error()
 			return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
+		// BUG(denisacostaq@gmail.com): if file not exist, metricsForServicesTmplDataFromFile panics
 		if metricsForServiceTmplData, err = tmplData.metricsForServicesTmplDataFromFile(); err != nil {
 			errCause := "error reading template data from file: " + err.Error()
 			return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	}
-	if strings.Compare(tmplData.ServiceConfigPath, "") == 0 || strings.Compare(tmplData.MetricsForServicesPath, "") == 0 {
+	if strings.Compare(tmplData.ServicesConfigPath, "") == 0 || strings.Compare(tmplData.MetricsForServicesPath, "") == 0 {
 		var homeConf *configdir.Config
 		if homeConf, err = homeConfigFolder(); err != nil {
 			errCause := "error looking for config folder under home: " + err.Error()
 			return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		tmpTmplData := defaultTmplData(homeConf)
-		if strings.Compare(tmplData.ServiceConfigPath, "") == 0 {
-			tmplData.ServiceConfigPath = tmpTmplData.ServiceConfigPath
+		if strings.Compare(tmplData.ServicesConfigPath, "") == 0 {
+			tmplData.ServicesConfigPath = tmpTmplData.ServicesConfigPath
 		}
 		if strings.Compare(tmplData.MetricsForServicesPath, "") == 0 {
 			tmplData.MetricsForServicesPath = tmpTmplData.MetricsForServicesPath
