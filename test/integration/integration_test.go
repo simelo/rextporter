@@ -252,9 +252,11 @@ func (suite *HealthSuit) TestDefaultGeneratedConfigWorks() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8081/metrics1")
-	defer func() {
-		suite.Nil(resp.Body.Close())
-	}()
+	if err == nil {
+		defer func() {
+			suite.Nil(resp.Body.Close())
+		}()
+	}
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
 	suite.Equal(http.StatusOK, resp.StatusCode)
@@ -295,9 +297,11 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8082/metrics2")
-	defer func() {
-		suite.Nil(resp.Body.Close())
-	}()
+	if err == nil {
+		defer func() {
+			suite.Nil(resp.Body.Close())
+		}()
+	}
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
@@ -339,9 +343,11 @@ func (suite *HealthSuit) TestMetricMonitorHealthCanSetUpFlag() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8083/metrics3")
-	defer func() {
-		suite.Nil(resp.Body.Close())
-	}()
+	if err == nil {
+		defer func() {
+			suite.Nil(resp.Body.Close())
+		}()
+	}
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
@@ -383,9 +389,11 @@ func (suite *HealthSuit) TestMetricMonitorAsProxy() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8084/metrics4")
-	defer func() {
-		suite.Nil(resp.Body.Close())
-	}()
+	if err == nil {
+		defer func() {
+			suite.Nil(resp.Body.Close())
+		}()
+	}
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
