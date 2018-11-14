@@ -11,6 +11,7 @@ import (
 	"github.com/oliveagle/jsonpath"
 	"github.com/simelo/rextporter/src/common"
 	"github.com/simelo/rextporter/src/config"
+	log "github.com/sirupsen/logrus"
 )
 
 // BaseClient have common data to be shared through embedded struct in those type who implement the
@@ -67,6 +68,7 @@ func (client *MetricClient) resetToken() (err error) {
 	var val interface{}
 	jPath := "$" + strings.Replace(client.service.TokenKeyFromEndpoint, "/", ".", -1)
 	if val, err = jsonpath.JsonPathLookup(jsonData, jPath); err != nil {
+		log.WithError(err).Errorln("aaaaaaaaaaaaa")
 		errCause := fmt.Sprintln("can not locate the path: ", err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -135,6 +137,7 @@ func (client *MetricClient) GetMetric() (val interface{}, err error) {
 	}
 	jPath := "$" + strings.Replace(client.metricJPath, "/", ".", -1)
 	if val, err = jsonpath.JsonPathLookup(jsonData, jPath); err != nil {
+		log.WithError(err).Errorln("bbbbbbbbbbbbbb")
 		errCause := fmt.Sprintln("can not locate the path: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}

@@ -83,9 +83,11 @@ func newServiceConfigFromFile(path string, conf mainConfigData) (servicesConf []
 		return servicesConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	for idxService, service := range servicesConf {
-		if servicesConf[idxService].Metrics, err = newMetricsConfig(conf.MetricsConfigPath(service.Name)); err != nil {
-			errCause := "error reading metrics config: " + err.Error()
-			panic(common.ErrorFromThisScope(errCause, generalScopeErr))
+		if strings.Compare(service.Mode, ServiceTypeAPIRest) == 0 {
+			if servicesConf[idxService].Metrics, err = newMetricsConfig(conf.MetricsConfigPath(service.Name)); err != nil {
+				errCause := "error reading metrics config: " + err.Error()
+				panic(common.ErrorFromThisScope(errCause, generalScopeErr))
+			}
 		}
 	}
 	return servicesConf, err
@@ -130,19 +132,23 @@ func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
 
 // FilterServicesByType will return all the services who match whit the 't' parameter.
 func (conf RootConfig) FilterServicesByType(t string) (services []Service) {
+	return filterServicesByType(t, conf.Services)
+}
+
+func filterServicesByType(t string, services []Service) (filteredService []Service) {
 	tmpServices := list.New()
-	for _, service := range conf.Services {
+	for _, service := range services {
 		if strings.Compare(service.Mode, t) == 0 {
 			tmpServices.PushBack(service)
 		}
 	}
-	services = make([]Service, tmpServices.Len())
+	filteredService = make([]Service, tmpServices.Len())
 	idxLink := 0
 	for it := tmpServices.Front(); it != nil; it = it.Next() {
-		services[idxLink] = it.Value.(Service)
+		filteredService[idxLink] = it.Value.(Service)
 		idxLink++
 	}
-	return services
+	return filteredService
 }
 
 func (conf RootConfig) validate() {
