@@ -134,11 +134,9 @@ func ExportMetrics(mainConfigFile, handlerEndpint string, listenPort uint16) (sr
 	}
 	port := fmt.Sprintf(":%d", listenPort)
 	srv = &http.Server{Addr: port}
-	hdl := promhttp.InstrumentMetricHandler(
-		prometheus.DefaultRegisterer,
-		promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{DisableCompression: false}),
-	)
-	http.Handle(handlerEndpint, gziphandler.GzipHandler(exposedMetricsMidleware(metricsMidleware, hdl)))
+	http.Handle(
+		handlerEndpint,
+		gziphandler.GzipHandler(exposedMetricsMidleware(metricsMidleware, promhttp.Handler())))
 	go func() {
 		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpint))
 		log.WithError(srv.ListenAndServe()).Errorln("unable to start the server")
