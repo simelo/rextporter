@@ -31,11 +31,13 @@ func findMetricsName(metricsData []byte) (metricsName [][]byte) {
 		splittedTypeColumns := bytes.Split(splittedType, []byte(" "))
 		metricsName = append(metricsName, splittedTypeColumns[0])
 	}
-	metricsName = metricsName[1:]
+	if len(metricsName) > 0 {
+		metricsName = metricsName[1:]
+	}
 	return metricsName
 }
 
-func appendPrefixForMetrics(prefix []byte, metricsData []byte) (prefixedMetricsData []byte) {
+func appendPrefixForMetrics(prefix []byte, metricsData []byte) (prefixedMetricsData []byte, err error) {
 	metricsName := findMetricsName(metricsData)
 	prefixedMetricsData = make([]byte, len(metricsData))
 	copy(prefixedMetricsData, metricsData)
@@ -44,7 +46,11 @@ func appendPrefixForMetrics(prefix []byte, metricsData []byte) (prefixedMetricsD
 		newName = append(newName, metricName...)
 		prefixedMetricsData = bytes.Replace(prefixedMetricsData, append(metricName, []byte(" ")...), append(newName, []byte(" ")...), -1)
 	}
-	return prefixedMetricsData
+	if len(metricsName) == 0 {
+		err = fmt.Errorf("data from %s not appear to be from a metrics(trough prometheus instrumentation) endpoint", string(prefix))
+		log.WithError(err).Errorln("append prefix error, content ignored")
+	}
+	return prefixedMetricsData, err
 }
 
 func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler http.Handler) http.Handler {
@@ -55,17 +61,17 @@ func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler htt
 				if exposedMetricsData, err := cl.client.GetExposedMetrics(); err != nil {
 					log.WithError(err).Error("error getting metrics from service " + cl.client.Name)
 				} else {
-					prefixed := appendPrefixForMetrics([]byte(cl.client.Name), exposedMetricsData)
-					var count int
-					if count, err = recorder.Write(prefixed); err != nil || count != len(prefixed) {
-						if err != nil {
-							log.WithError(err).Errorln("error writing prefixed content")
-						}
-						if count != len(prefixed) {
-							log.WithFields(log.Fields{
-								"wrote":    count,
-								"required": len(prefixed),
-							}).Errorln("no enough content wrote")
+					if prefixed, err := appendPrefixForMetrics([]byte(cl.client.Name), exposedMetricsData); err == nil {
+						if count, err := recorder.Write(prefixed); err != nil || count != len(prefixed) {
+							if err != nil {
+								log.WithError(err).Errorln("error writing prefixed content")
+							}
+							if count != len(prefixed) {
+								log.WithFields(log.Fields{
+									"wrote":    count,
+									"required": len(prefixed),
+								}).Errorln("no enough content wrote")
+							}
 						}
 					}
 				}
