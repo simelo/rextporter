@@ -82,8 +82,6 @@ func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler htt
 			recorder := httptest.NewRecorder()
 			promHandler.ServeHTTP(recorder, r)
 			var reader io.ReadCloser
-			// BUG(denisacostaq@gmail.com): close this reader.
-			// defer reader.Close()
 			switch recorder.Header().Get("Content-Encoding") {
 			case "gzip":
 				reader, err = gzip.NewReader(recorder.Body)
@@ -94,6 +92,7 @@ func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler htt
 			default:
 				reader = ioutil.NopCloser(bytes.NewReader(recorder.Body.Bytes()))
 			}
+			defer reader.Close()
 			if data, err = ioutil.ReadAll(reader); err != nil {
 				log.WithError(err).Errorln("can not read recorded default data")
 				return nil, err

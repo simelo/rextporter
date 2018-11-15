@@ -157,10 +157,10 @@ func (conf RootConfig) validate() {
 		errs = append(errs, service.validate()...)
 	}
 	if len(errs) != 0 {
-		defer log.Panicln("some errors found")
 		for _, err := range errs {
 			log.WithError(err).Errorln("Error")
 		}
+		log.Panicln("some errors found")
 	}
 }
 
