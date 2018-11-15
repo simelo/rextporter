@@ -1,13 +1,13 @@
 package client
 
 import (
-	"log"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/simelo/rextporter/src/config"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -57,7 +57,7 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 	//}
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte(jsonResponse)); err != nil {
-		log.Panicln(err)
+		log.WithError(err).Panicln("unable to write response")
 	}
 }
 
@@ -66,12 +66,12 @@ type SkycoinStatsSuit struct {
 	testServer *httptest.Server
 }
 
-func (suite *SkycoinStatsSuit) SetupTest() {
+func (suite *SkycoinStatsSuit) SetupSuite() {
 	suite.testServer = stubSkycoin()
 	suite.testServer.Start()
 }
 
-func (suite *SkycoinStatsSuit) TearDownTest() {
+func (suite *SkycoinStatsSuit) TearDownSuite() {
 	suite.testServer.Close()
 }
 
@@ -82,7 +82,7 @@ func TestSkycoinStatsSuit(t *testing.T) {
 func stubSkycoin() *httptest.Server {
 	l, err := net.Listen("tcp", "127.0.0.1:8080")
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Fatal("unable to create listenner")
 	}
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(httpHandler))
 	testServer.Listener.Close()
@@ -93,38 +93,36 @@ func stubSkycoin() *httptest.Server {
 func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadSeq() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
-
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
-
- [metrics.options]
- type = "Counter"
- description = "I am running since"
-
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/blockchain/head/seq"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
+	
+		[service.location]
+			location = "localhost"
+		
+	# All metrics to be measured.
+	[[metrics]]
+		name = "seq"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "/blockchain/head/seq"
+	
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -139,38 +137,36 @@ path = "/blockchain/head/seq"
 func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadBlockHash() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
-
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
-
- [metrics.options]
- type = "Counter"
- description = "I am running since"
-
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/blockchain/head/block_hash"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
+	
+		[service.location]
+			location = "localhost"
+		
+	# All metrics to be measured.
+	[[metrics]]
+		name = "block_hash"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "/blockchain/head/block_hash"
+	
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -185,38 +181,36 @@ path = "/blockchain/head/block_hash"
 func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
-
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
-
- [metrics.options]
- type = "Counter"
- description = "I am running since"
-
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/blockchain/head/previous_block_hash"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
+	
+		[service.location]
+			location = "localhost"
+		
+	# All metrics to be measured.
+	[[metrics]]
+		name = "previous_block_hash"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "/blockchain/head/previous_block_hash"
+	
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -231,38 +225,36 @@ path = "/blockchain/head/previous_block_hash"
 func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTimestamp() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "timestamp"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "/blockchain/head/timestamp"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/blockchain/head/timestamp"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -277,38 +269,36 @@ path = "/blockchain/head/timestamp"
 func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadFee() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "fee"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "/blockchain/head/fee"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/blockchain/head/fee"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -323,38 +313,36 @@ path = "/blockchain/head/fee"
 func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadVersion() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "version"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "/blockchain/head/version"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/blockchain/head/version"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -369,38 +357,36 @@ path = "/blockchain/head/version"
 func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "tx_body_hash"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "/blockchain/head/tx_body_hash"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/blockchain/head/tx_body_hash"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -415,38 +401,36 @@ path = "/blockchain/head/tx_body_hash"
 func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadUxHash() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "ux_hash"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "/blockchain/head/ux_hash"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/blockchain/head/ux_hash"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -461,38 +445,36 @@ path = "/blockchain/head/ux_hash"
 func (suite *SkycoinStatsSuit) TestMetricBlockchainUnspens() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "unspents"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "/blockchain/unspents"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/blockchain/unspents"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -507,38 +489,36 @@ path = "/blockchain/unspents"
 func (suite *SkycoinStatsSuit) TestMetricBlockchainUnconfirmed() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "unconfirmed"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "/blockchain/unconfirmed"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/blockchain/unconfirmed"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -553,38 +533,36 @@ path = "/blockchain/unconfirmed"
 func (suite *SkycoinStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "time_since_last_block"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "/blockchain/time_since_last_block"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/blockchain/time_since_last_block"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -599,38 +577,36 @@ path = "/blockchain/time_since_last_block"
 func (suite *SkycoinStatsSuit) TestMetricVersionVersion() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "version"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "/version/version"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/version/version"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -645,38 +621,36 @@ path = "/version/version"
 func (suite *SkycoinStatsSuit) TestMetricVersionCommit() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "commit"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "/version/commit"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/version/commit"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -691,38 +665,36 @@ path = "/version/commit"
 func (suite *SkycoinStatsSuit) TestMetricVersionBranch() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "branch"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "version/branch"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/version/branch"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -737,38 +709,36 @@ path = "/version/branch"
 func (suite *SkycoinStatsSuit) TestMetricOpenConnections() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "open_connections"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "open_connections"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/open_connections"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -783,38 +753,36 @@ path = "/open_connections"
 func (suite *SkycoinStatsSuit) TestMetricUptime() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "uptime"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "uptime"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/uptime"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -829,38 +797,36 @@ path = "/uptime"
 func (suite *SkycoinStatsSuit) TestMetricCsrfEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "csrf_enabled"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "csrf_enabled"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/csrf_enabled"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -875,38 +841,36 @@ path = "/csrf_enabled"
 func (suite *SkycoinStatsSuit) TestMetricCspEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "csp_enabled"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "csp_enabled"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/csp_enabled"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -921,38 +885,36 @@ path = "/csp_enabled"
 func (suite *SkycoinStatsSuit) TestMetricWalletApiEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "wallet_api_enabled"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "wallet_api_enabled"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/wallet_api_enabled"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -967,38 +929,36 @@ path = "/wallet_api_enabled"
 func (suite *SkycoinStatsSuit) TestMetricGuiEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "gui_enabled"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "gui_enabled"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/gui_enabled"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1013,38 +973,36 @@ path = "/gui_enabled"
 func (suite *SkycoinStatsSuit) TestMetricUnversionedApiEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "unversioned_api_enabled"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "unversioned_api_enabled"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/unversioned_api_enabled"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1059,38 +1017,36 @@ path = "/unversioned_api_enabled"
 func (suite *SkycoinStatsSuit) TestMetricJsonRpcEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
-# All hots to be monitored.
-[[hosts]]
-ref = "hostname1"
-location = "http://127.0.0.1"
-port = 8080
-authType = "CSRF"
-tokenHeaderKey = "X-CSRF-Token"
-genTokenEndpoint = "/api/v1/csrf"
-tokenKeyFromEndpoint = "csrf_token"
+	# Service configuration.
+	[service]
+		name = "wallet"
+		scheme = "http"
+		port = 8080
+		basePath = ""
+		authType = "CSRF"
+		tokenHeaderKey = "X-CSRF-Token"
+		genTokenEndpoint = "/api/v1/csrf"
+		tokenKeyFromEndpoint = "csrf_token"
 
-# All metrics to be measured.
-[[metrics]]
-name = "uptime"
+		[service.location]
+			location = "localhost"
 
- [metrics.options]
- type = "Counter"
- description = "I am running since"
+	# All metrics to be measured.
+	[[metrics]]
+		name = "json_rpc_enabled"
+		url = "/api/v1/health"
+		httpMethod = "GET"
+		path = "json_rpc_enabled"
 
-# Now you should define what metrics to take care of in what host
-[[metricsForHost]]
-hostRef = "hostname1"
-metricRef = "uptime"
-url = "/api/v1/health"
-httpMethod = "GET"
-path = "/json_rpc_enabled"
+		[metrics.options]
+			type = "Counter"
+			description = "I am running since"
 `
 	require := require.New(suite.T())
 	require.Nil(config.NewConfigFromRawString(tomlConfig))
 	conf := config.Config()
-	require.Len(conf.MetricsForHost, 1)
-	link := conf.MetricsForHost[0]
-	mc, err := NewMetricClient(link)
+	require.Len(conf.Metrics, 1)
+	mc, err := NewMetricClient(conf.Metrics[0], conf)
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When

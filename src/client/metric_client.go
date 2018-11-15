@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 
@@ -13,15 +12,11 @@ import (
 	"github.com/simelo/rextporter/src/config"
 )
 
-type token struct {
-	CsrfToken string `json:"csrf_token"`
-}
-
 // BaseClient have common data to be shared through embedded struct in those type who implement the
 // client.Client interface
 type BaseClient struct {
-	req  *http.Request
-	host config.Host
+	req     *http.Request
+	service config.Service
 }
 
 // MetricClient implements the getRemoteInfo method from `client.Client` interface by using some `.toml` config parameters
@@ -29,22 +24,19 @@ type BaseClient struct {
 // sa NewMetricClient method.
 type MetricClient struct {
 	BaseClient
-	link  config.Link
-	token string
+	token       string
+	metricJPath string
 }
 
-// NewMetricClient will put a lot of parameters in the data structure based on the `.toml` config file values.
-func NewMetricClient(link config.Link) (client *MetricClient, err error) {
+// NewMetricClient will put all the required info to be able to do http requests to get the remote data.
+func NewMetricClient(metric config.Metric, conf config.RootConfig) (client *MetricClient, err error) {
 	const generalScopeErr = "error creating a client to get a metric from remote endpoint"
 	client = new(MetricClient)
-	client.link = link
-	if client.BaseClient.host, err = config.Config().FindHostByRef(link.HostRef); err != nil {
-		errCause := fmt.Sprintln("can not find a host", err.Error())
-		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	client.BaseClient.req, err = http.NewRequest(link.HTTPMethod, client.BaseClient.host.URIToGetMetric(link), nil)
+	client.BaseClient.service = conf.Service
+	client.metricJPath = metric.Path
+	client.BaseClient.req, err = http.NewRequest(metric.HTTPMethod, client.service.URIToGetMetric(metric), nil)
 	if err != nil {
-		errCause := fmt.Sprintln("can not create the request:", err.Error())
+		errCause := fmt.Sprintln("can not create the request: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return client, nil
@@ -54,50 +46,65 @@ func (client *MetricClient) resetToken() (err error) {
 	const generalScopeErr = "error making resetting the token"
 	client.token = ""
 	var clientToken *TokenClient
-	if clientToken, err = newTokenClient(client.BaseClient.host); err != nil {
-		errCause := fmt.Sprintln("can not find a host", err.Error())
+	if clientToken, err = newTokenClient(client.service); err != nil {
+		errCause := fmt.Sprintln("can not find a host: ", err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var data []byte
 	if data, err = clientToken.getRemoteInfo(); err != nil {
-		errCause := fmt.Sprintln("can make the request to get a token:", err.Error())
+		errCause := fmt.Sprintln("can make the request to get a token: ", err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	var tk token
-	if err = json.Unmarshal(data, &tk); err != nil {
-		errCause := fmt.Sprintln("error decoding the server response:", err.Error())
+	var jsonData interface{}
+	if err = json.Unmarshal(data, &jsonData); err != nil {
+		errCause := fmt.Sprintln("can not decode the body: ", string(data), " ", err.Error())
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	client.token = tk.CsrfToken
+	var val interface{}
+	jPath := "$" + strings.Replace(client.service.TokenKeyFromEndpoint, "/", ".", -1)
+	if val, err = jsonpath.JsonPathLookup(jsonData, jPath); err != nil {
+		errCause := fmt.Sprintln("can not locate the path: ", err.Error())
+		return common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	tk, ok := val.(string)
+	if !ok {
+		errCause := fmt.Sprintln("unable the get the token as a string value")
+		return common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	client.token = tk
+	if strings.Compare(client.token, "") == 0 {
+		errCause := fmt.Sprintln("unable the get a not null(empty) token")
+		return common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
 	return nil
 }
 
 func (client *MetricClient) getRemoteInfo() (data []byte, err error) {
 	const generalScopeErr = "error making a server request to get metric from remote endpoint"
-	client.req.Header.Set(client.BaseClient.host.TokenHeaderKey, client.token)
+	client.req.Header.Set(client.service.TokenHeaderKey, client.token)
 	doRequest := func() (*http.Response, error) {
 		httpClient := &http.Client{}
 		var resp *http.Response
 		if resp, err = httpClient.Do(client.req); err != nil {
-			errCause := fmt.Sprintln("can not do the request:", err.Error())
+			errCause := fmt.Sprintln("can not do the request: ", err.Error())
 			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		return resp, nil
 	}
 	var resp *http.Response
 	if resp, err = doRequest(); err != nil {
-		log.Println("can not do the request:", err.Error(), "trying with a new token...")
+		// log.Println("can not do the request:", err.Error(), "trying with a new token...")
 		if err = client.resetToken(); err != nil {
-			errCause := fmt.Sprintln("can not reset the token:", err.Error())
+			errCause := fmt.Sprintln("can not reset the token: ", err.Error())
 			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		if resp, err = doRequest(); err != nil {
-			errCause := fmt.Sprintln("can not do the request after a token reset neither:", err.Error())
+			errCause := fmt.Sprintln("can not do the request after a token reset neither: ", err.Error())
 			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	}
 	if data, err = ioutil.ReadAll(resp.Body); err != nil {
-		errCause := fmt.Sprintln("can not read the body:", err.Error())
+		errCause := fmt.Sprintln("can not read the body: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return data, nil
@@ -113,12 +120,12 @@ func (client *MetricClient) GetMetric() (val interface{}, err error) {
 	}
 	var jsonData interface{}
 	if err = json.Unmarshal(data, &jsonData); err != nil {
-		errCause := fmt.Sprintln("can not decode the body:", string(data), err.Error())
+		errCause := fmt.Sprintln("can not decode the body: ", string(data), " ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	jpath := "$" + strings.Replace(client.link.Path, "/", ".", -1)
-	if val, err = jsonpath.JsonPathLookup(jsonData, jpath); err != nil {
-		errCause := fmt.Sprintln("can not locate the path:", err.Error())
+	jPath := "$" + strings.Replace(client.metricJPath, "/", ".", -1)
+	if val, err = jsonpath.JsonPathLookup(jsonData, jPath); err != nil {
+		errCause := fmt.Sprintln("can not locate the path: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return val, nil

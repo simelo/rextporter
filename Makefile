@@ -2,25 +2,35 @@
 .PHONY: test install-linters test-386 test-amd64 lint
 
 test: ## Run test with GOARCH=Default
-	# go test  -timeout=5m ./src/...
-	# go test  -timeout=5m ./cmd/...
-	go test github.com/simelo/rextporter/src/client
+	go test -count=1 github.com/simelo/rextporter/src/config
+	go test -count=1 github.com/simelo/rextporter/src/client
+	screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go
+	go test -count=1 github.com/simelo/rextporter/test/integration
+	screen -S fakeSkycoinForIntegrationTest -X quit
+
 
 test-386: ## Run tests  with GOARCH=386
-	# GOARCH=386 go test ./cmd/... -timeout=5m
-	# GOARCH=386 go test ./src/... -timeout=5m
-	GOARCH=386 go test github.com/simelo/rextporter/src/client
+	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/config
+	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/client
+	screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go
+	GOARCH=386 go test -count=1 github.com/simelo/rextporter/test/integration
+	screen -S fakeSkycoinForIntegrationTest -X quit
 
 test-amd64: ## Run tests with GOARCH=amd64
-	# GOARCH=amd64  go test ./cmd/... -timeout=5m
-	# GOARCH=amd64  go test ./src/... -timeout=5m
-	GOARCH=amd64 go test github.com/simelo/rextporter/src/client
+	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/src/config
+	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/src/client
+	screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go
+	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/test/integration
+	screen -S fakeSkycoinForIntegrationTest -X quit
 
 lint: ## Run linters. Use make install-linters first.
 	vendorcheck ./...
 	golangci-lint run -c .golangci.yml ./...
 	# The govet version in golangci-lint is out of date and has spurious warnings, run it separately
 	go vet -all ./...
+
+check:
+	test
 
 install-linters: ## Install linters
 	go get -u github.com/FiloSottile/vendorcheck
