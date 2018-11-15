@@ -13,13 +13,13 @@ type Service struct {
 	Name string `json:"name"`
 	// Scheme is http or https
 	Scheme               string `json:"scheme"`
-	Location             Server `json:"location"`
 	Port                 uint16 `json:"port"`
-	BasePath             string `json:"base_path"`
-	AuthType             string `json:"auth_type"`
-	TokenHeaderKey       string `json:"token_header_key"`
-	GenTokenEndpoint     string `json:"gen_token_endpoint"`
-	TokenKeyFromEndpoint string `json:"token_key_from_endpoint"`
+	BasePath             string `json:"basePath"`
+	AuthType             string `json:"authType"`
+	TokenHeaderKey       string `json:"tokenHeaderKey"`
+	GenTokenEndpoint     string `json:"genTokenEndpoint"`
+	TokenKeyFromEndpoint string `json:"tokenKeyFromEndpoint"`
+	Location             Server `json:"location"`
 }
 
 // URIToGetMetric build the URI from where you will to get metric information

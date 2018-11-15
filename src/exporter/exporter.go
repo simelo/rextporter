@@ -12,10 +12,8 @@ import (
 
 // ExportMetrics will read the config file from the CLI parammeter `-config` if any
 // or use a default one.
-func ExportMetrics(configFile string, listenPort uint16) (srv *http.Server) {
-	if err := config.NewConfigFromFilePath(configFile); err != nil {
-		log.WithError(err).Fatalln("can not open the config file")
-	}
+func ExportMetrics(metricsConfFile, serviceConfFile string, listenPort uint16) (srv *http.Server) {
+	config.NewConfigFromFileSystem(metricsConfFile, serviceConfFile)
 	if collector, err := newSkycoinCollector(); err != nil {
 		log.WithError(err).Panicln("Can not create metrics")
 	} else {

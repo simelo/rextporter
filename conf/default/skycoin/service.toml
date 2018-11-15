@@ -1,0 +1,12 @@
+# Service configuration.
+name = "wallet"
+scheme = "http"
+port = 8000
+basePath = ""
+authType = "CSRF"
+tokenHeaderKey = "X-CSRF-Token"
+genTokenEndpoint = "/api/v1/csrf.json"
+tokenKeyFromEndpoint = "csrf_token"
+
+[location]
+  location = "localhost"

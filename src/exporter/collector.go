@@ -106,6 +106,7 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 }
 
 //Collect update all the descriptors is values
+// TODO(denisacostaq@gmail.com): Make a research about race conditions here, "lastSuccessValue"
 func (collector *SkycoinCollector) Collect(ch chan<- prometheus.Metric) {
 	collector.collectCounters(ch)
 	collector.collectGauges(ch)
