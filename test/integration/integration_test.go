@@ -57,19 +57,6 @@ const servicesProxyConfigFileContenTemplate = `
 		location = "localhost"
 `
 
-const servicesProxyConfigFileContenTemplateWithNonValiedMetricsEndpint = `
-# Service configuration.
-[[services]]
-	name = "myMonitoredAsProxyServer"
-	mode="proxy"
-	scheme = "http"
-	port = 8080
-	basePath = "/api/v1/health"
-	
-	[services.location]
-		location = "localhost"
-`
-
 const metricsConfigFileContenTemplate = `
 # All metrics to be measured.
 [[metrics]]
@@ -436,7 +423,18 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithNonMetricsEndpoint() {
 	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, "mymonitoredservermetri_s.toml")
 	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, "met4services.toml")
 	suite.mainConfTmplContent = mainConfigFileContenTemplate
-	suite.servicesConfTmplContent = servicesProxyConfigFileContenTemplateWithNonValiedMetricsEndpint
+	suite.servicesConfTmplContent = `
+	# Service configuration.
+	[[services]]
+		name = "myMonitoredAsProxyServer"
+		mode="proxy"
+		scheme = "http"
+		port = 8080
+		basePath = "/api/v1/health"
+
+		[services.location]
+			location = "localhost"
+	`
 	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
 	suite.createMainConfig()
@@ -465,6 +463,66 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithNonMetricsEndpoint() {
 	metricName := conf.Services[0].Name + "_skycoin_wallet2_seq2"
 	suite.require.Equal(metricName, "myMonitoredAsProxyServer_skycoin_wallet2_seq2")
 	suite.require.False(metricHealthIsOk(metricName, string(data)))
+	var usingAVariableToMakeLinterHappy = context.Context(nil)
+	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
+}
+
+func (suite *HealthSuit) TestMetricMonitorAsProxyWithMetricsNamesOverlap() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	suite.require = require.New(suite.T())
+	mainConfigDir := filepath.Join(os.TempDir(), "54ff54", "adf", "affa")
+	servicesDir := filepath.Join(os.TempDir(), "ffsff", "test")
+	myMonitoredServerMetricsDir := filepath.Join(os.TempDir(), "fd", "test")
+	metricsForServicesDir := filepath.Join(os.TempDir(), "integration", "trtr")
+	suite.createDirectoriesWithFullDepth([]string{mainConfigDir, servicesDir, myMonitoredServerMetricsDir, metricsForServicesDir})
+	suite.mainConfFilePath = filepath.Join(mainConfigDir, "rrrddr")
+	suite.servicesConfFilePath = filepath.Join(servicesDir, "servicezs.toml")
+	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, "monitoredservices.toml")
+	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, "servmetrics.toml")
+	suite.mainConfTmplContent = mainConfigFileContenTemplate
+	suite.servicesConfTmplContent = `
+	# Service configuration.
+	[[services]]
+		name = "myMonitoredAsProxyServer"
+		mode="proxy"
+		scheme = "http"
+		port = 8080
+		basePath = "/a_few_metrics"
+		
+		[services.location]
+			location = "localhost"
+	`
+	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
+	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
+	suite.createMainConfig()
+	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics6", 8086)
+	suite.require.NotNil(srv)
+	conf := config.Config()
+	// NOTE(denisacostaq@gmail.com): Wait for server starts
+	time.Sleep(time.Second * 2)
+
+	// NOTE(denisacostaq@gmail.com): When
+	resp, err := http.Get("http://127.0.0.1:8086/metrics6")
+	if err == nil {
+		defer func() {
+			suite.Nil(resp.Body.Close())
+		}()
+	}
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Nil(err)
+	suite.Equal(http.StatusOK, resp.StatusCode)
+	var data []byte
+	data, err = ioutil.ReadAll(resp.Body)
+	suite.Nil(err)
+	suite.require.Len(conf.Services, 1)
+	suite.require.Len(conf.Services[0].Metrics, 0)
+	metricName := conf.Services[0].Name + "_seq"
+	suite.require.Equal(metricName, "myMonitoredAsProxyServer_seq")
+	suite.require.True(metricHealthIsOk(metricName, string(data)))
+	metricName = conf.Services[0].Name + "_main_seq"
+	suite.require.Equal(metricName, "myMonitoredAsProxyServer_main_seq")
+	suite.require.True(metricHealthIsOk(metricName, string(data)))
 	var usingAVariableToMakeLinterHappy = context.Context(nil)
 	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
 }

@@ -201,8 +201,30 @@ func exposedMetricHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func exposedAFewMetrics(w http.ResponseWriter, r *http.Request) {
+	var metrics = `
+# HELP main_seq Says if the same name metric(skycoin_wallet2_seq2) was success updated, 1 for ok, 0 for failed.
+# TYPE main_seq gauge
+main_seq 13
+# HELP main_seq_up Says if the same name metric(skycoin_wallet2_seq2) was success updated, 1 for ok, 0 for failed.
+# TYPE main_seq_up gauge
+main_seq_up 0
+# HELP seq Says if the same name metric(skycoin_wallet2_seq2) was success updated, 1 for ok, 0 for failed.
+# TYPE seq gauge
+seq 32
+# HELP seq_up Says if the same name metric(skycoin_wallet2_seq2) was success updated, 1 for ok, 0 for failed.
+# TYPE seq_up gauge
+seq_up 0
+`
+	if _, err := w.Write([]byte(metrics)); err != nil {
+		log.WithError(err).Panicln("unable to write response")
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 func main() {
 	http.HandleFunc("/api/v1/health", apiHealthHandler)
 	http.HandleFunc("/metrics", exposedMetricHandler)
+	http.HandleFunc("/a_few_metrics", exposedAFewMetrics)
 	log.WithError(http.ListenAndServe(":8080", nil)).Fatalln("server fail")
 }
