@@ -2,22 +2,15 @@
 .PHONY: test install-linters test-386 test-amd64 lint
 
 test: ## Run test with GOARCH=Default
-	# go test  -timeout=5m ./src/...
-	# go test  -timeout=5m ./cmd/...
-	go test -count=1 github.com/simelo/rextporter/test/config
-	go test -count=1 github.com/simelo/rextporter/src/client
-	go test -count=1 github.com/simelo/rextporter/test/integration
-	@mkdir -p coverage/
-	go test -count=1 github.com/simelo/rextporter/test/config
+	go test -count=1 github.com/simelo/rextporter/src/config
 	go test -count=1 github.com/simelo/rextporter/src/client
 	screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go
 	sleep 3
 	go test -count=1 github.com/simelo/rextporter/test/integration
 	screen -S fakeSkycoinForIntegrationTest -X quit
 
+
 test-386: ## Run tests  with GOARCH=386
-	# GOARCH=386 go test ./cmd/... -timeout=5m
-	# GOARCH=386 go test ./src/... -timeout=5m
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/config
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/client
 	screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go
@@ -26,8 +19,6 @@ test-386: ## Run tests  with GOARCH=386
 	screen -S fakeSkycoinForIntegrationTest -X quit
 
 test-amd64: ## Run tests with GOARCH=amd64
-	# GOARCH=amd64  go test ./cmd/... -timeout=5m
-	# GOARCH=amd64  go test ./src/... -timeout=5m
 	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/src/config
 	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/src/client
 	screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go
@@ -42,10 +33,7 @@ lint: ## Run linters. Use make install-linters first.
 	go vet -all ./...
 
 check:
-	test integration-test-enable-seed-api
-
-integration-test-enable-seed-api: ## Run enable seed api integration test
-	GOCACHE=off COIN=$(COIN) ./ci-scripts/integration-test-enable-seed-api.sh
+	test
 
 install-linters: ## Install linters
 	go get -u github.com/FiloSottile/vendorcheck
