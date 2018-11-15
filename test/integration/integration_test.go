@@ -252,13 +252,10 @@ func (suite *HealthSuit) TestDefaultGeneratedConfigWorks() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8081/metrics1")
-	if err == nil {
-		defer func() {
-			suite.Nil(resp.Body.Close())
-		}()
-	}
+
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
+	defer func() { suite.Nil(resp.Body.Close()) }()
 	suite.Equal(http.StatusOK, resp.StatusCode)
 	var data []byte
 	data, err = ioutil.ReadAll(resp.Body)
@@ -297,13 +294,9 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8082/metrics2")
-	if err == nil {
-		defer func() {
-			suite.Nil(resp.Body.Close())
-		}()
-	}
 
 	// NOTE(denisacostaq@gmail.com): Assert
+	defer func() { suite.Nil(resp.Body.Close()) }()
 	suite.Nil(err)
 	suite.Equal(http.StatusOK, resp.StatusCode)
 	var data []byte
@@ -343,13 +336,9 @@ func (suite *HealthSuit) TestMetricMonitorHealthCanSetUpFlag() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8083/metrics3")
-	if err == nil {
-		defer func() {
-			suite.Nil(resp.Body.Close())
-		}()
-	}
 
 	// NOTE(denisacostaq@gmail.com): Assert
+	defer func() { suite.Nil(resp.Body.Close()) }()
 	suite.Nil(err)
 	suite.Equal(http.StatusOK, resp.StatusCode)
 	var data []byte
@@ -389,14 +378,10 @@ func (suite *HealthSuit) TestMetricMonitorAsProxy() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8084/metrics4")
-	if err == nil {
-		defer func() {
-			suite.Nil(resp.Body.Close())
-		}()
-	}
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
+	defer func() { suite.Nil(resp.Body.Close()) }()
 	suite.Equal(http.StatusOK, resp.StatusCode)
 	var data []byte
 	data, err = ioutil.ReadAll(resp.Body)
@@ -446,14 +431,10 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithNonMetricsEndpoint() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8085/metrics5")
-	if err == nil {
-		defer func() {
-			suite.Nil(resp.Body.Close())
-		}()
-	}
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
+	defer func() { suite.Nil(resp.Body.Close()) }()
 	suite.Equal(http.StatusOK, resp.StatusCode)
 	var data []byte
 	data, err = ioutil.ReadAll(resp.Body)
@@ -503,14 +484,10 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithMetricsNamesOverlap() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	resp, err := http.Get("http://127.0.0.1:8086/metrics6")
-	if err == nil {
-		defer func() {
-			suite.Nil(resp.Body.Close())
-		}()
-	}
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
+	defer func() { suite.Nil(resp.Body.Close()) }()
 	suite.Equal(http.StatusOK, resp.StatusCode)
 	var data []byte
 	data, err = ioutil.ReadAll(resp.Body)
