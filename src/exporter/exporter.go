@@ -20,7 +20,7 @@ import (
 )
 
 func findMetricsName(metricsData string) (metricsNames []string) {
-	rex := regexp.MustCompile("# TYPE [a-zA-Z_:][a-zA-Z0-9_:]*")
+	rex := regexp.MustCompile(`# TYPE [a-zA-Z_:][a-zA-Z0-9_:]*`)
 	metricsNameLines := rex.FindAllString(metricsData, -1)
 	metricsNames = make([]string, len(metricsNameLines))
 	for idx, metricsNameLine := range metricsNameLines {
