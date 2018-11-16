@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/simelo/rextporter/src/common"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+    "github.com/simelo/rextporter/src/util"
 )
 
 // RootConfig is the top level node for the config tree, it has a list of metrics and a
@@ -41,12 +41,12 @@ func NewConfigFromRawString(strConf string) error {
 	buff := bytes.NewBuffer([]byte(strConf))
 	if err := viper.ReadConfig(buff); err != nil {
 		errCause := fmt.Sprintln("can not read the buffer: ", err.Error())
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	rootConfig = RootConfig{}
 	if err := viper.Unmarshal(&rootConfig); err != nil {
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	rootConfig.validate()
 	return nil
@@ -63,12 +63,12 @@ func newMetricsConfig(path string) (metricsConf []Metric, err error) {
 	viper.SetConfigFile(path)
 	if err := viper.ReadInConfig(); err != nil {
 		errCause := fmt.Sprintln("error reading config file: ", path, err.Error())
-		return metricsConf, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return metricsConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var root RootConfig
 	if err := viper.Unmarshal(&root); err != nil {
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
-		return metricsConf, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return metricsConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return root.Metrics, nil
 }
@@ -79,7 +79,7 @@ func newServiceConfigFromFile(path string) (serviceConf Service, err error) {
 	serviceConfReader := NewServiceConfigFromFile(path)
 	if serviceConf, err = serviceConfReader.GetConfig(); err != nil {
 		errCause := "error reading service config"
-		return serviceConf, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return serviceConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return serviceConf, err
 }
@@ -98,11 +98,11 @@ func NewConfigFromFileSystem(mainConfigPath string) {
 	}
 	if rootConfig.Metrics, err = newMetricsConfig(conf.MetricsConfigPath()); err != nil {
 		errCause := "error reading metrics config: " + err.Error()
-		panic(common.ErrorFromThisScope(errCause, generalScopeErr))
+		panic(util.ErrorFromThisScope(errCause, generalScopeErr))
 	}
 	if rootConfig.Service, err = newServiceConfigFromFile(conf.ServiceConfigPath()); err != nil {
 		errCause := "root cause: " + err.Error()
-		panic(common.ErrorFromThisScope(errCause, generalScopeErr))
+		panic(util.ErrorFromThisScope(errCause, generalScopeErr))
 	}
 	rootConfig.validate()
 }

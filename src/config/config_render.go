@@ -8,7 +8,7 @@ import (
 	"text/template"
 
 	"github.com/shibukawa/configdir"
-	"github.com/simelo/rextporter/src/common"
+	"github.com/simelo/rextporter/src/util"
 	"github.com/simelo/rextporter/src/util/file"
 	"github.com/spf13/viper"
 )
@@ -123,20 +123,20 @@ func (confData mainConfigData) createServiceConfigFile() (err error) {
 	var templateEngine *template.Template
 	if templateEngine, err = tmpl.Parse(serviceConfigFileContentTemplate); err != nil {
 		errCause := "error parsing service config: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err = file.CreteFullPathForFile(confData.ServiceConfigPath()); err != nil {
 		errCause := "error creating directory for service file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var serviceConfigFile *os.File
 	if serviceConfigFile, err = os.Create(confData.ServiceConfigPath()); err != nil {
 		errCause := "error creating service config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err = templateEngine.Execute(serviceConfigFile, nil); err != nil {
 		errCause := "error writing main config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return err
 }
@@ -156,20 +156,20 @@ func (confData mainConfigData) createMetricsConfigFile() (err error) {
 	var templateEngine *template.Template
 	if templateEngine, err = tmpl.Parse(metricsConfigFileContentTemplate); err != nil {
 		errCause := "error parsing metrics config: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err = file.CreteFullPathForFile(confData.MetricsConfigPath()); err != nil {
 		errCause := "error creating directory for metrics file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var metricsConfigFile *os.File
 	if metricsConfigFile, err = os.Create(confData.MetricsConfigPath()); err != nil {
 		errCause := "error creating metrics config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err = templateEngine.Execute(metricsConfigFile, nil); err != nil {
 		errCause := "error writing metrics config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return err
 }
@@ -189,20 +189,20 @@ func (confData mainConfigData) createMainConfigFile() (err error) {
 	var templateEngine *template.Template
 	if templateEngine, err = tmpl.Parse(mainConfigFileContentTemplate); err != nil {
 		errCause := "error parsing main config: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err = file.CreteFullPathForFile(confData.MainConfigPath()); err != nil {
 		errCause := "error creating directory for main file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var mainConfigFile *os.File
 	if mainConfigFile, err = os.Create(confData.MainConfigPath()); err != nil {
 		errCause := "error creating main config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err = templateEngine.Execute(mainConfigFile, confData.tmplData); err != nil {
 		errCause := "error writing main config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return err
 }
@@ -233,12 +233,12 @@ func tmplDataFromMainFile(mainConfigFilePath string) (tmpl templateData, err err
 	viper.SetConfigType("toml")
 	if err := viper.ReadInConfig(); err != nil {
 		errCause := fmt.Sprintln("error reading config file: ", mainConfigFilePath, err.Error())
-		return tmpl, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return tmpl, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var mainConf templateData
 	if err := viper.Unmarshal(&mainConf); err != nil {
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
-		return tmpl, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return tmpl, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	tmpl.ServiceConfigPath, tmpl.MetricsConfigPath = mainConf.ServiceConfigPath, mainConf.MetricsConfigPath
 	return tmpl, err
@@ -255,21 +255,21 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 		var homeConf *configdir.Config
 		if homeConf, err = file.HomeConfigFolder(systemVendorName, systemProgramName); err != nil {
 			errCause := "error looking for config folder under home: " + err.Error()
-			return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
+			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		path = mainDefaultConfigPath(homeConf)
 		tmplData = defaultTmplData(homeConf)
 	} else {
 		if tmplData, err = tmplDataFromMainFile(path); err != nil {
 			errCause := "error reading template data from file: " + err.Error()
-			return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
+			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	}
 	if strings.Compare(tmplData.ServiceConfigPath, "") == 0 || strings.Compare(tmplData.MetricsConfigPath, "") == 0 {
 		var homeConf *configdir.Config
 		if homeConf, err = file.HomeConfigFolder(systemVendorName, systemProgramName); err != nil {
 			errCause := "error looking for config folder under home: " + err.Error()
-			return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
+			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		tmpTmplData := defaultTmplData(homeConf)
 		if strings.Compare(tmplData.ServiceConfigPath, "") == 0 {
@@ -285,15 +285,15 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 	}
 	if err = mainConf.createMainConfigFile(); err != nil {
 		errCause := "error creating main config file: " + err.Error()
-		return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err = mainConf.createMetricsConfigFile(); err != nil {
 		errCause := "error creating metrics config file: " + err.Error()
-		return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err = mainConf.createServiceConfigFile(); err != nil {
 		errCause := "error creating service config file: " + err.Error()
-		return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return mainConf, err
 }

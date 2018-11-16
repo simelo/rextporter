@@ -5,8 +5,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
-	"github.com/simelo/rextporter/src/common"
 	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/util"
 )
 
 // CounterMetric has the necessary http client to get and updated value for the counter metric
@@ -22,7 +22,7 @@ func createCounter(metricConf config.Metric, conf config.RootConfig) (metric Cou
 	var metricClient *client.MetricClient
 	if metricClient, err = client.NewMetricClient(metricConf, conf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
-		return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metric = CounterMetric{
 		Client:     metricClient,
@@ -42,7 +42,7 @@ func createCounters() ([]CounterMetric, error) {
 			counters[idx] = counter
 		} else {
 			errCause := "error creating counter: " + err.Error()
-			return []CounterMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
+			return []CounterMetric{}, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	}
 	return counters, nil
@@ -61,7 +61,7 @@ func createGauge(metricConf config.Metric, conf config.RootConfig) (metric Gauge
 	var metricClient *client.MetricClient
 	if metricClient, err = client.NewMetricClient(metricConf, conf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
-		return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metric = GaugeMetric{
 		Client:     metricClient,
@@ -80,7 +80,7 @@ func createGauges() ([]GaugeMetric, error) {
 		gauge, err := createGauge(metric, conf)
 		if err != nil {
 			errCause := fmt.Sprintln("error creating gauge: ", err.Error())
-			return []GaugeMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
+			return []GaugeMetric{}, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		gauges[idx] = gauge
 	}

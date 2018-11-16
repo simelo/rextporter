@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/alecthomas/template"
-	"github.com/simelo/rextporter/src/common"
 	"github.com/simelo/rextporter/src/exporter"
+	"github.com/simelo/rextporter/src/util"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -31,16 +31,16 @@ func createConfigFile(tmplContent, path string, data interface{}) (err error) {
 	var templateEngine *template.Template
 	if templateEngine, err = tmpl.Parse(tmplContent); err != nil {
 		errCause := "error parsing config: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var configFile *os.File
 	if configFile, err = os.Create(path); err != nil {
 		errCause := "error creating config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err = templateEngine.Execute(configFile, data); err != nil {
 		errCause := "error writing config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return err
 }
@@ -49,7 +49,7 @@ func createServiceConfig(tmplContent, path string) (err error) {
 	generalScopeErr := "error creating service config file for integration test"
 	if err = createConfigFile(tmplContent, path, nil); err != nil {
 		errCause := "error writing service config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return err
 }
@@ -76,7 +76,7 @@ func createMetricsConfig(tmplContent, path string) (err error) {
 	generalScopeErr := "error creating metrics config file for integration test"
 	if err = createConfigFile(tmplContent, path, nil); err != nil {
 		errCause := "error writing metrics config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return err
 }
@@ -109,15 +109,15 @@ func createMainConfig(tmplContent, path, metricsConfigPath, serviceConfigPath st
 	}
 	if err = createConfigFile(tmplContent, path, confData); err != nil {
 		errCause := "error writing main config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err = createServiceConfigPaths(serviceConfigPath); err != nil {
 		errCause := "error writing service config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err = createMetricsConfigPaths(metricsConfigPath); err != nil {
 		errCause := "error writing metrics config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return err
 }
