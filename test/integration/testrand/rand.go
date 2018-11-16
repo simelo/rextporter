@@ -10,13 +10,20 @@ import (
 )
 
 // testingFolder return a default testing folder root
-func testingFolder() string {
-	return filepath.Join(os.TempDir(), "testingFolder")
+func testingFolder() (testingFolder string, err error) {
+	testingFolder = filepath.Join(os.TempDir(), "testingFolder")
+	if err = os.MkdirAll(testingFolder, 0750); err != nil {
+		log.WithError(err).Infoln("creating testing folder")
+		return testingFolder, err
+	}
+	return testingFolder, err
 }
 
 // FilePathToSharePort path in which you should write/read the port number where fake server is listinning
-func FilePathToSharePort() string {
-	return filepath.Join(testingFolder(), "listenport.txt")
+func FilePathToSharePort() (path string, err error) {
+	var testFolder string
+	testFolder, err = testingFolder()
+	return filepath.Join(testFolder, "listenport.txt"), err
 }
 
 // RName return a random string from a predefined list
@@ -31,7 +38,11 @@ func RName() string {
 
 // RFolderPath return a random folder path under a directory from tmp
 func RFolderPath() string {
-	path := filepath.Join(testingFolder(), RName())
+	testFolder, err := testingFolder()
+	if err != nil {
+		return ""
+	}
+	path := filepath.Join(testFolder, RName())
 	src := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(src)
 	deep := r.Intn(5)

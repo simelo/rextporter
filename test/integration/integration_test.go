@@ -153,7 +153,8 @@ metricsConfigPath = "{{.MetricsConfigPath}}"
 }
 
 func readListenPortFromFile() (port uint16, err error) {
-	path := testrand.FilePathToSharePort()
+	var path string
+	path, err = testrand.FilePathToSharePort()
 	var file *os.File
 	file, err = os.OpenFile(path, os.O_RDONLY, 0400)
 	if err != nil {
@@ -243,6 +244,7 @@ func (suite *HealthSuit) TestConfigWorks() {
 	log.Println("resp, err", resp, err)
 	// // NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
+	// suite.NotNil(err)
 	suite.Equal(http.StatusOK, resp.StatusCode)
 	require.Nil(srv.Shutdown(context.Context(nil)))
 }
