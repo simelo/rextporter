@@ -4,7 +4,6 @@
 test: ## Run test with GOARCH=Default
 	go test -count=1 github.com/simelo/rextporter/src/config
 	go test -count=1 github.com/simelo/rextporter/src/client
-	if [ -d /home/travis/.config/simelo/rextporter ]; then cat /home/travis/.config/simelo/rextporter/metrics.toml; fi
 	if ! screen -list | grep -q "fakeSkycoinForIntegrationTest"; then echo "creating screen fakeSkycoinForIntegrationTest"; screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; else echo "fakeSkycoinForIntegrationTest screen already exist. quiting it to create a new one"; screen -S fakeSkycoinForIntegrationTest -X quit; screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; fi
 	sleep 3
 	go test -count=1 github.com/simelo/rextporter/test/integration
@@ -15,7 +14,6 @@ test: ## Run test with GOARCH=Default
 test-386: ## Run tests  with GOARCH=386
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/config
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/client
-	if [ -d /home/travis/.config/simelo/rextporter ]; then cat /home/travis/.config/simelo/rextporter/metrics.toml; fi
 	if ! screen -list | grep -q "fakeSkycoinForIntegrationTest"; then echo "creating screen fakeSkycoinForIntegrationTest"; screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; else echo "fakeSkycoinForIntegrationTest screen already exist. quiting it to create a new one"; screen -S fakeSkycoinForIntegrationTest -X quit; screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; fi
 	sleep 3
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/test/integration
@@ -25,7 +23,6 @@ test-386: ## Run tests  with GOARCH=386
 test-amd64: ## Run tests with GOARCH=amd64
 	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/src/config
 	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/src/client
-	if [ -d /home/travis/.config/simelo/rextporter ]; then cat /home/travis/.config/simelo/rextporter/metrics.toml; fi
 	if ! screen -list | grep -q "fakeSkycoinForIntegrationTest"; then echo "creating screen fakeSkycoinForIntegrationTest"; screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; else echo "fakeSkycoinForIntegrationTest screen already exist. quiting it to create a new one"; screen -S fakeSkycoinForIntegrationTest -X quit; screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; fi
 	sleep 3
 	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/test/integration

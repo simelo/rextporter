@@ -92,12 +92,9 @@ const metricsConfigFileContentTemplate = `
 # if you refer(under "metrics_for_host") to a not previously defined host or metric it will be raise an error and the process will not start
 # if in all your definition you not use some host or metric the process will raise a warning and the process will start normally.
 # from https://github.com/simelo/rextporter/pull/17
-
-
-@denisacostaq services should be match against whole templates , rather than individual metrics. 
-The match is not for hosts directly . The match is for service types . Works like this
-
-metrics <- m:1 -> templates <- m:n -> services <- 1:n -> (physical | virtual) hosts
+# @denisacostaq services should be match against whole templates , rather than individual metrics. 
+# The match is not for hosts directly . The match is for service types . Works like this
+# metrics <- m:1 -> templates <- m:n -> services <- 1:n -> (physical | virtual) hosts
 `
 
 var (
