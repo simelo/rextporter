@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/shibukawa/configdir"
 	"github.com/simelo/rextporter/src/common"
+	"github.com/simelo/rextporter/src/util/file"
 	"github.com/spf13/viper"
 )
 
@@ -91,6 +91,13 @@ const metricsConfigFileContentTemplate = `
 # TODO(denisacostaq@gmail.com):
 # if you refer(under "metrics_for_host") to a not previously defined host or metric it will be raise an error and the process will not start
 # if in all your definition you not use some host or metric the process will raise a warning and the process will start normally.
+# from https://github.com/simelo/rextporter/pull/17
+
+
+@denisacostaq services should be match against whole templates , rather than individual metrics. 
+The match is not for hosts directly . The match is for service types . Works like this
+
+metrics <- m:1 -> templates <- m:n -> services <- 1:n -> (physical | virtual) hosts
 `
 
 var (
@@ -101,29 +108,8 @@ var (
 	metricsConfigFileName = "metrics.toml"
 )
 
-func createFullPath(path string) error {
-	return os.MkdirAll(path, 0750)
-}
-
-func creteFullPathForFile(filePath string) (err error) {
-	dir, _ := filepath.Split(filePath)
-	return createFullPath(dir)
-}
-
-// isADirectoryPath get info about the path string not about a phisical resource in the filesystem.
-// return true if the path is a directory path
-func isADirectoryPath(path string) bool {
-	dir, file := filepath.Split(path)
-	return (strings.Compare(dir, "") != 0 && strings.Compare(file, "") == 0)
-}
-
-func existFile(path string) bool {
-	_, err := os.Stat(path)
-	return !os.IsNotExist(err)
-}
-
 func (confData mainConfigData) existServiceConfigFile() bool {
-	return existFile(confData.ServiceConfigPath())
+	return file.ExistFile(confData.ServiceConfigPath())
 }
 
 // createServiceConfigFile creates the service file or return an error if any,
@@ -139,7 +125,7 @@ func (confData mainConfigData) createServiceConfigFile() (err error) {
 		errCause := "error parsing service config: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = creteFullPathForFile(confData.ServiceConfigPath()); err != nil {
+	if err = file.CreteFullPathForFile(confData.ServiceConfigPath()); err != nil {
 		errCause := "error creating directory for service file: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -156,7 +142,7 @@ func (confData mainConfigData) createServiceConfigFile() (err error) {
 }
 
 func (confData mainConfigData) existMetricsConfigFile() bool {
-	return existFile(confData.tmplData.MetricsConfigPath)
+	return file.ExistFile(confData.tmplData.MetricsConfigPath)
 }
 
 // createMetricsConfigFile creates the metrics file or return an error if any,
@@ -172,7 +158,7 @@ func (confData mainConfigData) createMetricsConfigFile() (err error) {
 		errCause := "error parsing metrics config: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = creteFullPathForFile(confData.MetricsConfigPath()); err != nil {
+	if err = file.CreteFullPathForFile(confData.MetricsConfigPath()); err != nil {
 		errCause := "error creating directory for metrics file: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -189,7 +175,7 @@ func (confData mainConfigData) createMetricsConfigFile() (err error) {
 }
 
 func (confData mainConfigData) existMainConfigFile() bool {
-	return existFile(confData.MetricsConfigPath())
+	return file.ExistFile(confData.MetricsConfigPath())
 }
 
 // createMainConfigFile creates the main file or return an error if any,
@@ -205,7 +191,7 @@ func (confData mainConfigData) createMainConfigFile() (err error) {
 		errCause := "error parsing main config: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = creteFullPathForFile(confData.MainConfigPath()); err != nil {
+	if err = file.CreteFullPathForFile(confData.MainConfigPath()); err != nil {
 		errCause := "error creating directory for main file: " + err.Error()
 		return common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -221,29 +207,16 @@ func (confData mainConfigData) createMainConfigFile() (err error) {
 	return err
 }
 
-func homeConfigFolder() (*configdir.Config, error) {
-	configDirs := configdir.New(systemVendorName, systemProgramName)
-	folders := configDirs.QueryFolders(configdir.Global)
-	if len(folders) <= 0 {
-		return nil, errors.New("some strange error was happen, can not determine the home config folder")
-	}
-	return folders[0], nil
-}
-
-func fileDefaultConfigPath(fileName string, homeConf *configdir.Config) (path string) {
-	return filepath.Join(homeConf.Path, fileName)
-}
-
 func metricsDefaultConfigPath(conf *configdir.Config) (path string) {
-	return fileDefaultConfigPath(metricsConfigFileName, conf)
+	return file.DefaultConfigPath(metricsConfigFileName, conf)
 }
 
 func serviceDefaultConfigPath(conf *configdir.Config) (path string) {
-	return fileDefaultConfigPath(serviceConfigFileName, conf)
+	return file.DefaultConfigPath(serviceConfigFileName, conf)
 }
 
 func mainDefaultConfigPath(conf *configdir.Config) (path string) {
-	return fileDefaultConfigPath(mainConfigFileName, conf)
+	return file.DefaultConfigPath(mainConfigFileName, conf)
 }
 
 func defaultTmplData(conf *configdir.Config) (tmplData templateData) {
@@ -273,14 +246,14 @@ func tmplDataFromMainFile(mainConfigFilePath string) (tmpl templateData, err err
 
 func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 	generalScopeErr := "can not create main config instance"
-	if isADirectoryPath(path) {
+	if file.IsADirectoryPath(path) {
 		path = filepath.Join(path, mainConfigFileName)
 	}
 	var tmplData templateData
-	if strings.Compare(path, "") == 0 || !existFile(path) {
+	if strings.Compare(path, "") == 0 || !file.ExistFile(path) {
 		// TODO(denisacostaq@gmail.com): move homeConf to fn defaultTmplData
 		var homeConf *configdir.Config
-		if homeConf, err = homeConfigFolder(); err != nil {
+		if homeConf, err = file.HomeConfigFolder(systemVendorName, systemProgramName); err != nil {
 			errCause := "error looking for config folder under home: " + err.Error()
 			return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
@@ -294,7 +267,7 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 	}
 	if strings.Compare(tmplData.ServiceConfigPath, "") == 0 || strings.Compare(tmplData.MetricsConfigPath, "") == 0 {
 		var homeConf *configdir.Config
-		if homeConf, err = homeConfigFolder(); err != nil {
+		if homeConf, err = file.HomeConfigFolder(systemVendorName, systemProgramName); err != nil {
 			errCause := "error looking for config folder under home: " + err.Error()
 			return mainConf, common.ErrorFromThisScope(errCause, generalScopeErr)
 		}
