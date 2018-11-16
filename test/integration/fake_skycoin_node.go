@@ -85,14 +85,12 @@ func writeListenPortInFile(port uint16) (err error) {
 }
 
 func main() {
+	log.Errorln("func main() {")
 	var fakeNodePort = testrand.RandomPort()
 	if err := writeListenPortInFile(fakeNodePort); err != nil {
 		log.Fatal(err)
 	}
 	log.WithField("port", fakeNodePort).Infoln("starting fake server")
-	// log.WithField("port", testrand.RandomPort()).Infoln("starting fake server")
-	// log.WithField("port", testrand.RandomPort()).Infoln("starting fake server")
-	// log.WithField("port", testrand.RandomPort()).Infoln("starting fake server")
 	handler := http.HandlerFunc(httpHandler)
 	log.WithError(http.ListenAndServe(fmt.Sprintf(":%d", fakeNodePort), handler)).Fatalln("server fail")
 }
