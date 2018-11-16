@@ -24,6 +24,8 @@ type HealthSuit struct {
 	suite.Suite
 }
 
+var fakeNodePort uint16
+
 func createConfigFile(tmplContent, path string, data interface{}) (err error) {
 	generalScopeErr := "error creating config file for integration test"
 	if strings.Compare(tmplContent, "") == 0 || strings.Compare(path, "") == 0 {
@@ -150,8 +152,32 @@ metricsConfigPath = "{{.MetricsConfigPath}}"
 		createMainConfig(mainConfigFileContenTemplate, mainConfFilePath, metricsConfigPath, serviceConfigPath)
 }
 
+func readListenPortFromFile() (port uint16, err error) {
+	path := testrand.FilePathToSharePort()
+	var file *os.File
+	file, err = os.OpenFile(path, os.O_RDONLY, 0400)
+	if err != nil {
+		return 0, err
+	}
+	defer file.Close()
+	_, err = fmt.Fscanf(file, "%d", &port)
+	if err != nil {
+		return port, err
+	}
+	return port, err
+}
+
 func TestSkycoinHealthSuit(t *testing.T) {
 	suite.Run(t, new(HealthSuit))
+}
+
+func (suite *HealthSuit) SetupSuite() {
+	require := require.New(suite.T())
+	var port uint16
+	var err error
+	port, err = readListenPortFromFile()
+	require.Nil(err)
+	fakeNodePort = port
 }
 
 func (suite *HealthSuit) TestMetricMonitorHealth() {

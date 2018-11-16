@@ -14,6 +14,11 @@ func testingFolder() string {
 	return filepath.Join(os.TempDir(), "testingFolder")
 }
 
+// FilePathToSharePort path in which you should write/read the port number where fake server is listinning
+func FilePathToSharePort() string {
+	return filepath.Join(testingFolder(), "listenport.txt")
+}
+
 // RName return a random string from a predefined list
 func RName() string {
 	names := []string{"a", "bsfdf", "test", "integration", "integration_test", "fake", "32", "other", "dfdf"}
