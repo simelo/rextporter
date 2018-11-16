@@ -7,6 +7,7 @@ test: ## Run test with GOARCH=Default
 	screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go
 	sleep 3
 	go test -count=1 github.com/simelo/rextporter/test/integration
+	screen -list
 	screen -S fakeSkycoinForIntegrationTest -X quit
 
 
@@ -16,6 +17,7 @@ test-386: ## Run tests  with GOARCH=386
 	screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go
 	sleep 3
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/test/integration
+	screen -list
 	screen -S fakeSkycoinForIntegrationTest -X quit
 
 test-amd64: ## Run tests with GOARCH=amd64
@@ -24,6 +26,7 @@ test-amd64: ## Run tests with GOARCH=amd64
 	screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go
 	sleep 3
 	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/test/integration
+	screen -list
 	screen -S fakeSkycoinForIntegrationTest -X quit
 
 lint: ## Run linters. Use make install-linters first.
