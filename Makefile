@@ -14,9 +14,12 @@ test: ## Run test with GOARCH=Default
 test-386: ## Run tests  with GOARCH=386
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/config
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/client
+	if [ -d /home/travis/.config/simelo/rextporter ]; then echo "a1"; cat /home/travis/.config/simelo/rextporter/metrics.toml; else echo "b1"; fi
 	if ! screen -list | grep -q "fakeSkycoinForIntegrationTest"; then echo "creating screen fakeSkycoinForIntegrationTest"; screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; else echo "fakeSkycoinForIntegrationTest screen already exist. quiting it to create a new one"; screen -S fakeSkycoinForIntegrationTest -X quit; screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; fi
 	sleep 3
+	if [ -d /home/travis/.config/simelo/rextporter ]; then echo "a2"; cat /home/travis/.config/simelo/rextporter/metrics.toml; else echo "b2"; fi
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/test/integration
+	if [ -d /home/travis/.config/simelo/rextporter ]; then echo "a3"; cat /home/travis/.config/simelo/rextporter/metrics.toml; else echo "b3"; fi
 	screen -list
 	screen -S fakeSkycoinForIntegrationTest -X quit
 
