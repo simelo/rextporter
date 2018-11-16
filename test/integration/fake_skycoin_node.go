@@ -55,6 +55,7 @@ func writeListenPortInFile(port uint16) (err error) {
 	if !file.ExistFile(path) {
 		var file, err = os.Create(path)
 		if err != nil {
+			log.WithError(err).Errorln("error creating file")
 			return err
 		}
 		defer file.Close()
@@ -62,15 +63,18 @@ func writeListenPortInFile(port uint16) (err error) {
 	var file *os.File
 	file, err = os.OpenFile(path, os.O_WRONLY, 0400)
 	if err != nil {
+		log.WithError(err).Errorln("error opening file")
 		return err
 	}
 	defer file.Close()
 	_, err = file.WriteString(fmt.Sprintf("%d", port))
 	if err != nil {
+		log.WithError(err).Errorln("error writing file")
 		return err
 	}
 	err = file.Sync()
 	if err != nil {
+		log.WithError(err).Errorln("error flushing file")
 		return err
 	}
 	return err

@@ -157,11 +157,13 @@ func readListenPortFromFile() (port uint16, err error) {
 	var file *os.File
 	file, err = os.OpenFile(path, os.O_RDONLY, 0400)
 	if err != nil {
+		log.WithError(err).Errorln("error opening file")
 		return 0, err
 	}
 	defer file.Close()
 	_, err = fmt.Fscanf(file, "%d", &port)
 	if err != nil {
+		log.WithError(err).Errorln("error reading file")
 		return port, err
 	}
 	return port, err
