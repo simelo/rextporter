@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
+	"github.com/simelo/rextporter/test/integration/testrand"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,7 +48,10 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+var fakeNodePort = testrand.RandomPort()
+
 func main() {
+	log.Println("fakeNodePort", fakeNodePort)
 	handler := http.HandlerFunc(httpHandler)
-	log.WithError(http.ListenAndServe(":8080", handler)).Fatalln("server fail")
+	log.WithError(http.ListenAndServe(fmt.Sprintf(":%d", fakeNodePort), handler)).Fatalln("server fail")
 }

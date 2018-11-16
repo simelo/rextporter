@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-    "github.com/simelo/rextporter/src/util"
 )
 
 // RootConfig is the top level node for the config tree, it has a list of metrics and a

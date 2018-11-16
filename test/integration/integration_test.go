@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,6 +14,8 @@ import (
 	"github.com/alecthomas/template"
 	"github.com/simelo/rextporter/src/exporter"
 	"github.com/simelo/rextporter/src/util"
+	"github.com/simelo/rextporter/test/integration/testrand"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -47,7 +49,7 @@ func createConfigFile(tmplContent, path string, data interface{}) (err error) {
 
 func createServiceConfig(tmplContent, path string) (err error) {
 	generalScopeErr := "error creating service config file for integration test"
-	if err = createConfigFile(tmplContent, path, nil); err != nil {
+	if err = createConfigFile(tmplContent, path, fakeNodePort); err != nil {
 		errCause := "error writing service config file: " + err.Error()
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -59,7 +61,7 @@ func createServiceConfigPaths(serviceConfigPath string) (err error) {
 	# Service configuration.
 	name = "myMonitoredServer"
 	scheme = "http"
-	port = 8080
+	port = {{.}}
 	basePath = ""
 	authType = "CSRF"
 	tokenHeaderKey = "X-CSRF-Token"
@@ -129,17 +131,17 @@ serviceConfigTransport = "file"
 serviceConfigPath = "{{.ServiceConfigPath}}"
 metricsConfigPath = "{{.MetricsConfigPath}}"
 `
-	mainConfigDir := filepath.Join(os.TempDir(), "sdsds", "675656", "aa")
+	mainConfigDir := testrand.RFolderPath()
 	if err = os.MkdirAll(mainConfigDir, 0750); err != nil {
 		return mainConfFilePath, err
 	}
-	mainConfFilePath = filepath.Join(mainConfigDir, "rrrr")
-	serviceDir := filepath.Join(os.TempDir(), "test", "integration")
+	mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName())
+	serviceDir := testrand.RFolderPath()
 	if err = os.MkdirAll(serviceDir, 0750); err != nil {
 		return mainConfFilePath, err
 	}
 	serviceConfigPath := filepath.Join(serviceDir, "service.toml")
-	metricsDir := filepath.Join(os.TempDir(), "integration", "test")
+	metricsDir := testrand.RFolderPath()
 	if err = os.MkdirAll(metricsDir, 0750); err != nil {
 		return mainConfFilePath, err
 	}
@@ -157,7 +159,8 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 	require := require.New(suite.T())
 	mainConfFilePath, err := createMainConfigTestPaths()
 	require.Nil(err)
-	srv := exporter.ExportMetrics(mainConfFilePath, "/metrics", 8081)
+	port := testrand.RandomPort()
+	srv := exporter.ExportMetrics(mainConfFilePath, "/metrics", port)
 	require.NotNil(srv)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	t := time.NewTimer(time.Second * 2)
@@ -165,7 +168,7 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	var resp *http.Response
-	resp, err = http.Get("http://127.0.0.1:8081/metrics")
+	resp, err = http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics", port))
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
@@ -184,12 +187,12 @@ serviceConfigTransport = "file"
 serviceConfigPath = "{{.ServiceConfigPath}}"
 metricsConfigPath = "{{.MetricsConfigPath}}"
 `
-	mainConfigDir := filepath.Join(os.TempDir(), "sdsds", "675656", "aa")
+	mainConfigDir := testrand.RFolderPath()
 	if err = os.MkdirAll(mainConfigDir, 0750); err != nil {
 		return mainConfFilePath, err
 	}
-	mainConfFilePath = filepath.Join(mainConfigDir, "rrrr")
-	serviceConfigPath := filepath.Join(os.TempDir(), "sdsds", "epe.toml")
+	mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName()+".toml")
+	serviceConfigPath := filepath.Join(mainConfigDir, testrand.RName()+".toml")
 	return mainConfFilePath,
 		createMainConfig(mainConfigFileContenTemplate, mainConfFilePath, "", serviceConfigPath)
 }
@@ -199,7 +202,8 @@ func (suite *HealthSuit) TestConfigWorks() {
 	require := require.New(suite.T())
 	mainConfFilePath, err := createMainConfigCustomPaths()
 	require.Nil(err)
-	srv := exporter.ExportMetrics(mainConfFilePath, "/metrics2", 8082)
+	port := testrand.RandomPort()
+	srv := exporter.ExportMetrics(mainConfFilePath, "/metrics2", port)
 	require.NotNil(srv)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	t := time.NewTimer(time.Second * 2)
@@ -207,7 +211,7 @@ func (suite *HealthSuit) TestConfigWorks() {
 
 	// // NOTE(denisacostaq@gmail.com): When
 	var resp *http.Response
-	resp, err = http.Get("http://127.0.0.1:8082/metrics2")
+	resp, err = http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics2", port))
 	log.Println("resp, err", resp, err)
 	// // NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
