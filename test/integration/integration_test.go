@@ -174,8 +174,7 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 	suite.Nil(err)
 	suite.Equal(http.StatusOK, resp.StatusCode)
 	suite.Contains(string(data), "open_connections_is_a_fake_name_for_test_purpose")
-	var usingAVariableToMakeLinterHappy = context.Context(nil)
-	require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
+	require.Nil(srv.Shutdown(context.Context(nil)))
 }
 
 func createMainConfigCustomPaths() (mainConfFilePath string, err error) {
@@ -213,6 +212,5 @@ func (suite *HealthSuit) TestConfigWorks() {
 	// // NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
 	suite.Equal(http.StatusOK, resp.StatusCode)
-	var usingAVariableToMakeLinterHappy = context.Context(nil)
-	require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
+	require.Nil(srv.Shutdown(context.Context(nil)))
 }
