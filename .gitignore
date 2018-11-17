@@ -14,3 +14,7 @@
 
 # JetBrains IDE
 /.idea/
+
+
+# screen logs
+screenlog.*
