@@ -85,7 +85,6 @@ func writeListenPortInFile(port uint16) (err error) {
 }
 
 func main() {
-	log.Errorln("func main() {")
 	var fakeNodePort = testrand.RandomPort()
 	if err := writeListenPortInFile(fakeNodePort); err != nil {
 		log.Fatal(err)

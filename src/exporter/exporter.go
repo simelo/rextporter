@@ -11,7 +11,7 @@ import (
 )
 
 // ExportMetrics will read the config from mainConfigFile if any or use a default one.
-func ExportMetrics(mainConfigFile, handlerEndpint string, listenPort uint16) (srv *http.Server) {
+func ExportMetrics(mainConfigFile, handlerEndpoint string, listenPort uint16) (srv *http.Server) {
 	config.NewConfigFromFileSystem(mainConfigFile)
 	if collector, err := newSkycoinCollector(); err != nil {
 		log.WithError(err).Panicln("Can not create metrics")
@@ -20,9 +20,9 @@ func ExportMetrics(mainConfigFile, handlerEndpint string, listenPort uint16) (sr
 	}
 	port := fmt.Sprintf(":%d", listenPort)
 	srv = &http.Server{Addr: port}
-	http.Handle(handlerEndpint, promhttp.Handler())
+	http.Handle(handlerEndpoint, promhttp.Handler())
 	go func() {
-		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpint))
+		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpoint))
 		log.WithError(srv.ListenAndServe()).Errorln("unable to start the server")
 	}()
 	return srv

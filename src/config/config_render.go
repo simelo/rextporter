@@ -94,7 +94,7 @@ const metricsConfigFileContentTemplate = `
 # from https://github.com/simelo/rextporter/pull/17
 # @denisacostaq services should be match against whole templates , rather than individual metrics. 
 # The match is not for hosts directly . The match is for service types . Works like this
-# metrics <- m:1 -> templates <- m:n -> services <- 1:n -> (physical | virtual) hosts
+# metrics <- m:1 -> templates <- 1:n -> services <- m:n -> (physical | virtual) hosts
 `
 
 var (
@@ -122,7 +122,7 @@ func (confData mainConfigData) createServiceConfigFile() (err error) {
 		errCause := "error parsing service config: " + err.Error()
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = file.CreteFullPathForFile(confData.ServiceConfigPath()); err != nil {
+	if err = file.CreateFullPathForFile(confData.ServiceConfigPath()); err != nil {
 		errCause := "error creating directory for service file: " + err.Error()
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -155,7 +155,7 @@ func (confData mainConfigData) createMetricsConfigFile() (err error) {
 		errCause := "error parsing metrics config: " + err.Error()
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = file.CreteFullPathForFile(confData.MetricsConfigPath()); err != nil {
+	if err = file.CreateFullPathForFile(confData.MetricsConfigPath()); err != nil {
 		errCause := "error creating directory for metrics file: " + err.Error()
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -188,7 +188,7 @@ func (confData mainConfigData) createMainConfigFile() (err error) {
 		errCause := "error parsing main config: " + err.Error()
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = file.CreteFullPathForFile(confData.MainConfigPath()); err != nil {
+	if err = file.CreateFullPathForFile(confData.MainConfigPath()); err != nil {
 		errCause := "error creating directory for main file: " + err.Error()
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

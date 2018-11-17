@@ -14,8 +14,8 @@ func CreateFullPath(path string) error {
 	return os.MkdirAll(path, 0750)
 }
 
-// CreteFullPathForFile take the directory path in which this file should exist and create this path
-func CreteFullPathForFile(filePath string) (err error) {
+// CreateFullPathForFile take the directory path in which this file should exist and create this path
+func CreateFullPathForFile(filePath string) (err error) {
 	dir, _ := filepath.Split(filePath)
 	return CreateFullPath(dir)
 }

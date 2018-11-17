@@ -175,7 +175,6 @@ func TestSkycoinHealthSuit(t *testing.T) {
 }
 
 func (suite *HealthSuit) SetupSuite() {
-	log.Errorln("func (suite *HealthSuit) SetupSuite() {")
 	require := require.New(suite.T())
 	var port uint16
 	var err error
