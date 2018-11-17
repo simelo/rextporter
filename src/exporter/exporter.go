@@ -10,10 +10,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ExportMetrics will read the config file from the CLI parammeter `-config` if any
-// or use a default one.
-func ExportMetrics(metricsConfFile, serviceConfFile string, listenPort uint16) (srv *http.Server) {
-	config.NewConfigFromFileSystem(metricsConfFile, serviceConfFile)
+// ExportMetrics will read the config from mainConfigFile if any or use a default one.
+func ExportMetrics(mainConfigFile, handlerEndpoint string, listenPort uint16) (srv *http.Server) {
+	config.NewConfigFromFileSystem(mainConfigFile)
 	if collector, err := newSkycoinCollector(); err != nil {
 		log.WithError(err).Panicln("Can not create metrics")
 	} else {
@@ -21,10 +20,10 @@ func ExportMetrics(metricsConfFile, serviceConfFile string, listenPort uint16) (
 	}
 	port := fmt.Sprintf(":%d", listenPort)
 	srv = &http.Server{Addr: port}
-	http.Handle("/metrics", promhttp.Handler())
+	http.Handle(handlerEndpoint, promhttp.Handler())
 	go func() {
-		log.Infoln(fmt.Sprintf("Starting server in port %d, path /metrics ...", listenPort))
-		log.WithError(srv.ListenAndServe()).Panicln("unable to start the server")
+		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpoint))
+		log.WithError(srv.ListenAndServe()).Errorln("unable to start the server")
 	}()
 	return srv
 }
