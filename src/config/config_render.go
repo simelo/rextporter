@@ -261,10 +261,6 @@ func (confData mainConfigData) createMainConfigFile() (err error) {
 	return err
 }
 
-func fileDefaultConfigPath(fileName string, homeConf *configdir.Config) (path string) {
-	return filepath.Join(homeConf.Path, fileName)
-}
-
 func serviceDefaultConfigPath(conf *configdir.Config) (path string) {
 	return file.DefaultConfigPath(serviceConfigFileName, conf)
 }
