@@ -13,11 +13,11 @@ $ go install ./...
 
 ## Run
 
-You can run the program (`rextporter`, make sure you have it accessible trough your PATH env variable) by calling it in the console and you have the following parameters options.
+You can run the program (`rextporter`, make sure you have it accessible trough your `PATH` env variable) by calling it in the console and you have the following parameters options.
 
  - `-config` Metrics main config file path. (default to your home config folder + simelo -> rextporter -> main.toml).
  - `-handler` Handler to expose metric. (default "/metrics").
- - `port` Listen port. (default 8080)
+ - `-port` Listen port. (default 8080)
 
 ### Config file
 
