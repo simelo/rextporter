@@ -102,7 +102,7 @@ func NewConfigFromFileSystem(mainConfigPath string) {
 		errCause := "error reading metrics config: " + err.Error()
 		panic(errCause)
 	}
-	if rootConfig.Services, err = newServiceConfigFromFile(conf.ServiceConfigPath(), conf); err != nil {
+	if rootConfig.Services, err = newServiceConfigFromFile(conf.ServicesConfigPath(), conf); err != nil {
 		errCause := "root cause: " + err.Error()
 		panic(util.ErrorFromThisScope(errCause, generalScopeErr))
 	}

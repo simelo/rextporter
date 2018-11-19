@@ -13,7 +13,7 @@ import (
 )
 
 type templateData struct {
-	ServiceConfigPath      string
+	ServicesConfigPath     string
 	MetricsForServicesPath string
 }
 
@@ -31,8 +31,8 @@ type mainConfigData struct {
 	metricsForServiceConfigTmplData metricsForServiceConfigTemplateData
 }
 
-func (confData mainConfigData) ServiceConfigPath() string {
-	return confData.tmplData.ServiceConfigPath
+func (confData mainConfigData) ServicesConfigPath() string {
+	return confData.tmplData.ServicesConfigPath
 }
 
 func (confData mainConfigData) metricsForServicesPath() string {
@@ -50,7 +50,7 @@ func (confData mainConfigData) MainConfigPath() string {
 const mainConfigFileContentTemplate = `
 serviceConfigTransport = "file" # "file" | "consulCatalog"
 # render a template with a portable path
-serviceConfigPath = "{{.ServiceConfigPath}}"
+servicesConfigPath = "{{.ServicesConfigPath}}"
 metricsForServicesPath = "{{.MetricsForServicesPath}}"
 `
 
@@ -63,7 +63,7 @@ const serviceConfigFileContentTemplate = `
   basePath = ""
   authType = "CSRF"
   tokenHeaderKey = "X-CSRF-Token"
-  genTokenEndpoint = "/api/v1/csrf.json"
+  genTokenEndpoint = "/api/v1/csrf"
   tokenKeyFromEndpoint = "csrf_token"
 
   [services.location]
@@ -73,7 +73,7 @@ const skycoinMetricsConfigFileContentTemplate = `
 # All metrics to be measured.
 [[metrics]]
   name = "seq"
-  url = "/api/v1/health.json"
+  url = "/api/v1/health"
   httpMethod = "GET"
   path = "/blockchain/head/seq"
 
@@ -120,21 +120,21 @@ var (
 	systemVendorName                 = "simelo"
 	systemProgramName                = "rextporter"
 	mainConfigFileName               = "main.toml"
-	serviceConfigFileName            = "service.toml"
+	servicesConfigFileName           = "services.toml"
 	skycoinMetricsConfigFileName     = "skycoinMetrics.toml"
 	walletMetricsConfigFileName      = "walletMetrics.toml"
 	metricsForServicesConfigFileName = "metricsForServices.toml"
 )
 
-func (confData mainConfigData) existServiceConfigFile() bool {
-	return file.ExistFile(confData.ServiceConfigPath())
+func (confData mainConfigData) existServicesConfigFile() bool {
+	return file.ExistFile(confData.ServicesConfigPath())
 }
 
-// createServiceConfigFile creates the service file or return an error if any,
+// createServicesConfigFile creates the service file or return an error if any,
 // if the file already exist does no thin.
-func (confData mainConfigData) createServiceConfigFile() (err error) {
+func (confData mainConfigData) createServicesConfigFile() (err error) {
 	generalScopeErr := "error creating service config file"
-	if confData.existServiceConfigFile() {
+	if confData.existServicesConfigFile() {
 		return nil
 	}
 	tmpl := template.New("serviceConfig")
@@ -143,16 +143,16 @@ func (confData mainConfigData) createServiceConfigFile() (err error) {
 		errCause := "error parsing service config: " + err.Error()
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = file.CreateFullPathForFile(confData.ServiceConfigPath()); err != nil {
+	if err = file.CreateFullPathForFile(confData.ServicesConfigPath()); err != nil {
 		errCause := "error creating directory for service file: " + err.Error()
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	var serviceConfigFile *os.File
-	if serviceConfigFile, err = os.Create(confData.ServiceConfigPath()); err != nil {
+	var servicesConfigFile *os.File
+	if servicesConfigFile, err = os.Create(confData.ServicesConfigPath()); err != nil {
 		errCause := "error creating service config file: " + err.Error()
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = templateEngine.Execute(serviceConfigFile, nil); err != nil {
+	if err = templateEngine.Execute(servicesConfigFile, nil); err != nil {
 		errCause := "error writing main config file: " + err.Error()
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -261,7 +261,7 @@ func (confData mainConfigData) createMainConfigFile() (err error) {
 }
 
 func serviceDefaultConfigPath(conf *configdir.Config) (path string) {
-	return file.DefaultConfigPath(serviceConfigFileName, conf)
+	return file.DefaultConfigPath(servicesConfigFileName, conf)
 }
 
 func mainDefaultConfigPath(conf *configdir.Config) (path string) {
@@ -282,7 +282,7 @@ func walletMetricsConfigPath(conf *configdir.Config) (path string) {
 
 func defaultTmplData(conf *configdir.Config) (tmplData templateData) {
 	tmplData = templateData{
-		ServiceConfigPath:      serviceDefaultConfigPath(conf),
+		ServicesConfigPath:     serviceDefaultConfigPath(conf),
 		MetricsForServicesPath: metricsForServicesDefaultConfigPath(conf),
 	}
 	return tmplData
@@ -313,7 +313,7 @@ func tmplDataFromMainFile(mainConfigFilePath string) (tmpl templateData, err err
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
 		return tmpl, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	tmpl.ServiceConfigPath, tmpl.MetricsForServicesPath = mainConf.ServiceConfigPath, mainConf.MetricsForServicesPath
+	tmpl.ServicesConfigPath, tmpl.MetricsForServicesPath = mainConf.ServicesConfigPath, mainConf.MetricsForServicesPath
 	return tmpl, err
 }
 
@@ -363,15 +363,15 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	}
-	if len(tmplData.ServiceConfigPath) == 0 || len(tmplData.MetricsForServicesPath) == 0 {
+	if len(tmplData.ServicesConfigPath) == 0 || len(tmplData.MetricsForServicesPath) == 0 {
 		var homeConf *configdir.Config
 		if homeConf, err = file.HomeConfigFolder(systemVendorName, systemProgramName); err != nil {
 			errCause := "error looking for config folder under home: " + err.Error()
 			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		tmpTmplData := defaultTmplData(homeConf)
-		if len(tmplData.ServiceConfigPath) == 0 {
-			tmplData.ServiceConfigPath = tmpTmplData.ServiceConfigPath
+		if len(tmplData.ServicesConfigPath) == 0 {
+			tmplData.ServicesConfigPath = tmpTmplData.ServicesConfigPath
 		}
 		if len(tmplData.MetricsForServicesPath) == 0 {
 			tmplData.MetricsForServicesPath = tmpTmplData.MetricsForServicesPath
@@ -387,7 +387,7 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 		errCause := "error creating main config file: " + err.Error()
 		return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if err = mainConf.createServiceConfigFile(); err != nil {
+	if err = mainConf.createServicesConfigFile(); err != nil {
 		errCause := "error creating service config file: " + err.Error()
 		return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

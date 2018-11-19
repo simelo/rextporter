@@ -49,12 +49,16 @@ func createConfigFile(tmplContent, path string, data interface{}) (err error) {
 }
 
 func createServicesConfPath(servicesConfPath string) (err error) {
+	type servicesData struct {
+		Port uint16
+	}
+	srvData := servicesData{Port: fakeNodePort}
 	const servicesConfigFileContenTemplate = `
 	# Service configuration.
 	[[services]]
 		name = "myMonitoredServer"
 		scheme = "http"
-		port = 8080
+		port = {{.Port}}
 		basePath = ""
 		authType = "CSRF"
 		tokenHeaderKey = "X-CSRF-Token"
@@ -65,7 +69,7 @@ func createServicesConfPath(servicesConfPath string) (err error) {
 			location = "localhost"
 `
 	generalScopeErr := "error creating service config file for integration test"
-	if err = createConfigFile(servicesConfigFileContenTemplate, servicesConfPath, nil); err != nil {
+	if err = createConfigFile(servicesConfigFileContenTemplate, servicesConfPath, srvData); err != nil {
 		errCause := "error writing service config file: " + err.Error()
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -142,7 +146,7 @@ func createMainConfigTestPaths() (mainConfFilePath string, err error) {
 	const mainConfigFileContenTemplate = `
 serviceConfigTransport = "file"
 # render a template with a portable path
-serviceConfigPath = "{{.ServicesConfigPath}}"
+servicesConfigPath = "{{.ServicesConfigPath}}"
 metricsForServicesPath = "{{.MetricsForServicesPath}}"
 `
 	mainConfigDir := testrand.RFolderPath()
@@ -218,14 +222,14 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 	srv := exporter.ExportMetrics(mainConfFilePath, "/metrics", port)
 	require.NotNil(srv)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
-	t := time.NewTimer(time.Second * 2)
-	<-t.C
+	time.Sleep(time.Second * 2)
 
 	// NOTE(denisacostaq@gmail.com): When
 	var resp *http.Response
 	resp, err = http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics", port))
 
 	// NOTE(denisacostaq@gmail.com): Assert
+	require.NotNil(resp)
 	suite.Nil(err)
 	var data []byte
 	data, err = ioutil.ReadAll(resp.Body)
@@ -238,18 +242,17 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 func (suite *HealthSuit) TestConfigWorks() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	require := require.New(suite.T())
-	port := testrand.RandomPort()
+	port := uint16(8000)
 	srv := exporter.ExportMetrics("", "/metrics2", port)
 	require.NotNil(srv)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
-	t := time.NewTimer(time.Second * 2)
-	<-t.C
+	time.Sleep(time.Second * 2)
 
 	// // NOTE(denisacostaq@gmail.com): When
 	var resp *http.Response
 	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics2", port))
-	log.Println("resp, err", resp, err)
 	// // NOTE(denisacostaq@gmail.com): Assert
+	require.NotNil(resp)
 	suite.Nil(err)
 	suite.Equal(http.StatusOK, resp.StatusCode)
 	require.Nil(srv.Shutdown(context.Context(nil)))
