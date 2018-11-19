@@ -17,17 +17,18 @@ type CounterMetric struct {
 	StatusDesc       *prometheus.Desc
 }
 
-func createCounter(metricConf config.Metric, conf config.RootConfig) (metric CounterMetric, err error) {
+func createCounter(metricConf config.Metric, srvConf config.Service) (metric CounterMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
 	var metricClient *client.MetricClient
-	if metricClient, err = client.NewMetricClient(metricConf, conf); err != nil {
+	if metricClient, err = client.NewMetricClient(metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metric = CounterMetric{
+		// FIXME(denisacostaq@gmail.com): if you use a duplicated name can panic?
 		Client:     metricClient,
-		MetricDesc: prometheus.NewDesc(conf.MetricName(metricConf.Name), metricConf.Options.Description, nil, nil),
-		StatusDesc: prometheus.NewDesc(conf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+conf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
+		MetricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, nil, nil),
+		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
 	}
 	return metric, err
 }
@@ -36,13 +37,15 @@ func createCounters() ([]CounterMetric, error) {
 	generalScopeErr := "can not create counters"
 	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
 	metrics := conf.FilterMetricsByType(config.KeyTypeCounter)
-	counters := make([]CounterMetric, len(metrics))
-	for idx, metric := range metrics {
-		if counter, err := createCounter(metric, conf); err == nil {
-			counters[idx] = counter
-		} else {
-			errCause := "error creating counter: " + err.Error()
-			return []CounterMetric{}, util.ErrorFromThisScope(errCause, generalScopeErr)
+	counters := make([]CounterMetric, len(metrics)*len(conf.Services))
+	for idxService, srvConf := range conf.Services {
+		for idxMetric, metric := range metrics {
+			if counter, err := createCounter(metric, srvConf); err == nil {
+				counters[idxService*len(conf.Services)+idxMetric] = counter
+			} else {
+				errCause := "error creating counter: " + err.Error()
+				return []CounterMetric{}, util.ErrorFromThisScope(errCause, generalScopeErr)
+			}
 		}
 	}
 	return counters, nil
@@ -56,17 +59,17 @@ type GaugeMetric struct {
 	StatusDesc       *prometheus.Desc
 }
 
-func createGauge(metricConf config.Metric, conf config.RootConfig) (metric GaugeMetric, err error) {
+func createGauge(metricConf config.Metric, srvConf config.Service) (metric GaugeMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
 	var metricClient *client.MetricClient
-	if metricClient, err = client.NewMetricClient(metricConf, conf); err != nil {
+	if metricClient, err = client.NewMetricClient(metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metric = GaugeMetric{
 		Client:     metricClient,
-		MetricDesc: prometheus.NewDesc(conf.MetricName(metricConf.Name), metricConf.Options.Description, nil, nil),
-		StatusDesc: prometheus.NewDesc(conf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+conf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
+		MetricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, nil, nil),
+		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
 	}
 	return metric, err
 }
@@ -76,13 +79,15 @@ func createGauges() ([]GaugeMetric, error) {
 	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
 	metrics := conf.FilterMetricsByType(config.KeyTypeGauge)
 	gauges := make([]GaugeMetric, len(metrics))
-	for idx, metric := range metrics {
-		gauge, err := createGauge(metric, conf)
-		if err != nil {
-			errCause := fmt.Sprintln("error creating gauge: ", err.Error())
-			return []GaugeMetric{}, util.ErrorFromThisScope(errCause, generalScopeErr)
+	for idxService, srvConf := range conf.Services {
+		for idxMetric, metric := range metrics {
+			gauge, err := createGauge(metric, srvConf)
+			if err != nil {
+				errCause := fmt.Sprintln("error creating gauge: ", err.Error())
+				return []GaugeMetric{}, util.ErrorFromThisScope(errCause, generalScopeErr)
+			}
+			gauges[idxService*len(conf.Services)+idxMetric] = gauge
 		}
-		gauges[idx] = gauge
 	}
 	return gauges, nil
 }

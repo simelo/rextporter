@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](http://www.keepachangelog.com/en/1.0.0
 ## [0.0.2](https://github.com/simelo/rexporter/releases...) 2019-01-25
 
 ### Added
+ * [\#19](https://github.com/simelo/rextporter/issues/19)
+   - Multiple services definition to be monitored.
+
  * [\#14](https://github.com/simelo/rextporter/issues/14)
    - Use a default configuration file path and initialize it if not exist.
    

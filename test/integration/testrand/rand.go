@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -13,10 +14,25 @@ import (
 func testingFolder() (testingFolder string, err error) {
 	testingFolder = filepath.Join(os.TempDir(), "testingFolder")
 	if err = os.MkdirAll(testingFolder, 0750); err != nil {
-		log.WithError(err).Infoln("creating testing folder")
+		log.WithError(err).Errorln("creating testing folder")
 		return testingFolder, err
 	}
 	return testingFolder, err
+}
+
+// dynamicTestingFolder return a default testing folder root with a timestamp as last folder path
+func dynamicTestingFolder() (timestampedTestingFolder string, err error) {
+	if timestampedTestingFolder, err = testingFolder(); err != nil {
+		log.WithError(err).Errorln("getting testing root folder")
+		return timestampedTestingFolder, err
+	}
+	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	timestampedTestingFolder = filepath.Join(timestampedTestingFolder, timestamp)
+	if err = os.MkdirAll(timestampedTestingFolder, 0750); err != nil {
+		log.WithError(err).Errorln("creating dynamic testing folder")
+		return timestampedTestingFolder, err
+	}
+	return timestampedTestingFolder, err
 }
 
 // FilePathToSharePort path in which you should write/read the port number where fake server is listinning
@@ -38,7 +54,7 @@ func RName() string {
 
 // RFolderPath return a random folder path under a directory from tmp
 func RFolderPath() string {
-	testFolder, err := testingFolder()
+	testFolder, err := dynamicTestingFolder()
 	if err != nil {
 		return ""
 	}

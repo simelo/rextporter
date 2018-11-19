@@ -3,7 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
-	"strings"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Service is a concept to grab information about a running server, for example:
@@ -12,14 +13,20 @@ import (
 type Service struct {
 	Name string `json:"name"`
 	// Scheme is http or https
-	Scheme               string `json:"scheme"`
-	Port                 uint16 `json:"port"`
-	BasePath             string `json:"basePath"`
-	AuthType             string `json:"authType"`
-	TokenHeaderKey       string `json:"tokenHeaderKey"`
-	GenTokenEndpoint     string `json:"genTokenEndpoint"`
-	TokenKeyFromEndpoint string `json:"tokenKeyFromEndpoint"`
-	Location             Server `json:"location"`
+	Scheme               string   `json:"scheme"`
+	Port                 uint16   `json:"port"`
+	BasePath             string   `json:"basePath"`
+	AuthType             string   `json:"authType"`
+	TokenHeaderKey       string   `json:"tokenHeaderKey"`
+	GenTokenEndpoint     string   `json:"genTokenEndpoint"`
+	TokenKeyFromEndpoint string   `json:"tokenKeyFromEndpoint"`
+	Location             Server   `json:"location"`
+	Metrics              []Metric `json:"metrics"`
+}
+
+// MetricName returns a promehteus style name for the giving metric name.
+func (srv Service) MetricName(metricName string) string {
+	return prometheus.BuildFQName("skycoin", srv.Name, metricName)
 }
 
 // URIToGetMetric build the URI from where you will to get metric information
@@ -48,15 +55,24 @@ func (srv Service) validate() (errs []error) {
 	if !isValidURL(srv.URIToGetToken()) {
 		errs = append(errs, errors.New("can not create a valid url to get token: "+srv.URIToGetToken()))
 	}
-	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.TokenHeaderKey) == 0 {
+	for _, metric := range srv.Metrics {
+		if !isValidURL(srv.URIToGetMetric(metric)) {
+			errs = append(errs, errors.New("can not create a valid url to get metric: "+srv.URIToGetMetric(metric)))
+		}
+	}
+	if srv.AuthType == "CSRF" && len(srv.TokenHeaderKey) == 0 {
 		errs = append(errs, errors.New("TokenHeaderKey is required if you are using CSRF"))
 	}
-	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.TokenKeyFromEndpoint) == 0 {
+	if srv.AuthType == "CSRF" && len(srv.TokenKeyFromEndpoint) == 0 {
 		errs = append(errs, errors.New("TokenKeyFromEndpoint is required if you are using CSRF"))
 	}
-	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.GenTokenEndpoint) == 0 {
+	if srv.AuthType == "CSRF" && len(srv.GenTokenEndpoint) == 0 {
 		errs = append(errs, errors.New("GenTokenEndpoint is required if you are using CSRF"))
 	}
+	for _, metric := range srv.Metrics {
+		errs = append(errs, metric.validate()...)
+	}
+
 	errs = append(errs, srv.Location.validate()...)
 	return errs
 }

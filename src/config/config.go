@@ -5,9 +5,7 @@ import (
 	"container/list"
 	"fmt"
 	"net/url"
-	"strings"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -16,8 +14,7 @@ import (
 // RootConfig is the top level node for the config tree, it has a list of metrics and a
 // service from which get this metrics.
 type RootConfig struct {
-	Service Service  `json:"service"`
-	Metrics []Metric `json:"metrics"`
+	Services []Service `json:"services"`
 }
 
 var rootConfig RootConfig
@@ -52,36 +49,45 @@ func NewConfigFromRawString(strConf string) error {
 	return nil
 }
 
-// MetricName returns a promehteus style name for the giving metric name.
-func (conf RootConfig) MetricName(metricName string) string {
-	return prometheus.BuildFQName("skycoin", conf.Service.Name, metricName)
-}
-
 // newMetricsConfig desserialize a metrics config from the 'toml' file path
 func newMetricsConfig(path string) (metricsConf []Metric, err error) {
 	const generalScopeErr = "error reading metrics config"
+	if len(path) == 0 {
+		errCause := "path should not be null"
+		return metricsConf, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
 	viper.SetConfigFile(path)
 	if err := viper.ReadInConfig(); err != nil {
 		errCause := fmt.Sprintln("error reading config file: ", path, err.Error())
 		return metricsConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	var root RootConfig
+	type metricsForService struct {
+		Metrics []Metric
+	}
+	var root metricsForService
 	if err := viper.Unmarshal(&root); err != nil {
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
 		return metricsConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	return root.Metrics, nil
+	metricsConf = root.Metrics
+	return metricsConf, nil
 }
 
 // newServiceConfigFromFile desserialize a service config from the 'toml' file path
-func newServiceConfigFromFile(path string) (serviceConf Service, err error) {
+func newServiceConfigFromFile(path string, conf mainConfigData) (servicesConf []Service, err error) {
 	const generalScopeErr = "error reading service config"
 	serviceConfReader := NewServiceConfigFromFile(path)
-	if serviceConf, err = serviceConfReader.GetConfig(); err != nil {
+	if servicesConf, err = serviceConfReader.GetConfig(); err != nil {
 		errCause := "error reading service config"
-		return serviceConf, util.ErrorFromThisScope(errCause, generalScopeErr)
+		return servicesConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	return serviceConf, err
+	for idxService, service := range servicesConf {
+		if servicesConf[idxService].Metrics, err = newMetricsConfig(conf.MetricsConfigPath(service.Name)); err != nil {
+			errCause := "error reading metrics config: " + err.Error()
+			panic(util.ErrorFromThisScope(errCause, generalScopeErr))
+		}
+	}
+	return servicesConf, err
 }
 
 // NewConfigFromFileSystem will read the config from the file system, you should send the
@@ -96,11 +102,7 @@ func NewConfigFromFileSystem(mainConfigPath string) {
 		errCause := "error reading metrics config: " + err.Error()
 		panic(errCause)
 	}
-	if rootConfig.Metrics, err = newMetricsConfig(conf.MetricsConfigPath()); err != nil {
-		errCause := "error reading metrics config: " + err.Error()
-		panic(util.ErrorFromThisScope(errCause, generalScopeErr))
-	}
-	if rootConfig.Service, err = newServiceConfigFromFile(conf.ServiceConfigPath()); err != nil {
+	if rootConfig.Services, err = newServiceConfigFromFile(conf.ServicesConfigPath(), conf); err != nil {
 		errCause := "root cause: " + err.Error()
 		panic(util.ErrorFromThisScope(errCause, generalScopeErr))
 	}
@@ -110,9 +112,11 @@ func NewConfigFromFileSystem(mainConfigPath string) {
 // FilterMetricsByType will return all the metrics who match whit the 't' parameter.
 func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
 	tmpMetrics := list.New()
-	for _, metric := range conf.Metrics {
-		if strings.Compare(metric.Options.Type, t) == 0 {
-			tmpMetrics.PushBack(metric)
+	for _, service := range conf.Services {
+		for _, metric := range service.Metrics {
+			if metric.Options.Type == t {
+				tmpMetrics.PushBack(metric)
+			}
 		}
 	}
 	metrics = make([]Metric, tmpMetrics.Len())
@@ -126,9 +130,8 @@ func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
 
 func (conf RootConfig) validate() {
 	var errs []error
-	errs = append(errs, conf.Service.validate()...)
-	for _, metric := range conf.Metrics {
-		errs = append(errs, metric.validate()...)
+	for _, service := range conf.Services {
+		errs = append(errs, service.validate()...)
 	}
 	if len(errs) != 0 {
 		defer log.Panicln("some errors found")

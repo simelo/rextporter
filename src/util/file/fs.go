@@ -4,7 +4,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/shibukawa/configdir"
 )
@@ -24,7 +23,7 @@ func CreateFullPathForFile(filePath string) (err error) {
 // return true if the path is a directory path
 func IsADirectoryPath(path string) bool {
 	dir, file := filepath.Split(path)
-	return (strings.Compare(dir, "") != 0 && strings.Compare(file, "") == 0)
+	return (len(dir) != 0 && len(file) == 0)
 }
 
 // ExistFile return true if this file exist
