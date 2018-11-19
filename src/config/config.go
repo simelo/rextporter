@@ -5,7 +5,6 @@ import (
 	"container/list"
 	"fmt"
 	"net/url"
-	"strings"
 
 	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
@@ -53,7 +52,7 @@ func NewConfigFromRawString(strConf string) error {
 // newMetricsConfig desserialize a metrics config from the 'toml' file path
 func newMetricsConfig(path string) (metricsConf []Metric, err error) {
 	const generalScopeErr = "error reading metrics config"
-	if strings.Compare(path, "") == 0 {
+	if len(path) == 0 {
 		errCause := "path should not be null"
 		return metricsConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -115,7 +114,7 @@ func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
 	tmpMetrics := list.New()
 	for _, service := range conf.Services {
 		for _, metric := range service.Metrics {
-			if strings.Compare(metric.Options.Type, t) == 0 {
+			if metric.Options.Type == t {
 				tmpMetrics.PushBack(metric)
 			}
 		}

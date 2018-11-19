@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"text/template"
 
 	"github.com/shibukawa/configdir"
@@ -344,7 +343,7 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 	}
 	var tmplData templateData
 	var metricsForServiceTmplData metricsForServiceConfigTemplateData
-	if strings.Compare(path, "") == 0 || !file.ExistFile(path) {
+	if len(path) == 0 || !file.ExistFile(path) {
 		// TODO(denisacostaq@gmail.com): move homeConf to fn defaultTmplData
 		var homeConf *configdir.Config
 		if homeConf, err = file.HomeConfigFolder(systemVendorName, systemProgramName); err != nil {
@@ -364,17 +363,17 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	}
-	if strings.Compare(tmplData.ServiceConfigPath, "") == 0 || strings.Compare(tmplData.MetricsForServicesPath, "") == 0 {
+	if len(tmplData.ServiceConfigPath) == 0 || len(tmplData.MetricsForServicesPath) == 0 {
 		var homeConf *configdir.Config
 		if homeConf, err = file.HomeConfigFolder(systemVendorName, systemProgramName); err != nil {
 			errCause := "error looking for config folder under home: " + err.Error()
 			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		tmpTmplData := defaultTmplData(homeConf)
-		if strings.Compare(tmplData.ServiceConfigPath, "") == 0 {
+		if len(tmplData.ServiceConfigPath) == 0 {
 			tmplData.ServiceConfigPath = tmpTmplData.ServiceConfigPath
 		}
-		if strings.Compare(tmplData.MetricsForServicesPath, "") == 0 {
+		if len(tmplData.MetricsForServicesPath) == 0 {
 			tmplData.MetricsForServicesPath = tmpTmplData.MetricsForServicesPath
 		}
 		metricsForServiceTmplData = metricsForServicesTmplData(homeConf)

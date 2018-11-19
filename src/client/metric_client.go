@@ -72,7 +72,7 @@ func (client *MetricClient) resetToken() (err error) {
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	client.token = tk
-	if strings.Compare(client.token, "") == 0 {
+	if len(client.token) == 0 {
 		errCause := fmt.Sprintln("unable the get a not null(empty) token")
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

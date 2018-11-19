@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/simelo/rextporter/src/util"
 	"github.com/spf13/viper"
@@ -23,7 +22,7 @@ func NewServiceConfigFromFile(path string) (conf *ServiceConfigFromFile) {
 // GetConfig read the file 'filePath' and returns the services config or an error if any
 func (srvConf ServiceConfigFromFile) GetConfig() (services []Service, err error) {
 	generalScopeErr := "error reading config from file"
-	if strings.Compare(srvConf.filePath, "") == 0 {
+	if len(srvConf.filePath) == 0 {
 		errCause := fmt.Sprintln("file path should not be empty, are you using the 'NewServiceConfigFromFile' function to get an instance?")
 		return services, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

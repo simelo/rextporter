@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -28,7 +27,7 @@ var fakeNodePort uint16
 
 func createConfigFile(tmplContent, path string, data interface{}) (err error) {
 	generalScopeErr := "error creating config file for integration test"
-	if strings.Compare(tmplContent, "") == 0 || strings.Compare(path, "") == 0 {
+	if len(tmplContent) == 0 || len(path) == 0 {
 		return err
 	}
 	tmpl := template.New("fileConfig")

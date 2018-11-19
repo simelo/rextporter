@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -61,13 +60,13 @@ func (srv Service) validate() (errs []error) {
 			errs = append(errs, errors.New("can not create a valid url to get metric: "+srv.URIToGetMetric(metric)))
 		}
 	}
-	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.TokenHeaderKey) == 0 {
+	if srv.AuthType == "CSRF" && len(srv.TokenHeaderKey) == 0 {
 		errs = append(errs, errors.New("TokenHeaderKey is required if you are using CSRF"))
 	}
-	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.TokenKeyFromEndpoint) == 0 {
+	if srv.AuthType == "CSRF" && len(srv.TokenKeyFromEndpoint) == 0 {
 		errs = append(errs, errors.New("TokenKeyFromEndpoint is required if you are using CSRF"))
 	}
-	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.GenTokenEndpoint) == 0 {
+	if srv.AuthType == "CSRF" && len(srv.GenTokenEndpoint) == 0 {
 		errs = append(errs, errors.New("GenTokenEndpoint is required if you are using CSRF"))
 	}
 	for _, metric := range srv.Metrics {
