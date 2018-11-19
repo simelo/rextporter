@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"strings"
 )
 
 const (
@@ -28,7 +27,7 @@ type Metric struct {
 
 func (metric Metric) isHistogram() bool {
 	hasBuckets := len(metric.HistogramOptions.ExponentialBuckets) != 0 || len(metric.HistogramOptions.Buckets) != 0
-	return hasBuckets || strings.Compare(metric.Options.Type, "Histogram") == 0
+	return hasBuckets || metric.Options.Type == "Histogram"
 }
 
 func (metric Metric) validate() (errs []error) {
@@ -44,7 +43,7 @@ func (metric Metric) validate() (errs []error) {
 	if len(metric.Path) == 0 {
 		errs = append(errs, errors.New("path is required in metric"))
 	}
-	if strings.Compare(metric.HistogramOptions.inferType(), "Histogram") == 0 && strings.Compare(metric.Options.Type, "Histogram") != 0 {
+	if metric.HistogramOptions.inferType() == "Histogram" && metric.Options.Type != "Histogram" {
 		errs = append(errs, errors.New("the buckets, only apply for metrics of type histogram"))
 	}
 	errs = append(errs, metric.Options.validate()...)
