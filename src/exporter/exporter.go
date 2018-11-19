@@ -86,7 +86,7 @@ func ExportMetrics(mainConfigFile, handlerEndpoint string, listenPort uint16) (s
 		prometheus.DefaultRegisterer,
 		promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{DisableCompression: true}),
 	)
-	http.Handle(handlerEndpint, exposedMetricsMidleware(metricsMidleware, hdl))
+	http.Handle(handlerEndpoint, exposedMetricsMidleware(metricsMidleware, hdl))
 	go func() {
 		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpoint))
 		log.WithError(srv.ListenAndServe()).Errorln("unable to start the server")

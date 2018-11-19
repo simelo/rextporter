@@ -22,7 +22,7 @@ func createMetricsMidleware() (metricsMidleware []MetricMidleware, err error) {
 		var cl *client.ProxyMetricClient
 		if cl, err = client.NewProxyMetricClient(service); err != nil {
 			errCause := fmt.Sprintln("error creating metric client: ", err.Error())
-			return metricsMidleware, common.ErrorFromThisScope(errCause, generalScopeErr)
+			return metricsMidleware, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		metricsMidleware = append(metricsMidleware, MetricMidleware{client: cl})
 	}
@@ -66,6 +66,7 @@ func createCounters() ([]CounterMetric, error) {
 	for _, service := range services {
 		metricsForService := service.FilterMetricsByType(config.KeyTypeCounter)
 		for _, metric := range metricsForService {
+			if counter, err := createCounter(metric, service); err == nil {
 				counters[idxMetric] = counter
 				idxMetric++
 			} else {
@@ -118,6 +119,7 @@ func createGauges() ([]GaugeMetric, error) {
 				idxMetric++
 			} else {
 				errCause := "error creating gauge: " + err.Error()
+				return gauges, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
 		}
 	}

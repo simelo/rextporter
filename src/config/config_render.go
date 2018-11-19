@@ -49,7 +49,7 @@ func (confData mainConfigData) MainConfigPath() string {
 
 const mainConfigFileContentTemplate = `
 servicesConfigTransport = "file" # "file" | "consulCatalog"
-servicesConfigPath = "{{.ServiceConfigPath}}"
+servicesConfigPath = "{{.ServicesConfigPath}}"
 servicesConfigPath = "{{.ServicesConfigPath}}"
 metricsForServicesPath = "{{.MetricsForServicesPath}}"
 `
