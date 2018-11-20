@@ -18,3 +18,8 @@
 
 # screen logs
 screenlog.*
+
+# Temp files
+*.swo
+*.swp
+
