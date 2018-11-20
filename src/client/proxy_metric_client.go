@@ -51,10 +51,15 @@ func (client *ProxyMetricClient) getRemoteInfo() (data []byte, err error) {
 	}
 	defer resp.Body.Close()
 	var reader io.ReadCloser
-	// BUG(denisacostaq@gmail.com): close this reader.
-	// defer reader.Close()
+	var isGzipContent = false
+	defer func() {
+		if isGzipContent {
+			reader.Close()
+		}
+	}()
 	switch resp.Header.Get("Content-Encoding") {
 	case "gzip":
+		isGzipContent = true
 		reader, err = gzip.NewReader(resp.Body)
 		if err != nil {
 			errCause := fmt.Sprintln("can not create gzip reader.", err.Error())
