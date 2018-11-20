@@ -12,8 +12,8 @@ const (
 	// ServiceTypeAPIRest is the key you should define in the config file for a service who request remote data
 	// and uses this to build the metrics.
 	ServiceTypeAPIRest = "rest_api"
-	// ServiceTypeProxy is the key you should define in the config file for a service to work like a middleware/proxy.
-	ServiceTypeProxy = "proxy"
+	// ServiceTypeProxy is the key you should define in the config file for a service to work like a middleware/forward_metrics.
+	ServiceTypeProxy = "forward_metrics"
 )
 
 // Service is a concept to grab information about a running server, for example:

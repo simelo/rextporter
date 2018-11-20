@@ -427,7 +427,7 @@ func (suite *HealthSuit) TestMetricMonitorAsProxy() {
 			"myMonitoredServer":        suite.metricsConfFilePath,
 			"myMonitoredAsProxyServer": suite.metricsConfFilePath}
 	suite.servicesConfData = ServicesConfData{
-		Services: []Service{Service{Name: "myMonitoredAsProxyServer", Port: fakeNodePort, Mode: "proxy", BasePath: "/metrics"}},
+		Services: []Service{Service{Name: "myMonitoredAsProxyServer", Port: fakeNodePort, Mode: "forward_metrics", BasePath: "/metrics"}},
 	}
 	suite.createMainConfig()
 	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics4", port)

@@ -78,7 +78,7 @@ func ExportMetrics(mainConfigFile, handlerEndpoint string, listenPort uint16) (s
 	}
 	metricsMiddleware, err := createMetricsMiddleware()
 	if err != nil {
-		log.WithError(err).Panicln("Can not create proxy metrics")
+		log.WithError(err).Panicln("Can not create forward_metrics metrics")
 	}
 	port := fmt.Sprintf(":%d", listenPort)
 	srv = &http.Server{Addr: port}
