@@ -5,8 +5,7 @@ import (
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/simelo/rextporter/src/client"
-	"github.com/simelo/rextporter/src/common"
+	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -22,11 +21,11 @@ func newSkycoinCollector() (collector *SkycoinCollector, err error) {
 	collector = &SkycoinCollector{}
 	if collector.Counters, err = createCounters(); err != nil {
 		errCause := fmt.Sprintln("error creating counters: ", err.Error())
-		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if collector.Gauges, err = createGauges(); err != nil {
 		errCause := fmt.Sprintln("error creating gauges: ", err.Error())
-		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if collector.Histograms, err = createHistograms(); err != nil {
 		errCause := fmt.Sprintln("error creating histograms: ", err.Error())
