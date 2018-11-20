@@ -41,11 +41,11 @@ func appendPrefixForMetrics(prefix []byte, metricsData []byte) (prefixedMetricsD
 	return prefixedMetricsData
 }
 
-func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler http.Handler) http.Handler {
+func exposedMetricsMiddleware(metricsMiddleware []MetricMiddleware, promHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// TODO(denisacostaq@gmail.com): Track all the data and write a header with Content-Length compressed
 		promHandler.ServeHTTP(w, r)
-		for _, cl := range metricsMidleware {
+		for _, cl := range metricsMiddleware {
 			if exposedMetricsData, err := cl.client.GetExposedMetrics(); err != nil {
 				log.WithError(err).Error("error getting metrics from service " + cl.client.Name)
 			} else {
@@ -76,7 +76,7 @@ func ExportMetrics(mainConfigFile, handlerEndpoint string, listenPort uint16) (s
 	} else {
 		prometheus.MustRegister(collector)
 	}
-	metricsMidleware, err := createMetricsMidleware()
+	metricsMiddleware, err := createMetricsMiddleware()
 	if err != nil {
 		log.WithError(err).Panicln("Can not create proxy metrics")
 	}
@@ -86,7 +86,7 @@ func ExportMetrics(mainConfigFile, handlerEndpoint string, listenPort uint16) (s
 		prometheus.DefaultRegisterer,
 		promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{DisableCompression: true}),
 	)
-	http.Handle(handlerEndpoint, exposedMetricsMidleware(metricsMidleware, hdl))
+	http.Handle(handlerEndpoint, exposedMetricsMiddleware(metricsMiddleware, hdl))
 	go func() {
 		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpoint))
 		log.WithError(srv.ListenAndServe()).Errorln("unable to start the server")
