@@ -10,6 +10,22 @@ The format is based on [Keep a Changelog](http://www.keepachangelog.com/en/1.0.0
 
 ### Added
 
+ * [\#34](https://github.com/simelo/rextporter/issues/34)
+
+   - Change the must operations(whit a panic implication) with a val|err scheme and handle the error(with logs) with out panic.
+
+ * [\#29](https://github.com/simelo/rextporter/issues/29)
+
+   - Define histogram metrics configuration.
+
+ * [\#27](https://github.com/simelo/rextporter/issues/27)
+
+   - Solve parse issue to put a prefix in incoming metrics names.
+
+ * [\#23](https://github.com/simelo/rextporter/issues/23)
+
+   - Detect content encoding when configure a service in proxy mode, proper handling for the default gzip.
+
  * [\#19](https://github.com/simelo/rextporter/issues/19)
 
    - Multiple metrics template, you can define in a config (metrics for file), what metrics will be used by what service.
