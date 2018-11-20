@@ -12,8 +12,8 @@ import (
 	"github.com/NYTimes/gziphandler"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/simelo/rextporter/src/common"
 	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -51,7 +51,7 @@ func exposedMetricsMiddleware(metricsMiddleware []MetricMiddleware, promHandler 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		getCustomData := func() (data []byte, err error) {
 			recorder := httptest.NewRecorder()
-		for _, cl := range metricsMiddleware {
+			for _, cl := range metricsMiddleware {
 				if exposedMetricsData, err := cl.client.GetExposedMetrics(); err != nil {
 					log.WithError(err).Error("error getting metrics from service " + cl.client.Name)
 				} else {
@@ -88,7 +88,7 @@ func exposedMetricsMiddleware(metricsMiddleware []MetricMiddleware, promHandler 
 				reader, err = gzip.NewReader(recorder.Body)
 				if err != nil {
 					errCause := fmt.Sprintln("can not create gzip reader.", err.Error())
-					return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+					return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 				}
 			default:
 				reader = ioutil.NopCloser(bytes.NewReader(recorder.Body.Bytes()))
@@ -143,9 +143,8 @@ func ExportMetrics(mainConfigFile, handlerEndpoint string, listenPort uint16) (s
 	port := fmt.Sprintf(":%d", listenPort)
 	srv = &http.Server{Addr: port}
 	http.Handle(
-		handlerEndpint,
-		gziphandler.GzipHandler(exposedMetricsMidleware(metricsMidleware, promhttp.Handler())))
-	http.Handle(handlerEndpoint, exposedMetricsMiddleware(metricsMiddleware, hdl))
+		handlerEndpoint,
+		gziphandler.GzipHandler(exposedMetricsMiddleware(metricsMiddleware, promhttp.Handler())))
 	go func() {
 		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpoint))
 		log.WithError(srv.ListenAndServe()).Errorln("unable to start the server")

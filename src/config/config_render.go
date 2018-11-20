@@ -132,7 +132,6 @@ func (confData mainConfigData) existServicesConfigFile() bool {
 }
 
 // createServicesConfigFile creates the service file or return an error if any,
-	return existFile(confData.ServicesConfigPath())
 // if the file already exist does no thin.
 func (confData mainConfigData) createServicesConfigFile() (err error) {
 	generalScopeErr := "error creating service config file"
@@ -285,7 +284,7 @@ func walletMetricsConfigPath(conf *configdir.Config) (path string) {
 
 func defaultTmplData(conf *configdir.Config) (tmplData templateData) {
 	tmplData = templateData{
-		ServicesConfigPath:     serviceDefaultConfigPath(conf),
+		ServicesConfigPath:     servicesDefaultConfigPath(conf),
 		MetricsForServicesPath: metricsForServicesDefaultConfigPath(conf),
 	}
 	return tmplData

@@ -82,10 +82,10 @@ func newServiceConfigFromFile(path string, conf mainConfigData) (servicesConf []
 		return servicesConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	for idxService, service := range servicesConf {
-		if strings.Compare(service.Mode, ServiceTypeAPIRest) == 0 {
+		if service.Mode == ServiceTypeAPIRest {
 			if servicesConf[idxService].Metrics, err = newMetricsConfig(conf.MetricsConfigPath(service.Name)); err != nil {
 				errCause := "error reading metrics config: " + err.Error()
-			panic(util.ErrorFromThisScope(errCause, generalScopeErr))
+				panic(util.ErrorFromThisScope(errCause, generalScopeErr))
 			}
 		}
 	}

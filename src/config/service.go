@@ -100,7 +100,7 @@ func (srv Service) validateAPIRest() (errs []error) {
 			errs = append(errs, errors.New("can not create a valid url to get metric: "+srv.URIToGetMetric(metric)))
 		}
 	}
-	if strings.Compare(srv.AuthType, "") == 0 {
+	if len(srv.AuthType) == 0 {
 		errs = append(errs, errors.New("AuthType is required if you are using consuming apiRest server"))
 	}
 	if srv.AuthType == "CSRF" && len(srv.TokenHeaderKey) == 0 {

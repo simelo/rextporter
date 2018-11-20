@@ -47,7 +47,7 @@ func (client *ProxyMetricClient) getRemoteInfo() (data []byte, err error) {
 	}
 	if resp.StatusCode != http.StatusOK {
 		errCause := fmt.Sprintf("no success response, status %s", resp.Status)
-		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	defer resp.Body.Close()
 	var reader io.ReadCloser
@@ -58,7 +58,7 @@ func (client *ProxyMetricClient) getRemoteInfo() (data []byte, err error) {
 		reader, err = gzip.NewReader(resp.Body)
 		if err != nil {
 			errCause := fmt.Sprintln("can not create gzip reader.", err.Error())
-			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	default:
 		reader = resp.Body

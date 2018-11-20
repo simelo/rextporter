@@ -39,7 +39,7 @@ func (client *TokenClient) getRemoteInfo() (data []byte, err error) {
 	}
 	if resp.StatusCode != http.StatusOK {
 		errCause := fmt.Sprintf("no success response, status %s", resp.Status)
-		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	defer resp.Body.Close()
 	if data, err = ioutil.ReadAll(resp.Body); err != nil {
