@@ -50,8 +50,16 @@ func (collector *SkycoinCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) {
 	onCollectFail := func(counter CounterMetric, fch chan<- prometheus.Metric) {
-		fch <- prometheus.MustNewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 1)
-		fch <- prometheus.MustNewConstMetric(counter.MetricDesc, prometheus.CounterValue, counter.lastSuccessValue)
+		if metric, err := prometheus.NewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 1); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectCounters -> onCollectFail can not set up flag")
+		}
+		if metric, err := prometheus.NewConstMetric(counter.MetricDesc, prometheus.CounterValue, counter.lastSuccessValue); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectCounters -> onCollectFail can not set the last success value")
+		}
 	}
 	recoverNegativeCounter := func(counter CounterMetric, fch chan<- prometheus.Metric) {
 		if r := recover(); r != nil {
@@ -68,8 +76,16 @@ func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) 
 	}
 	onCollectSuccess := func(counter *CounterMetric, fch chan<- prometheus.Metric, val float64) {
 		defer recoverNegativeCounter(*counter, fch)
-		fch <- prometheus.MustNewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 0)
-		fch <- prometheus.MustNewConstMetric(counter.MetricDesc, prometheus.CounterValue, val)
+		if metric, err := prometheus.NewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 0); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectCounters -> onCollectSuccess can not set down flag")
+		}
+		if metric, err := prometheus.NewConstMetric(counter.MetricDesc, prometheus.CounterValue, val); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectCounters -> onCollectSuccess can not set the value")
+		}
 		counter.lastSuccessValue = val
 	}
 	for idxCounter := range collector.Counters {
@@ -90,12 +106,28 @@ func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) 
 
 func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 	onCollectFail := func(gauge GaugeMetric, fch chan<- prometheus.Metric) {
-		fch <- prometheus.MustNewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 1)
-		fch <- prometheus.MustNewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, gauge.lastSuccessValue)
+		if metric, err := prometheus.NewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 1); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectGauges -> onCollectFail can not set up flag")
+		}
+		if metric, err := prometheus.NewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, gauge.lastSuccessValue); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectGauges -> onCollectFail can not set the last success value")
+		}
 	}
 	onCollectSuccess := func(gauge *GaugeMetric, fch chan<- prometheus.Metric, val float64) {
-		fch <- prometheus.MustNewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 0)
-		fch <- prometheus.MustNewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, val)
+		if metric, err := prometheus.NewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 0); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectGauges -> onCollectSuccess can not set down flag")
+		}
+		if metric, err := prometheus.NewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, val); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectGauges -> onCollectSuccess can not set the value")
+		}
 		gauge.lastSuccessValue = val
 	}
 	for idxGauge := range collector.Gauges {
@@ -116,23 +148,38 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 
 func (collector *SkycoinCollector) collectHistograms(ch chan<- prometheus.Metric) {
 	onCollectFail := func(histogram HistogramMetric, fch chan<- prometheus.Metric) {
-		// FIXME(denisacostaq@gmail.com): All prometheus.Must can cause a panic
-		fch <- prometheus.MustNewConstMetric(histogram.StatusDesc, prometheus.GaugeValue, 1)
-		fch <- prometheus.MustNewConstHistogram(
+		if metric, err := prometheus.NewConstMetric(histogram.StatusDesc, prometheus.GaugeValue, 1); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectHistograms -> onCollectFail can not set up flag")
+		}
+		if metric, err := prometheus.NewConstHistogram(
 			histogram.MetricDesc,
 			histogram.lastSuccessValue.Count,
 			histogram.lastSuccessValue.Sum,
 			histogram.lastSuccessValue.Buckets,
-		)
+		); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectHistograms -> onCollectFail can not set the last success value")
+		}
 	}
 	onCollectSuccess := func(histogram *HistogramMetric, fch chan<- prometheus.Metric, val client.HistogramValue) {
-		fch <- prometheus.MustNewConstMetric(histogram.StatusDesc, prometheus.GaugeValue, 0)
-		fch <- prometheus.MustNewConstHistogram(
+		if metric, err := prometheus.NewConstMetric(histogram.StatusDesc, prometheus.GaugeValue, 0); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectHistograms -> onCollectSuccess can not set down flag")
+		}
+		if metric, err := prometheus.NewConstHistogram(
 			histogram.MetricDesc,
 			val.Count,
 			val.Sum,
 			val.Buckets,
-		)
+		); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectHistograms -> onCollectSuccess can not set the value")
+		}
 		histogram.lastSuccessValue = val
 	}
 	for idxHistogram := range collector.Histograms {
