@@ -193,7 +193,7 @@ func (client *MetricClient) GetHistogramValue() (val HistogramValue, err error) 
 		val.Sum += metricVal
 		for _, bucket := range client.histogramClientOptions.Buckets {
 			if bucket <= metricVal {
-				val.Buckets[bucket] += 1
+				val.Buckets[bucket]++
 			}
 		}
 	}
