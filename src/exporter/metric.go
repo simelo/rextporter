@@ -139,7 +139,7 @@ func createHistogram(metricConf config.Metric, service config.Service) (metric H
 	var metricClient *client.MetricClient
 	if metricClient, err = client.NewMetricClient(metricConf, service); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
-		return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metric = HistogramMetric{
 		Client:     metricClient,
@@ -167,7 +167,7 @@ func createHistograms() ([]HistogramMetric, error) {
 				idxMetric++
 			} else {
 				errCause := "error creating histogram: " + err.Error()
-				return []HistogramMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
+				return []HistogramMetric{}, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
 		}
 	}

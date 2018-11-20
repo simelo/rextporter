@@ -175,12 +175,12 @@ func (client *MetricClient) GetHistogramValue() (val HistogramValue, err error) 
 	var metric interface{}
 	if metric, err = client.GetMetric(); err != nil {
 		errCause := fmt.Sprintln("can not get the metric data: ", err.Error())
-		return val, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metricCollection, okMetricCollection := metric.([]interface{})
 	if !okMetricCollection {
 		errCause := fmt.Sprintln("can not assert the metric type as slice")
-		return val, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	val = newHistogram(client.histogramClientOptions.Buckets)
 	for _, metricItem := range metricCollection {
@@ -188,7 +188,7 @@ func (client *MetricClient) GetHistogramValue() (val HistogramValue, err error) 
 		metricVal, okMetricVal := metricItem.(float64)
 		if !okMetricVal {
 			errCause := fmt.Sprintln("can not assert the metric value to type float")
-			return val, common.ErrorFromThisScope(errCause, generalScopeErr)
+			return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		val.Sum += metricVal
 		for _, bucket := range client.histogramClientOptions.Buckets {
