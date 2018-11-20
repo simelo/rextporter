@@ -5,14 +5,16 @@ import (
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/common"
 	log "github.com/sirupsen/logrus"
 )
 
 // SkycoinCollector has the metrics to be exposed
 type SkycoinCollector struct {
-	Counters []CounterMetric
-	Gauges   []GaugeMetric
+	Counters   []CounterMetric
+	Gauges     []GaugeMetric
+	Histograms []HistogramMetric
 }
 
 func newSkycoinCollector() (collector *SkycoinCollector, err error) {
@@ -26,6 +28,10 @@ func newSkycoinCollector() (collector *SkycoinCollector, err error) {
 		errCause := fmt.Sprintln("error creating gauges: ", err.Error())
 		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	if collector.Histograms, err = createHistograms(); err != nil {
+		errCause := fmt.Sprintln("error creating histograms: ", err.Error())
+		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
 	return collector, err
 }
 
@@ -36,6 +42,9 @@ func (collector *SkycoinCollector) Describe(ch chan<- *prometheus.Desc) {
 	}
 	for _, gauge := range collector.Gauges {
 		ch <- gauge.MetricDesc
+	}
+	for _, histogram := range collector.Histograms {
+		ch <- histogram.MetricDesc
 	}
 }
 
@@ -105,9 +114,41 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 	}
 }
 
+func (collector *SkycoinCollector) collectHistograms(ch chan<- prometheus.Metric) {
+	onCollectFail := func(histogram HistogramMetric, fch chan<- prometheus.Metric) {
+		// FIXME(denisacostaq@gmail.com): All prometheus.Must can cause a panic
+		fch <- prometheus.MustNewConstMetric(histogram.StatusDesc, prometheus.GaugeValue, 1)
+		fch <- prometheus.MustNewConstHistogram(
+			histogram.MetricDesc,
+			histogram.lastSuccessValue.Count,
+			histogram.lastSuccessValue.Sum,
+			histogram.lastSuccessValue.Buckets,
+		)
+	}
+	onCollectSuccess := func(histogram *HistogramMetric, fch chan<- prometheus.Metric, val client.HistogramValue) {
+		fch <- prometheus.MustNewConstMetric(histogram.StatusDesc, prometheus.GaugeValue, 0)
+		fch <- prometheus.MustNewConstHistogram(
+			histogram.MetricDesc,
+			val.Count,
+			val.Sum,
+			val.Buckets,
+		)
+		histogram.lastSuccessValue = val
+	}
+	for idxHistogram := range collector.Histograms {
+		if val, err := collector.Histograms[idxHistogram].Client.GetHistogramValue(); err != nil {
+			log.WithError(err).Errorln("can not get the data")
+			onCollectFail(collector.Histograms[idxHistogram], ch)
+		} else {
+			onCollectSuccess(&(collector.Histograms[idxHistogram]), ch, val)
+		}
+	}
+}
+
 //Collect update all the descriptors is values
 // TODO(denisacostaq@gmail.com): Make a research about race conditions here, "lastSuccessValue"
 func (collector *SkycoinCollector) Collect(ch chan<- prometheus.Metric) {
 	collector.collectCounters(ch)
 	collector.collectGauges(ch)
+	collector.collectHistograms(ch)
 }

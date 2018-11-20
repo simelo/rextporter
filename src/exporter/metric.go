@@ -125,3 +125,51 @@ func createGauges() ([]GaugeMetric, error) {
 	}
 	return gauges, nil
 }
+
+// HistogramMetric has the necessary http client to get and updated value for the histogram metric
+type HistogramMetric struct {
+	Client           *client.MetricClient
+	lastSuccessValue client.HistogramValue
+	MetricDesc       *prometheus.Desc
+	StatusDesc       *prometheus.Desc
+}
+
+func createHistogram(metricConf config.Metric, service config.Service) (metric HistogramMetric, err error) {
+	generalScopeErr := "can not create metric " + metricConf.Name
+	var metricClient *client.MetricClient
+	if metricClient, err = client.NewMetricClient(metricConf, service); err != nil {
+		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
+		return metric, common.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	metric = HistogramMetric{
+		Client:     metricClient,
+		MetricDesc: prometheus.NewDesc(service.MetricName(metricConf.Name), metricConf.Options.Description, nil, nil),
+		StatusDesc: prometheus.NewDesc(service.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+service.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
+	}
+	return metric, err
+}
+
+func createHistograms() ([]HistogramMetric, error) {
+	generalScopeErr := "can not create histograms"
+	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
+	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
+	var histogramMetricsAmount = 0
+	for _, service := range services {
+		histogramMetricsAmount += service.CountMetricsByType(config.KeyTypeHistogram)
+	}
+	histograms := make([]HistogramMetric, histogramMetricsAmount)
+	var idxMetric = 0
+	for _, service := range services {
+		metricsForService := service.FilterMetricsByType(config.KeyTypeHistogram)
+		for _, metric := range metricsForService {
+			if histogram, err := createHistogram(metric, service); err == nil {
+				histograms[idxMetric] = histogram
+				idxMetric++
+			} else {
+				errCause := "error creating histogram: " + err.Error()
+				return []HistogramMetric{}, common.ErrorFromThisScope(errCause, generalScopeErr)
+			}
+		}
+	}
+	return histograms, nil
+}
