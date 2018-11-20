@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -12,9 +13,10 @@ import (
 	"time"
 
 	"github.com/alecthomas/template"
-	"github.com/simelo/rextporter/src/common"
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/exporter"
+	"github.com/simelo/rextporter/src/util"
+	"github.com/simelo/rextporter/test/integration/testrand"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -27,14 +29,14 @@ servicesConfigPath = "{{.ServicesConfigPath}}"
 metricsForServicesPath = "{{.MetricsForServicesPath}}"
 `
 
-const servicesAPIRestConfigFileContenTemplate = `
-	# Service configuration.
+const servicesConfigFileContenTemplate = `
+	# Service configuration.{{range .Services}}
 	[[services]]
-		name = "myMonitoredServer"
-		mode="apiRest"
+		name = "{{.Name}}"
+		mode="{{.Mode}}"
 		scheme = "http"
-		port = 8080
-		basePath = ""
+		port = {{.Port}}
+		basePath = "{{.BasePath}}"
 		authType = "CSRF"
 		tokenHeaderKey = "X-CSRF-Token"
 		genTokenEndpoint = "/api/v1/csrf"
@@ -42,19 +44,8 @@ const servicesAPIRestConfigFileContenTemplate = `
 		
 		[services.location]
 			location = "localhost"
-`
 
-const servicesProxyConfigFileContenTemplate = `
-# Service configuration.
-[[services]]
-	name = "myMonitoredAsProxyServer"
-	mode="proxy"
-	scheme = "http"
-	port = 8080
-	basePath = "/metrics"
-	
-	[services.location]
-		location = "localhost"
+{{end}}
 `
 
 const metricsConfigFileContenTemplate = `
@@ -89,47 +80,61 @@ const metricsForServicesConfFileContenTemplate = `
 ]
 `
 
+type Service struct {
+	Name     string
+	Port     uint16
+	Mode     string
+	BasePath string
+}
+
+type ServicesConfData struct {
+	Services []Service
+}
+
 type HealthSuit struct {
 	suite.Suite
 	require                          *require.Assertions
 	mainConfFilePath                 string
 	mainConfTmplContent              string
-	servicesConfTmplContent          string
 	servicesConfFilePath             string
+	servicesConfData                 ServicesConfData
 	metricsConfTmplContent           string
 	metricsConfFilePath              string
 	metricsForServiceConfTmplContent string
+	metricsForServicesConfData       map[string]string
 	metricsForServicesConfFilePath   string
 }
 
+var fakeNodePort uint16
+
 func createConfigFile(tmplContent, path string, data interface{}) (err error) {
 	generalScopeErr := "error creating config file for integration test"
-	if strings.Compare(tmplContent, "") == 0 || strings.Compare(path, "") == 0 {
+	if len(tmplContent) == 0 || len(path) == 0 {
 		return err
 	}
 	tmpl := template.New("fileConfig")
 	var templateEngine *template.Template
 	if templateEngine, err = tmpl.Parse(tmplContent); err != nil {
 		errCause := "error parsing config: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var configFile *os.File
 	if configFile, err = os.Create(path); err != nil {
 		errCause := "error creating config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if err = templateEngine.Execute(configFile, data); err != nil {
 		errCause := "error writing config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return err
 }
 
 func (suite *HealthSuit) createServicesConfPath() (err error) {
 	generalScopeErr := "error creating service config file for integration test"
-	if err = createConfigFile(suite.servicesConfTmplContent, suite.servicesConfFilePath, nil); err != nil {
+	if err = createConfigFile(servicesConfigFileContenTemplate, suite.servicesConfFilePath, suite.servicesConfData); err != nil {
 		errCause := "error writing service config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return err
 }
@@ -138,16 +143,16 @@ func (suite *HealthSuit) createMainConfPath(tmplData interface{}) (err error) {
 	generalScopeErr := "error creating main config file for integration test"
 	if err = createConfigFile(suite.mainConfTmplContent, suite.mainConfFilePath, tmplData); err != nil {
 		errCause := "error writing service config file: " + err.Error()
-		return common.ErrorFromThisScope(errCause, generalScopeErr)
+		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return err
 }
 
-func (suite *HealthSuit) createMetricsForServicesConfPath(metricsForServices interface{}) (err error) {
+func (suite *HealthSuit) createMetricsForServicesConfPath() (err error) {
 	return createConfigFile(
 		suite.metricsForServiceConfTmplContent,
 		suite.metricsForServicesConfFilePath,
-		metricsForServices)
+		suite.metricsForServicesConfData)
 }
 
 func (suite *HealthSuit) createMetricsConfigPaths() (err error) {
@@ -169,28 +174,25 @@ func (suite *HealthSuit) createMainConfig() {
 	}
 	if err := suite.createMainConfPath(confData); err != nil {
 		errCause := "error writing main config file: " + err.Error()
-		suite.require.Nil(common.ErrorFromThisScope(errCause, generalScopeErr))
+		suite.Nil(util.ErrorFromThisScope(errCause, generalScopeErr))
 	}
 	if err := suite.createServicesConfPath(); err != nil {
 		errCause := "error writing services config file: " + err.Error()
-		suite.require.Nil(common.ErrorFromThisScope(errCause, generalScopeErr))
+		suite.Nil(util.ErrorFromThisScope(errCause, generalScopeErr))
 	}
 	if err := suite.createMetricsConfigPaths(); err != nil {
 		errCause := "error writing my monitored server metrics config file: " + err.Error()
-		suite.require.Nil(common.ErrorFromThisScope(errCause, generalScopeErr))
+		suite.Nil(util.ErrorFromThisScope(errCause, generalScopeErr))
 	}
-	if err := suite.createMetricsForServicesConfPath(
-		map[string]string{
-			"myMonitoredServer":        suite.metricsConfFilePath,
-			"myMonitoredAsProxyServer": suite.metricsConfFilePath}); err != nil {
+	if err := suite.createMetricsForServicesConfPath(); err != nil {
 		errCause := "error writing metrics for service config file: " + err.Error()
-		suite.require.Nil(common.ErrorFromThisScope(errCause, generalScopeErr))
+		suite.Nil(util.ErrorFromThisScope(errCause, generalScopeErr))
 	}
 }
 
 func (suite *HealthSuit) createDirectoriesWithFullDepth(dirs []string) {
 	for _, dir := range dirs {
-		suite.require.Nil(os.MkdirAll(dir, 0750))
+		suite.Nil(os.MkdirAll(dir, 0750))
 	}
 }
 
@@ -237,63 +239,107 @@ func metricHealthIsOk(metricName, metricData string) bool {
 	return true
 }
 
+func readListenPortFromFile() (port uint16, err error) {
+	var path string
+	path, err = testrand.FilePathToSharePort()
+	var file *os.File
+	file, err = os.OpenFile(path, os.O_RDONLY, 0400)
+	if err != nil {
+		log.WithError(err).Errorln("error opening file")
+		return 0, err
+	}
+	defer file.Close()
+	_, err = fmt.Fscanf(file, "%d", &port)
+	if err != nil {
+		log.WithError(err).Errorln("error reading file")
+		return port, err
+	}
+	return port, err
+}
+
 func TestSkycoinHealthSuit(t *testing.T) {
 	suite.Run(t, new(HealthSuit))
 }
 
-func (suite *HealthSuit) TestDefaultGeneratedConfigWorks() {
-	// NOTE(denisacostaq@gmail.com): Giving
-	suite.require = require.New(suite.T())
-	srv := exporter.ExportMetrics("", "/metrics1", 8081)
-	suite.require.NotNil(srv)
-	// NOTE(denisacostaq@gmail.com): Wait for server starts
-	time.Sleep(time.Second * 2)
-	conf := config.Config()
-
-	// NOTE(denisacostaq@gmail.com): When
-	resp, err := http.Get("http://127.0.0.1:8081/metrics1")
-
-	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Nil(err)
-	defer func() { suite.Nil(resp.Body.Close()) }()
-	suite.Equal(http.StatusOK, resp.StatusCode)
-	var data []byte
-	data, err = ioutil.ReadAll(resp.Body)
-	suite.Nil(err)
-	suite.require.Len(conf.Services, 1)
-	suite.require.Len(conf.Services[0].Metrics, 1)
-	metricName := "skycoin_" + conf.Services[0].Name + "_" + conf.Services[0].Metrics[0].Name
-	suite.require.Equal(metricName, "skycoin_skycoin_seq")
-	suite.require.True(metricHealthIsOk(metricName, string(data)))
-	var usingAVariableToMakeLinterHappy = context.Context(nil)
-	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
+func (suite *HealthSuit) SetupSuite() {
+	require := require.New(suite.T())
+	var port uint16
+	var err error
+	port, err = readListenPortFromFile()
+	require.Nil(err)
+	fakeNodePort = port
 }
+
+func (suite *HealthSuit) SetupTest() {
+	suite.callSetUpTest()
+}
+
+func (suite *HealthSuit) callSetUpTest() {
+	suite.metricsForServicesConfData =
+		map[string]string{
+			"myMonitoredServer":        suite.metricsConfFilePath,
+			"myMonitoredAsProxyServer": suite.metricsConfFilePath}
+	suite.servicesConfData = ServicesConfData{
+		Services: []Service{Service{Name: "myMonitoredServer", Port: fakeNodePort, Mode: "rest_api", BasePath: ""}},
+	}
+}
+
+// func (suite *HealthSuit) TestDefaultGeneratedConfigWorks() {
+// 	// NOTE(denisacostaq@gmail.com): Giving
+// 	suite.require = require.New(suite.T())
+// 	port := testrand.RandomPort()
+// 	srv := exporter.ExportMetrics("", "/metrics1", port)
+// 	suite.require.NotNil(srv)
+// 	// NOTE(denisacostaq@gmail.com): Wait for server starts
+// 	time.Sleep(time.Second * 2)
+// 	conf := config.Config()
+
+// 	// NOTE(denisacostaq@gmail.com): When
+// 	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics1", port))
+
+// 	// NOTE(denisacostaq@gmail.com): Assert
+// 	suite.Nil(err)
+// 	defer func() { suite.Nil(resp.Body.Close()) }()
+// 	suite.Equal(http.StatusOK, resp.StatusCode)
+// 	var data []byte
+// 	data, err = ioutil.ReadAll(resp.Body)
+// 	suite.Nil(err)
+// 	suite.require.Len(conf.Services, 1)
+// 	suite.require.Len(conf.Services[0].Metrics, 1)
+// 	metricName := "skycoin_" + conf.Services[0].Name + "_" + conf.Services[0].Metrics[0].Name
+// 	suite.Equal(metricName, "skycoin_skycoin_seq")
+// 	suite.require.True(metricHealthIsOk(metricName, string(data)))
+// 	var usingAVariableToMakeLinterHappy = context.Context(nil)
+// 	suite.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
+// }
 
 func (suite *HealthSuit) TestMetricMonitorHealth() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	suite.require = require.New(suite.T())
-	mainConfigDir := filepath.Join(os.TempDir(), "fdf", "vcvcv", "aa")
-	servicesDir := filepath.Join(os.TempDir(), "dfdfd", "3333")
-	myMonitoredServerMetricsDir := filepath.Join(os.TempDir(), "test", "aaaa")
-	metricsForServicesDir := filepath.Join(os.TempDir(), "tdddddest", "trtr")
+	mainConfigDir := testrand.RFolderPath()
+	servicesDir := testrand.RFolderPath()
+	myMonitoredServerMetricsDir := testrand.RFolderPath()
+	metricsForServicesDir := testrand.RFolderPath()
+	port := testrand.RandomPort()
 	suite.createDirectoriesWithFullDepth([]string{mainConfigDir, servicesDir, myMonitoredServerMetricsDir, metricsForServicesDir})
-	suite.mainConfFilePath = filepath.Join(mainConfigDir, "qqqqqqq")
-	suite.servicesConfFilePath = filepath.Join(servicesDir, "servicezz.toml")
-	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, "__dd.toml")
-	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, "dfdf.toml")
+	// suite.createDirectoriesWithFullDepth([]string{servicesDir})
+	suite.mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName())
+	suite.servicesConfFilePath = filepath.Join(servicesDir, testrand.RName())
+	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, testrand.RName())
+	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, testrand.RName())
 	suite.mainConfTmplContent = mainConfigFileContenTemplate
-	suite.servicesConfTmplContent = servicesAPIRestConfigFileContenTemplate
 	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
+	suite.callSetUpTest()
 	suite.createMainConfig()
-	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics2", 8082)
+	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics2", port)
 	suite.require.NotNil(srv)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)
 	conf := config.Config()
 
 	// NOTE(denisacostaq@gmail.com): When
-	resp, err := http.Get("http://127.0.0.1:8082/metrics2")
+	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics2", port))
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	defer func() { suite.Nil(resp.Body.Close()) }()
@@ -302,40 +348,42 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 	var data []byte
 	data, err = ioutil.ReadAll(resp.Body)
 	suite.Nil(err)
-	suite.require.Len(conf.Services, 1)
-	suite.require.Len(conf.Services[0].Metrics, 1)
+	suite.Len(conf.Services, 1)
+	suite.Len(conf.Services[0].Metrics, 1)
 	metricName := "skycoin_" + conf.Services[0].Name + "_" + conf.Services[0].Metrics[0].Name
-	suite.require.Equal(metricName, "skycoin_myMonitoredServer_open_connections_is_a_fake_name_for_test_purpose")
-	suite.require.True(metricHealthIsOk(metricName, string(data)))
+	suite.Equal(metricName, "skycoin_myMonitoredServer_open_connections_is_a_fake_name_for_test_purpose")
+	suite.True(metricHealthIsOk(metricName, string(data)))
 	var usingAVariableToMakeLinterHappy = context.Context(nil)
-	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
+	suite.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
 }
 
 func (suite *HealthSuit) TestMetricMonitorHealthCanSetUpFlag() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	suite.require = require.New(suite.T())
-	mainConfigDir := filepath.Join(os.TempDir(), "fdf", "vcvcv", "aa")
-	servicesDir := filepath.Join(os.TempDir(), "dfdfd", "3333")
-	myMonitoredServerMetricsDir := filepath.Join(os.TempDir(), "test", "aaaa")
-	metricsForServicesDir := filepath.Join(os.TempDir(), "tdddddest", "trtr")
+	mainConfigDir := testrand.RFolderPath()
+	servicesDir := testrand.RFolderPath()
+	port := testrand.RandomPort()
+	myMonitoredServerMetricsDir := testrand.RFolderPath()
+	metricsForServicesDir := testrand.RFolderPath()
 	suite.createDirectoriesWithFullDepth([]string{mainConfigDir, servicesDir, myMonitoredServerMetricsDir, metricsForServicesDir})
-	suite.mainConfFilePath = filepath.Join(mainConfigDir, "qqqqqqq")
-	suite.servicesConfFilePath = filepath.Join(servicesDir, "servicezz.toml")
-	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, "__dd.toml")
-	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, "dfdf.toml")
+	suite.mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName())
+	suite.servicesConfFilePath = filepath.Join(servicesDir, testrand.RName())
+	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, testrand.RName())
+	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, testrand.RName())
 	suite.mainConfTmplContent = mainConfigFileContenTemplate
-	suite.servicesConfTmplContent = servicesAPIRestConfigFileContenTemplate
 	suite.metricsConfTmplContent = metricsConfigFileContenTemplateNotAccesiblevalue
 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
+	// TODO(denisacostaq@gmail.com): Do not call this directly, use a setup scheme
+	suite.callSetUpTest()
 	suite.createMainConfig()
-	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics3", 8083)
+	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics3", port)
 	suite.require.NotNil(srv)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)
 	conf := config.Config()
 
 	// NOTE(denisacostaq@gmail.com): When
-	resp, err := http.Get("http://127.0.0.1:8083/metrics3")
+	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics3", port))
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	defer func() { suite.Nil(resp.Body.Close()) }()
@@ -347,37 +395,46 @@ func (suite *HealthSuit) TestMetricMonitorHealthCanSetUpFlag() {
 	suite.require.Len(conf.Services, 1)
 	suite.require.Len(conf.Services[0].Metrics, 1)
 	metricName := "skycoin_" + conf.Services[0].Name + "_" + conf.Services[0].Metrics[0].Name
-	suite.require.Equal(metricName, "skycoin_myMonitoredServer_can_not_be_updated")
-	suite.require.False(metricHealthIsOk(metricName, string(data)))
-	var usingAVariableToMakeLinterHappy = context.Context(nil)
-	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
+	suite.Equal(metricName, "skycoin_myMonitoredServer_can_not_be_updated")
+	suite.False(metricHealthIsOk(metricName, string(data)))
+	suite.Nil(srv.Shutdown(context.Context(nil)))
 }
 
 func (suite *HealthSuit) TestMetricMonitorAsProxy() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	suite.require = require.New(suite.T())
-	mainConfigDir := filepath.Join(os.TempDir(), "sdsds", "675656", "aa")
-	servicesDir := filepath.Join(os.TempDir(), "test", "integration")
-	myMonitoredServerMetricsDir := filepath.Join(os.TempDir(), "test", "integration")
-	metricsForServicesDir := filepath.Join(os.TempDir(), "test", "trtr")
+	port := testrand.RandomPort()
+	mainConfigDir := testrand.RFolderPath()
+	servicesDir := testrand.RFolderPath()
+	myMonitoredServerMetricsDir := testrand.RFolderPath()
+	metricsForServicesDir := testrand.RFolderPath()
 	suite.createDirectoriesWithFullDepth([]string{mainConfigDir, servicesDir, myMonitoredServerMetricsDir, metricsForServicesDir})
-	suite.mainConfFilePath = filepath.Join(mainConfigDir, "rrrr")
-	suite.servicesConfFilePath = filepath.Join(servicesDir, "servicezz.toml")
-	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, "mymonitoredservermetri_s.toml")
-	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, "met4services.toml")
+	suite.mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName())
+	suite.servicesConfFilePath = filepath.Join(servicesDir, testrand.RName())
+	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, testrand.RName())
+	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, testrand.RName())
 	suite.mainConfTmplContent = mainConfigFileContenTemplate
-	suite.servicesConfTmplContent = servicesProxyConfigFileContenTemplate
 	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
+	suite.callSetUpTest()
+	suite.metricsForServicesConfData =
+		map[string]string{
+			"myMonitoredServer":        suite.metricsConfFilePath,
+			"myMonitoredAsProxyServer": suite.metricsConfFilePath}
+	suite.servicesConfData = ServicesConfData{
+		Services: []Service{Service{Name: "myMonitoredAsProxyServer", Port: fakeNodePort, Mode: "forward_metrics", BasePath: "/metrics"}},
+	}
 	suite.createMainConfig()
-	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics4", 8084)
+	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics4", port)
 	suite.require.NotNil(srv)
 	conf := config.Config()
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)
 
 	// NOTE(denisacostaq@gmail.com): When
-	resp, err := http.Get("http://127.0.0.1:8084/metrics4")
+	var resp *http.Response
+	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics4", port))
+	suite.require.NotNil(resp)
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
@@ -398,39 +455,35 @@ func (suite *HealthSuit) TestMetricMonitorAsProxy() {
 func (suite *HealthSuit) TestMetricMonitorAsProxyWithNonMetricsEndpoint() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	suite.require = require.New(suite.T())
-	mainConfigDir := filepath.Join(os.TempDir(), "5454", "adf", "affa")
-	servicesDir := filepath.Join(os.TempDir(), "ffff", "integration")
-	myMonitoredServerMetricsDir := filepath.Join(os.TempDir(), "gddfd", "integration")
-	metricsForServicesDir := filepath.Join(os.TempDir(), "teffffst", "trtr")
+	port := testrand.RandomPort()
+	mainConfigDir := testrand.RFolderPath()
+	servicesDir := testrand.RFolderPath()
+	myMonitoredServerMetricsDir := testrand.RFolderPath()
+	metricsForServicesDir := testrand.RFolderPath()
 	suite.createDirectoriesWithFullDepth([]string{mainConfigDir, servicesDir, myMonitoredServerMetricsDir, metricsForServicesDir})
-	suite.mainConfFilePath = filepath.Join(mainConfigDir, "rrrddr")
-	suite.servicesConfFilePath = filepath.Join(servicesDir, "servicezz.toml")
-	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, "mymonitoredservermetri_s.toml")
-	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, "met4services.toml")
+	suite.mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName())
+	suite.servicesConfFilePath = filepath.Join(servicesDir, testrand.RName()+".toml")
+	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, testrand.RName()+".toml")
+	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, testrand.RName()+".toml")
 	suite.mainConfTmplContent = mainConfigFileContenTemplate
-	suite.servicesConfTmplContent = `
-	# Service configuration.
-	[[services]]
-		name = "myMonitoredAsProxyServer"
-		mode="proxy"
-		scheme = "http"
-		port = 8080
-		basePath = "/api/v1/health"
-
-		[services.location]
-			location = "localhost"
-	`
+	suite.callSetUpTest()
+	suite.metricsForServicesConfData =
+		map[string]string{
+			"myMonitoredAsProxyServer": suite.metricsConfFilePath}
+	suite.servicesConfData = ServicesConfData{
+		Services: []Service{Service{Name: "myMonitoredAsProxyServer", Port: fakeNodePort, Mode: "forward_metrics", BasePath: "/api/v1/health"}},
+	}
 	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
 	suite.createMainConfig()
-	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics5", 8085)
+	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics5", port)
 	suite.require.NotNil(srv)
 	conf := config.Config()
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)
 
 	// NOTE(denisacostaq@gmail.com): When
-	resp, err := http.Get("http://127.0.0.1:8085/metrics5")
+	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics5", port))
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
@@ -442,7 +495,7 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithNonMetricsEndpoint() {
 	suite.require.Len(conf.Services, 1)
 	suite.require.Len(conf.Services[0].Metrics, 0)
 	metricName := conf.Services[0].Name + "_skycoin_wallet2_seq2"
-	suite.require.Equal(metricName, "myMonitoredAsProxyServer_skycoin_wallet2_seq2")
+	suite.Equal(metricName, "myMonitoredAsProxyServer_skycoin_wallet2_seq2")
 	suite.require.False(metricHealthIsOk(metricName, string(data)))
 	var usingAVariableToMakeLinterHappy = context.Context(nil)
 	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
@@ -451,39 +504,35 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithNonMetricsEndpoint() {
 func (suite *HealthSuit) TestMetricMonitorAsProxyWithMetricsNamesOverlap() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	suite.require = require.New(suite.T())
-	mainConfigDir := filepath.Join(os.TempDir(), "54ff54", "adf", "affa")
-	servicesDir := filepath.Join(os.TempDir(), "ffsff", "test")
-	myMonitoredServerMetricsDir := filepath.Join(os.TempDir(), "fd", "test")
-	metricsForServicesDir := filepath.Join(os.TempDir(), "integration", "trtr")
+	port := testrand.RandomPort()
+	mainConfigDir := testrand.RFolderPath()
+	servicesDir := testrand.RFolderPath()
+	myMonitoredServerMetricsDir := testrand.RFolderPath()
+	metricsForServicesDir := testrand.RFolderPath()
 	suite.createDirectoriesWithFullDepth([]string{mainConfigDir, servicesDir, myMonitoredServerMetricsDir, metricsForServicesDir})
-	suite.mainConfFilePath = filepath.Join(mainConfigDir, "rrrddr")
-	suite.servicesConfFilePath = filepath.Join(servicesDir, "servicezs.toml")
-	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, "monitoredservices.toml")
-	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, "servmetrics.toml")
+	suite.mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName())
+	suite.servicesConfFilePath = filepath.Join(servicesDir, testrand.RName()+".toml")
+	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, testrand.RName()+".toml")
+	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, testrand.RName()+".toml")
 	suite.mainConfTmplContent = mainConfigFileContenTemplate
-	suite.servicesConfTmplContent = `
-	# Service configuration.
-	[[services]]
-		name = "myMonitoredAsProxyServer"
-		mode="proxy"
-		scheme = "http"
-		port = 8080
-		basePath = "/a_few_metrics"
-		
-		[services.location]
-			location = "localhost"
-	`
+	suite.callSetUpTest()
+	suite.metricsForServicesConfData =
+		map[string]string{
+			"myMonitoredAsProxyServer2": suite.metricsConfFilePath}
+	suite.servicesConfData = ServicesConfData{
+		Services: []Service{Service{Name: "myMonitoredAsProxyServer2", Port: fakeNodePort, Mode: "forward_metrics", BasePath: "/a_few_metrics"}},
+	}
 	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
 	suite.createMainConfig()
-	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics6", 8086)
+	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics6", port)
 	suite.require.NotNil(srv)
 	conf := config.Config()
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)
 
 	// NOTE(denisacostaq@gmail.com): When
-	resp, err := http.Get("http://127.0.0.1:8086/metrics6")
+	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics6", port))
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
@@ -495,11 +544,10 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithMetricsNamesOverlap() {
 	suite.require.Len(conf.Services, 1)
 	suite.require.Len(conf.Services[0].Metrics, 0)
 	metricName := conf.Services[0].Name + "_seq"
-	suite.require.Equal(metricName, "myMonitoredAsProxyServer_seq")
+	suite.require.Equal(metricName, "myMonitoredAsProxyServer2_seq")
 	suite.require.True(metricHealthIsOk(metricName, string(data)))
 	metricName = conf.Services[0].Name + "_main_seq"
-	suite.require.Equal(metricName, "myMonitoredAsProxyServer_main_seq")
+	suite.require.Equal(metricName, "myMonitoredAsProxyServer2_main_seq")
 	suite.require.True(metricHealthIsOk(metricName, string(data)))
-	var usingAVariableToMakeLinterHappy = context.Context(nil)
-	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
+	suite.Nil(srv.Shutdown(context.Context(nil)))
 }

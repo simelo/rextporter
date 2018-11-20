@@ -14,8 +14,8 @@ import (
 	"github.com/NYTimes/gziphandler"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/simelo/rextporter/src/common"
 	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -48,11 +48,11 @@ func appendPrefixForMetrics(prefix string, metricsData string) ([]byte, error) {
 	return []byte(metricsData), nil
 }
 
-func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler http.Handler) http.Handler {
+func exposedMetricsMiddleware(metricsMiddleware []MetricMiddleware, promHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		getCustomData := func() (data []byte, err error) {
 			recorder := httptest.NewRecorder()
-			for _, cl := range metricsMidleware {
+			for _, cl := range metricsMiddleware {
 				if exposedMetricsData, err := cl.client.GetExposedMetrics(); err != nil {
 					log.WithError(err).Error("error getting metrics from service " + cl.client.Name)
 				} else {
@@ -87,7 +87,7 @@ func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler htt
 				reader, err = gzip.NewReader(recorder.Body)
 				if err != nil {
 					errCause := fmt.Sprintln("can not create gzip reader.", err.Error())
-					return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+					return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 				}
 			default:
 				reader = ioutil.NopCloser(bytes.NewReader(recorder.Body.Bytes()))
@@ -129,24 +129,24 @@ func exposedMetricsMidleware(metricsMidleware []MetricMidleware, promHandler htt
 }
 
 // ExportMetrics will read the config from mainConfigFile if any or use a default one.
-func ExportMetrics(mainConfigFile, handlerEndpint string, listenPort uint16) (srv *http.Server) {
+func ExportMetrics(mainConfigFile, handlerEndpoint string, listenPort uint16) (srv *http.Server) {
 	config.NewConfigFromFileSystem(mainConfigFile)
 	if collector, err := newSkycoinCollector(); err != nil {
 		log.WithError(err).Panicln("Can not create metrics")
 	} else {
 		prometheus.MustRegister(collector)
 	}
-	metricsMidleware, err := createMetricsMidleware()
+	metricsMiddleware, err := createMetricsMiddleware()
 	if err != nil {
-		log.WithError(err).Panicln("Can not create proxy metrics")
+		log.WithError(err).Panicln("Can not create forward_metrics metrics")
 	}
 	port := fmt.Sprintf(":%d", listenPort)
 	srv = &http.Server{Addr: port}
 	http.Handle(
-		handlerEndpint,
-		gziphandler.GzipHandler(exposedMetricsMidleware(metricsMidleware, promhttp.Handler())))
+		handlerEndpoint,
+		gziphandler.GzipHandler(exposedMetricsMiddleware(metricsMiddleware, promhttp.Handler())))
 	go func() {
-		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpint))
+		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpoint))
 		log.WithError(srv.ListenAndServe()).Errorln("unable to start the server")
 	}()
 	return srv

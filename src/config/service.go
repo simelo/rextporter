@@ -4,7 +4,6 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -12,9 +11,9 @@ import (
 const (
 	// ServiceTypeAPIRest is the key you should define in the config file for a service who request remote data
 	// and uses this to build the metrics.
-	ServiceTypeAPIRest = "apiRest"
-	// ServiceTypeProxy is the key you should define in the config file for a service to work like a middleware/proxy.
-	ServiceTypeProxy = "proxy"
+	ServiceTypeAPIRest = "rest_api"
+	// ServiceTypeProxy is the key you should define in the config file for a service to work like a middleware/forward_metrics.
+	ServiceTypeProxy = "forward_metrics"
 )
 
 // Service is a concept to grab information about a running server, for example:
@@ -59,7 +58,7 @@ func (srv Service) URIToGetToken() string {
 func (srv Service) FilterMetricsByType(t string) (metrics []Metric) {
 	tmpMetrics := list.New()
 	for _, metric := range srv.Metrics {
-		if strings.Compare(metric.Options.Type, t) == 0 {
+		if metric.Options.Type == t {
 			tmpMetrics.PushBack(metric)
 		}
 	}
@@ -75,7 +74,7 @@ func (srv Service) FilterMetricsByType(t string) (metrics []Metric) {
 // CountMetricsByType will return the number of metrics who match whit the 't' parameter in this service.
 func (srv Service) CountMetricsByType(t string) (amount int) {
 	for _, metric := range srv.Metrics {
-		if strings.Compare(metric.Options.Type, t) == 0 {
+		if metric.Options.Type == t {
 			amount++
 		}
 	}
@@ -101,16 +100,16 @@ func (srv Service) validateAPIRest() (errs []error) {
 			errs = append(errs, errors.New("can not create a valid url to get metric: "+srv.URIToGetMetric(metric)))
 		}
 	}
-	if strings.Compare(srv.AuthType, "") == 0 {
+	if len(srv.AuthType) == 0 {
 		errs = append(errs, errors.New("AuthType is required if you are using consuming apiRest server"))
 	}
-	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.TokenHeaderKey) == 0 {
+	if srv.AuthType == "CSRF" && len(srv.TokenHeaderKey) == 0 {
 		errs = append(errs, errors.New("TokenHeaderKey is required if you are using CSRF"))
 	}
-	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.TokenKeyFromEndpoint) == 0 {
+	if srv.AuthType == "CSRF" && len(srv.TokenKeyFromEndpoint) == 0 {
 		errs = append(errs, errors.New("TokenKeyFromEndpoint is required if you are using CSRF"))
 	}
-	if strings.Compare(srv.AuthType, "CSRF") == 0 && len(srv.GenTokenEndpoint) == 0 {
+	if srv.AuthType == "CSRF" && len(srv.GenTokenEndpoint) == 0 {
 		errs = append(errs, errors.New("GenTokenEndpoint is required if you are using CSRF"))
 	}
 	return errs

@@ -34,7 +34,7 @@ The format is based on [Keep a Changelog](http://www.keepachangelog.com/en/1.0.0
 
  * [\#18](https://github.com/simelo/rextporter/issues/18)
 
-   - Define a service type, `apiRest` (get values trough API and make this the metrics as defined in metric conf), or `proxy` (forward some exposed metrics with the original metric name changed with the service name as prefix).
+   - Define a service type, `rest_api` (get values trough API and make this the metrics as defined in metric conf), or `forward_metrics` (forward some exposed metrics with the original metric name changed with the service name as prefix).
 
  * [\#14](https://github.com/simelo/rextporter/issues/14)
 
