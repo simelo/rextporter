@@ -8,3 +8,8 @@ type RextKeyValueStore interface {
 }
 
 type RextAuth interface{}
+
+type RextMetric interface {
+	GetMetadata() RextMetricDef
+	// TODO: Methods to retrieve values measured for a given metric
+}

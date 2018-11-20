@@ -8,12 +8,17 @@ type RextServiceScraper interface {
 	AddSources(sources ...RextDataSource)
 }
 
-type RextMetricScrapper interface {
-	Apply(rule RextScrapingRule)
-	ApplyMany(rules ...RextScrapingRule)
+type RextMetricsExtractor interface {
+	ExtractMetrics(target interface{}) []RextMetric
+	MergeMetrics(overwrite bool, metrics ...[]RextMetric) []RextMetric
 }
 
-type RextScrapingRule interface {
+type RextMetricScraper interface {
+	Apply(rule RextMetricDef)
+	ApplyMany(rules ...RextMetricDef)
+}
+
+type RextMetricDef interface {
 	GetMetricName() string
 	GetMetricType() string
 	GetMetricDescription() string
