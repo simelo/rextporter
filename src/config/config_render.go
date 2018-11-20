@@ -48,18 +48,19 @@ func (confData mainConfigData) MainConfigPath() string {
 }
 
 const mainConfigFileContentTemplate = `
-serviceConfigTransport = "file" # "file" | "consulCatalog"
-# render a template with a portable path
+servicesConfigTransport = "file" # "file" | "consulCatalog"
+servicesConfigPath = "{{.ServicesConfigPath}}"
 servicesConfigPath = "{{.ServicesConfigPath}}"
 metricsForServicesPath = "{{.MetricsForServicesPath}}"
 `
 
 const serviceConfigFileContentTemplate = `
-# Service configuration.
+# Services configuration.
 [[services]]
-  name = "wallet1"
+  name = "skycoin"
+  mode = "rest_api"
   scheme = "http"
-  port = 8000
+  port = 8080
   basePath = ""
   authType = "CSRF"
   tokenHeaderKey = "X-CSRF-Token"
@@ -121,9 +122,9 @@ var (
 	systemProgramName                = "rextporter"
 	mainConfigFileName               = "main.toml"
 	servicesConfigFileName           = "services.toml"
+	metricsForServicesConfigFileName = "metricsForServices.toml"
 	skycoinMetricsConfigFileName     = "skycoinMetrics.toml"
 	walletMetricsConfigFileName      = "walletMetrics.toml"
-	metricsForServicesConfigFileName = "metricsForServices.toml"
 )
 
 func (confData mainConfigData) existServicesConfigFile() bool {
@@ -293,7 +294,7 @@ func defaultMetricsForServiceTmplData(conf *configdir.Config) (tmplData metricsF
 		TmplData: metricsForServiceTemplateData{
 			ServiceNameToMetricsConfPath: map[string]string{
 				"skycoin": skycoinMetricsConfigPath(conf),
-				"wallet1": walletMetricsConfigPath(conf),
+				"wallet":  walletMetricsConfigPath(conf),
 			},
 		},
 	}

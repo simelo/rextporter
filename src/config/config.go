@@ -113,10 +113,9 @@ func NewConfigFromFileSystem(mainConfigPath string) {
 func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
 	tmpMetrics := list.New()
 	for _, service := range conf.Services {
-		for _, metric := range service.Metrics {
-			if metric.Options.Type == t {
-				tmpMetrics.PushBack(metric)
-			}
+		metricsForService := service.FilterMetricsByType(t)
+		for _, metric := range metricsForService {
+			tmpMetrics.PushBack(metric)
 		}
 	}
 	metrics = make([]Metric, tmpMetrics.Len())
@@ -126,6 +125,23 @@ func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
 		idxLink++
 	}
 	return metrics
+}
+
+// FilterServicesByType will return all the services who match whit the 't' parameter.
+func (conf RootConfig) FilterServicesByType(t string) (services []Service) {
+	tmpServices := list.New()
+	for _, service := range conf.Services {
+		if service.Mode == t {
+			tmpServices.PushBack(service)
+		}
+	}
+	services = make([]Service, tmpServices.Len())
+	idxLink := 0
+	for it := tmpServices.Front(); it != nil; it = it.Next() {
+		services[idxLink] = it.Value.(Service)
+		idxLink++
+	}
+	return services
 }
 
 func (conf RootConfig) validate() {

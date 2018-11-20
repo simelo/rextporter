@@ -37,6 +37,7 @@ func (client *TokenClient) getRemoteInfo() (data []byte, err error) {
 		errCause := fmt.Sprintln("can not do the request: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	defer resp.Body.Close()
 	if data, err = ioutil.ReadAll(resp.Body); err != nil {
 		errCause := fmt.Sprintln("can not read the body: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)

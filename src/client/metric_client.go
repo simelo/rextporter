@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -31,6 +32,9 @@ type MetricClient struct {
 // NewMetricClient will put all the required info to be able to do http requests to get the remote data.
 func NewMetricClient(metric config.Metric, service config.Service) (client *MetricClient, err error) {
 	const generalScopeErr = "error creating a client to get a metric from remote endpoint"
+	if strings.Compare(service.Mode, config.ServiceTypeAPIRest) != 0 {
+		return client, errors.New("can not create an api rest metric client from a service of type " + service.Mode)
+	}
 	client = new(MetricClient)
 	client.BaseClient.service = service
 	client.metricJPath = metric.Path
@@ -102,7 +106,9 @@ func (client *MetricClient) getRemoteInfo() (data []byte, err error) {
 			errCause := fmt.Sprintln("can not do the request after a token reset neither: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
+		// FIXME(denisacostaq@gmail.com): linter no allow me to write defer resp.Body.Close()
 	}
+	defer resp.Body.Close()
 	if data, err = ioutil.ReadAll(resp.Body); err != nil {
 		errCause := fmt.Sprintln("can not read the body: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)

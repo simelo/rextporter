@@ -6,6 +6,3 @@ usar varios archivos de ejemplo de configuracion no comentar, descometar seguida
 
 
 configurar un node de skycoin
-
-
-replace strings.Compare(varName, "") == 0 by len(varName) == 0

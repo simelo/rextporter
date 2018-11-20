@@ -14,6 +14,7 @@ type serviceConfSuite struct {
 func (suite *serviceConfSuite) SetupTest() {
 	suite.ServiceConf = Service{
 		Name:                 "MySupperServer",
+		Mode:                 "rest_api",
 		Scheme:               "http",
 		Location:             Server{Location: "http://localhost:8080"},
 		Port:                 8080,
@@ -45,6 +46,28 @@ func (suite *serviceConfSuite) TestNotEmptyName() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var serviceConf = suite.ServiceConf
 	serviceConf.Name = string("")
+
+	// NOTE(denisacostaq@gmail.com): When
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Len(serviceConf.validate(), 1)
+}
+
+func (suite *serviceConfSuite) TestNotEmptyMode() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	var serviceConf = suite.ServiceConf
+	serviceConf.Mode = string("")
+
+	// NOTE(denisacostaq@gmail.com): When
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Len(serviceConf.validate(), 1)
+}
+
+func (suite *serviceConfSuite) TestNotValidMode() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	var serviceConf = suite.ServiceConf
+	serviceConf.Mode = "acere"
 
 	// NOTE(denisacostaq@gmail.com): When
 
