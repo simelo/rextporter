@@ -280,7 +280,7 @@ func (suite *HealthSuit) callSetUpTest() {
 			"myMonitoredServer":        suite.metricsConfFilePath,
 			"myMonitoredAsProxyServer": suite.metricsConfFilePath}
 	suite.servicesConfData = ServicesConfData{
-		Services: []Service{Service{Name: "myMonitoredServer", Port: fakeNodePort, Mode: "apiRest", BasePath: ""}},
+		Services: []Service{Service{Name: "myMonitoredServer", Port: fakeNodePort, Mode: "rest_api", BasePath: ""}},
 	}
 }
 

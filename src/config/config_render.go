@@ -58,7 +58,7 @@ const serviceConfigFileContentTemplate = `
 # Services configuration.
 [[services]]
   name = "skycoin"
-  mode = "apiRest"
+  mode = "rest_api"
   scheme = "http"
   port = 8080
   basePath = ""
