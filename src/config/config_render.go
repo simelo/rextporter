@@ -82,22 +82,18 @@ const skycoinMetricsConfigFileContentTemplate = `
     type = "Counter"
     description = "I am running since"
 
-# [[metrics]]
-#   name = "openConnections"
-#   url = "/api/v1/network/connections"
-#   httpMethod = "GET"
-#   path = "/"
+[[metrics]]
+	name = "openConnections"
+	url = "/api/v1/network/connections"
+	httpMethod = "GET"
+	path = "/connections/unconfirmed_verify_transaction/burn_factor"
 
-#   [metrics.options]
-#     type = "Histogram"
-#     description = "Connections ammount"
+	[metrics.options]
+		type = "Histogram"
+		description = "Connections amount"
 
-#   [metrics.histogramOptions]
-#     buckets = [
-#       1,
-#       2, 
-#       3
-#     ]
+	[metrics.histogramOptions]
+		buckets = [1, 2, 3]
 
 
 

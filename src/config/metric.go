@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -63,6 +64,13 @@ type MetricOptions struct {
 func (mo MetricOptions) validate() (errs []error) {
 	if len(mo.Type) == 0 {
 		errs = append(errs, errors.New("type is required in metric"))
+	}
+	switch mo.Type {
+	case KeyTypeCounter, KeyTypeGauge, KeyTypeHistogram:
+	case KeyTypeSummary:
+		errs = append(errs, fmt.Errorf("type %s is not supported yet", KeyTypeSummary))
+	default:
+		errs = append(errs, fmt.Errorf("type should be one of %s, %s, %s or %s", KeyTypeCounter, KeyTypeGauge, KeyTypeSummary, KeyTypeHistogram))
 	}
 	return errs
 }
