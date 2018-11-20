@@ -44,3 +44,11 @@
 [[constraint]]
   branch = "master"
   name = "github.com/shibukawa/configdir"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/blynn/nex"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/cznic/goyacc"
