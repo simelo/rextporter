@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/simelo/rextporter/src/common"
 	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/util"
 )
 
 // TokenClient implements the getRemoteInfo method from `client.Client` interface by using some .toml config parameters
@@ -24,7 +24,7 @@ func newTokenClient(service config.Service) (client *TokenClient, err error) {
 	// FIXME(denisacostaq@gmail.com): make the "GET" configurable.
 	if client.req, err = http.NewRequest("GET", client.service.URIToGetToken(), nil); err != nil {
 		errCause := fmt.Sprintln("can not create the request: ", err.Error())
-		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return client, nil
 }
@@ -35,16 +35,16 @@ func (client *TokenClient) getRemoteInfo() (data []byte, err error) {
 	var resp *http.Response
 	if resp, err = httpClient.Do(client.req); err != nil {
 		errCause := fmt.Sprintln("can not do the request: ", err.Error())
-		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		errCause := fmt.Sprintf("no success response, status %s", resp.Status)
-		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if data, err = ioutil.ReadAll(resp.Body); err != nil {
 		errCause := fmt.Sprintln("can not read the body: ", err.Error())
-		return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return data, nil
 }
