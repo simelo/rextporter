@@ -1,8 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
+	"github.com/simelo/rextporter/src/util/file"
+	"github.com/simelo/rextporter/test/integration/testrand"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -201,8 +205,69 @@ func exposedMetricHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func exposedAFewMetrics(w http.ResponseWriter, r *http.Request) {
+	var metrics = `
+# HELP main_seq Says if the same name metric(skycoin_wallet2_seq2) was success updated, 1 for ok, 0 for failed.
+# TYPE main_seq gauge
+main_seq 13
+# HELP main_seq_up Says if the same name metric(skycoin_wallet2_seq2) was success updated, 1 for ok, 0 for failed.
+# TYPE main_seq_up gauge
+main_seq_up 0
+# HELP seq Says if the same name metric(skycoin_wallet2_seq2) was success updated, 1 for ok, 0 for failed.
+# TYPE seq gauge
+seq 32
+# HELP seq_up Says if the same name metric(skycoin_wallet2_seq2) was success updated, 1 for ok, 0 for failed.
+# TYPE seq_up gauge
+seq_up 0
+`
+	if _, err := w.Write([]byte(metrics)); err != nil {
+		log.WithError(err).Panicln("unable to write response")
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func writeListenPortInFile(port uint16) (err error) {
+	var path string
+	path, err = testrand.FilePathToSharePort()
+	if err != nil {
+		return err
+	}
+	if !file.ExistFile(path) {
+		var file, err = os.Create(path)
+		if err != nil {
+			log.WithError(err).Errorln("error creating file")
+			return err
+		}
+		defer file.Close()
+	}
+	var file *os.File
+	file, err = os.OpenFile(path, os.O_WRONLY, 0400)
+	if err != nil {
+		log.WithError(err).Errorln("error opening file")
+		return err
+	}
+	defer file.Close()
+	_, err = file.WriteString(fmt.Sprintf("%d", port))
+	if err != nil {
+		log.WithError(err).Errorln("error writing file")
+		return err
+	}
+	err = file.Sync()
+	if err != nil {
+		log.WithError(err).Errorln("error flushing file")
+		return err
+	}
+	return err
+}
+
 func main() {
+	var fakeNodePort = testrand.RandomPort()
+	if err := writeListenPortInFile(fakeNodePort); err != nil {
+		log.Fatal(err)
+	}
+	log.WithField("port", fakeNodePort).Infoln("starting fake server")
 	http.HandleFunc("/api/v1/health", apiHealthHandler)
 	http.HandleFunc("/metrics", exposedMetricHandler)
-	log.WithError(http.ListenAndServe(":8080", nil)).Fatalln("server fail")
+	http.HandleFunc("/a_few_metrics", exposedAFewMetrics)
+	log.WithError(http.ListenAndServe(fmt.Sprintf(":%d", fakeNodePort), nil)).Fatalln("server fail")
 }
