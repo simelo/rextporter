@@ -96,11 +96,11 @@ func (client *MetricClient) getRemoteInfo() (data []byte, err error) {
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			errCause := fmt.Sprintf("no success response, status %s", resp.Status)
-			return resp, util.ErrorFromThisScope(errCause, generalScopeErr)
+			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		if data, err = ioutil.ReadAll(resp.Body); err != nil {
 			errCause := fmt.Sprintln("can not read the body: ", err.Error())
-			return nil, common.ErrorFromThisScope(errCause, generalScopeErr)
+			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		return data, nil
 	}
@@ -114,7 +114,6 @@ func (client *MetricClient) getRemoteInfo() (data []byte, err error) {
 			errCause := fmt.Sprintln("can not do the request after a token reset neither: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return data, nil
 }

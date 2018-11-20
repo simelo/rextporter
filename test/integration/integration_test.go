@@ -455,39 +455,35 @@ func (suite *HealthSuit) TestMetricMonitorAsProxy() {
 func (suite *HealthSuit) TestMetricMonitorAsProxyWithNonMetricsEndpoint() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	suite.require = require.New(suite.T())
-	mainConfigDir := filepath.Join(os.TempDir(), "5454", "adf", "affa")
-	servicesDir := filepath.Join(os.TempDir(), "ffff", "integration")
-	myMonitoredServerMetricsDir := filepath.Join(os.TempDir(), "gddfd", "integration")
-	metricsForServicesDir := filepath.Join(os.TempDir(), "teffffst", "trtr")
+	port := testrand.RandomPort()
+	mainConfigDir := testrand.RFolderPath()
+	servicesDir := testrand.RFolderPath()
+	myMonitoredServerMetricsDir := testrand.RFolderPath()
+	metricsForServicesDir := testrand.RFolderPath()
 	suite.createDirectoriesWithFullDepth([]string{mainConfigDir, servicesDir, myMonitoredServerMetricsDir, metricsForServicesDir})
-	suite.mainConfFilePath = filepath.Join(mainConfigDir, "rrrddr")
-	suite.servicesConfFilePath = filepath.Join(servicesDir, "servicezz.toml")
-	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, "mymonitoredservermetri_s.toml")
-	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, "met4services.toml")
+	suite.mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName())
+	suite.servicesConfFilePath = filepath.Join(servicesDir, testrand.RName()+".toml")
+	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, testrand.RName()+".toml")
+	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, testrand.RName()+".toml")
 	suite.mainConfTmplContent = mainConfigFileContenTemplate
-	suite.servicesConfTmplContent = `
-	# Service configuration.
-	[[services]]
-		name = "myMonitoredAsProxyServer"
-		mode="proxy"
-		scheme = "http"
-		port = 8080
-		basePath = "/api/v1/health"
-
-		[services.location]
-			location = "localhost"
-	`
+	suite.callSetUpTest()
+	suite.metricsForServicesConfData =
+		map[string]string{
+			"myMonitoredAsProxyServer": suite.metricsConfFilePath}
+	suite.servicesConfData = ServicesConfData{
+		Services: []Service{Service{Name: "myMonitoredAsProxyServer", Port: fakeNodePort, Mode: "forward_metrics", BasePath: "/api/v1/health"}},
+	}
 	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
 	suite.createMainConfig()
-	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics5", 8085)
+	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics5", port)
 	suite.require.NotNil(srv)
 	conf := config.Config()
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)
 
 	// NOTE(denisacostaq@gmail.com): When
-	resp, err := http.Get("http://127.0.0.1:8085/metrics5")
+	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics5", port))
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
@@ -508,39 +504,35 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithNonMetricsEndpoint() {
 func (suite *HealthSuit) TestMetricMonitorAsProxyWithMetricsNamesOverlap() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	suite.require = require.New(suite.T())
-	mainConfigDir := filepath.Join(os.TempDir(), "54ff54", "adf", "affa")
-	servicesDir := filepath.Join(os.TempDir(), "ffsff", "test")
-	myMonitoredServerMetricsDir := filepath.Join(os.TempDir(), "fd", "test")
-	metricsForServicesDir := filepath.Join(os.TempDir(), "integration", "trtr")
+	port := testrand.RandomPort()
+	mainConfigDir := testrand.RFolderPath()
+	servicesDir := testrand.RFolderPath()
+	myMonitoredServerMetricsDir := testrand.RFolderPath()
+	metricsForServicesDir := testrand.RFolderPath()
 	suite.createDirectoriesWithFullDepth([]string{mainConfigDir, servicesDir, myMonitoredServerMetricsDir, metricsForServicesDir})
-	suite.mainConfFilePath = filepath.Join(mainConfigDir, "rrrddr")
-	suite.servicesConfFilePath = filepath.Join(servicesDir, "servicezs.toml")
-	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, "monitoredservices.toml")
-	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, "servmetrics.toml")
+	suite.mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName())
+	suite.servicesConfFilePath = filepath.Join(servicesDir, testrand.RName()+".toml")
+	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, testrand.RName()+".toml")
+	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, testrand.RName()+".toml")
 	suite.mainConfTmplContent = mainConfigFileContenTemplate
-	suite.servicesConfTmplContent = `
-	# Service configuration.
-	[[services]]
-		name = "myMonitoredAsProxyServer"
-		mode="proxy"
-		scheme = "http"
-		port = 8080
-		basePath = "/a_few_metrics"
-		
-		[services.location]
-			location = "localhost"
-	`
+	suite.callSetUpTest()
+	suite.metricsForServicesConfData =
+		map[string]string{
+			"myMonitoredAsProxyServer2": suite.metricsConfFilePath}
+	suite.servicesConfData = ServicesConfData{
+		Services: []Service{Service{Name: "myMonitoredAsProxyServer2", Port: fakeNodePort, Mode: "forward_metrics", BasePath: "/a_few_metrics"}},
+	}
 	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
 	suite.createMainConfig()
-	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics6", 8086)
+	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics6", port)
 	suite.require.NotNil(srv)
 	conf := config.Config()
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)
 
 	// NOTE(denisacostaq@gmail.com): When
-	resp, err := http.Get("http://127.0.0.1:8086/metrics6")
+	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics6", port))
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Nil(err)
@@ -552,10 +544,10 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithMetricsNamesOverlap() {
 	suite.require.Len(conf.Services, 1)
 	suite.require.Len(conf.Services[0].Metrics, 0)
 	metricName := conf.Services[0].Name + "_seq"
-	suite.require.Equal(metricName, "myMonitoredAsProxyServer_seq")
+	suite.require.Equal(metricName, "myMonitoredAsProxyServer2_seq")
 	suite.require.True(metricHealthIsOk(metricName, string(data)))
 	metricName = conf.Services[0].Name + "_main_seq"
-	suite.require.Equal(metricName, "myMonitoredAsProxyServer_main_seq")
+	suite.require.Equal(metricName, "myMonitoredAsProxyServer2_main_seq")
 	suite.require.True(metricHealthIsOk(metricName, string(data)))
 	suite.Nil(srv.Shutdown(context.Context(nil)))
 }
