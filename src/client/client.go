@@ -9,12 +9,12 @@ import (
 type Client interface {
 	// GetMetric return a metric val by using some `.toml` config parameters
 	// like for example: where is the host? it should be a GET, a POST or some other? ...
-	// sa NewMetricClient method.
+	// sa NewClient method.
 	GetMetric() (val interface{}, err error)
 }
 
-// NewMetricClient will put all the required info to be able to do http requests to get the remote data.
-func NewMetricClient(metric config.Metric, service config.Service) (Client, error) {
+// NewClient will put all the required info to be able to do http requests to get the remote data.
+func NewClient(metric config.Metric, service config.Service) (Client, error) {
 	const generalScopeErr = "error creating a client to get a metric from remote endpoint"
 	if service.Mode != config.ServiceTypeAPIRest {
 		errCause := "can not create an api rest metric client from a service of type " + service.Mode
