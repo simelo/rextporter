@@ -111,10 +111,23 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 		} else {
 			log.WithError(err).Errorln("collectGauges -> onCollectFail can not set up flag")
 		}
-		if metric, err := prometheus.NewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, gauge.lastSuccessValue); err == nil {
-			fch <- metric
-		} else {
-			log.WithError(err).Errorln("collectGauges -> onCollectFail can not set the last success value")
+		switch gauge.lastSuccessValue.(type) {
+		case float64:
+			val := gauge.lastSuccessValue.(float64)
+			if metric, err := prometheus.NewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, val); err == nil {
+				fch <- metric
+			} else {
+				log.WithError(err).Errorln("collectGauges -> onCollectFail can not set the last success value")
+			}
+		case []client.MetricVal:
+			vals := gauge.lastSuccessValue.([]client.MetricVal)
+			for _, val := range vals {
+				if metric, err := prometheus.NewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, val.Val, val.Labels...); err == nil {
+					fch <- metric
+				} else {
+					log.WithError(err).Errorln("collectGauges -> onCollectFail can not set the last success vec value")
+				}
+			}
 		}
 	}
 	onCollectSuccess := func(gauge *GaugeMetric, fch chan<- prometheus.Metric, val float64) {
@@ -130,16 +143,45 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 		}
 		gauge.lastSuccessValue = val
 	}
+	onCollectVecSuccess := func(gauge *GaugeMetric, fch chan<- prometheus.Metric, vals []client.MetricVal) {
+		for _, val := range vals {
+			if metric, err := prometheus.NewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 0, val.Labels...); err == nil {
+				fch <- metric
+			} else {
+				log.WithError(err).Errorln("collectGauges -> onCollectVecSuccess can not set down flag")
+			}
+			if metric, err := prometheus.NewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, val.Val, val.Labels...); err == nil {
+				fch <- metric
+			} else {
+				log.WithError(err).Errorln("collectGauges -> onCollectVecSuccess can not set the value")
+			}
+		}
+		gauge.lastSuccessValue = vals
+	}
 	for idxGauge := range collector.Gauges {
 		if val, err := collector.Gauges[idxGauge].Client.GetMetric(); err != nil {
 			log.WithError(err).Errorln("can not get the data")
 			onCollectFail(collector.Gauges[idxGauge], ch)
 		} else {
-			typedVal, ok := val.(float64)
-			if ok {
-				onCollectSuccess(&(collector.Gauges[idxGauge]), ch, typedVal)
-			} else {
-				log.WithField("val", val).Errorln("unable to get value as float64")
+			switch val.(type) {
+			case float64:
+				gaugeVal, okGaugeVal := val.(float64)
+				if okGaugeVal {
+					onCollectSuccess(&(collector.Gauges[idxGauge]), ch, gaugeVal)
+				} else {
+					log.WithField("val", val).Errorln(fmt.Sprintf("unable to get value %+v as float64", val))
+					onCollectFail(collector.Gauges[idxGauge], ch)
+				}
+			case []client.MetricVal:
+				gaugeVecVal, okGaugeVecVal := val.([]client.MetricVal)
+				if okGaugeVecVal {
+					onCollectVecSuccess(&(collector.Gauges[idxGauge]), ch, gaugeVecVal)
+				} else {
+					log.WithField("val", val).Errorln(fmt.Sprintf("unable to get value %+v as float64", val))
+					onCollectFail(collector.Gauges[idxGauge], ch)
+				}
+			default:
+				log.WithField("val", val).Errorln(fmt.Sprintf("unable to determine value %+v type", val))
 				onCollectFail(collector.Gauges[idxGauge], ch)
 			}
 		}
@@ -183,11 +225,16 @@ func (collector *SkycoinCollector) collectHistograms(ch chan<- prometheus.Metric
 		histogram.lastSuccessValue = val
 	}
 	for idxHistogram := range collector.Histograms {
-		if val, err := collector.Histograms[idxHistogram].Client.GetHistogramValue(); err != nil {
+		if val, err := collector.Histograms[idxHistogram].Client.GetMetric(); err != nil {
 			log.WithError(err).Errorln("can not get the data")
 			onCollectFail(collector.Histograms[idxHistogram], ch)
 		} else {
-			onCollectSuccess(&(collector.Histograms[idxHistogram]), ch, val)
+			metricVal, okMetricVal := val.(client.HistogramValue)
+			if okMetricVal {
+				onCollectSuccess(&(collector.Histograms[idxHistogram]), ch, metricVal)
+			} else {
+				log.WithError(err).Errorln("can not assert the metric value to type histogram")
+			}
 		}
 	}
 }
