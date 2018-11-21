@@ -22,12 +22,12 @@ func NewClient(metric config.Metric, service config.Service) (Client, error) {
 	}
 	// BUG(denisacostaq@gmail.com): type can collide with labels, for example type histogram with values
 	if metric.Options.Type == config.KeyTypeHistogram {
-		return createHistogramClient(metric, service)
+		return createHistogram(metric, service)
 	}
 	if len(metric.LabelNames()) > 0 {
-		return createVecMetricClient(metric, service)
+		return createNumericVec(metric, service)
 	}
-	return createNumericClient(metric, service)
+	return createNumeric(metric, service)
 }
 
 // TODO(denisacostaq@gmail.com): check out http://localhost:6060/pkg/github.com/prometheus/client_golang/api/#NewClient

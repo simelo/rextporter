@@ -11,9 +11,9 @@ import (
 	"github.com/simelo/rextporter/src/util"
 )
 
-// NumericVecClient implements the Client interface(is able to get numeric metrics through `GetMetric` like Gauge and Counter)
-type NumericVecClient struct {
-	NumericClient
+// NumericVec implements the Client interface(is able to get numeric metrics through `GetMetric` like Gauge and Counter)
+type NumericVec struct {
+	Numeric
 	labels     []config.Label
 	labelsName []string
 	itemPath   string
@@ -25,9 +25,9 @@ type NumericVal struct {
 	Labels []string
 }
 
-func createVecMetricClient(metric config.Metric, service config.Service) (client NumericVecClient, err error) {
+func createNumericVec(metric config.Metric, service config.Service) (client NumericVec, err error) {
 	const generalScopeErr = "error creating metric vec client"
-	client = NumericVecClient{}
+	client = NumericVec{}
 	client.BaseClient.service = service
 	client.metricJPath = metric.Path
 	client.BaseClient.req, err = http.NewRequest(metric.HTTPMethod, client.service.URIToGetMetric(metric), nil)
@@ -42,7 +42,7 @@ func createVecMetricClient(metric config.Metric, service config.Service) (client
 }
 
 // GetMetric returns a numeric(Gauge or Counter) vector metric by using remote data.
-func (client NumericVecClient) GetMetric() (interface{}, error) {
+func (client NumericVec) GetMetric() (interface{}, error) {
 	const generalScopeErr = "error getting metric vec data"
 	var data []byte
 	var err error

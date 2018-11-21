@@ -11,16 +11,16 @@ import (
 	"github.com/simelo/rextporter/src/util"
 )
 
-// NumericClient implements the GetMetric method from `client.Client` interface by using some `.toml` config parameters
+// Numeric implements the GetMetric method from `client.Client` interface by using some `.toml` config parameters
 // like for example: where is the host? it should be a GET, a POST or some other? ...
 // sa NewMetricClient method.
-type NumericClient struct {
+type Numeric struct {
 	BaseClient
 }
 
-func createNumericClient(metric config.Metric, service config.Service) (client NumericClient, err error) {
+func createNumeric(metric config.Metric, service config.Service) (client Numeric, err error) {
 	const generalScopeErr = "error creating number(gauge | counter) client"
-	client = NumericClient{}
+	client = Numeric{}
 	client.BaseClient.service = service
 	client.metricJPath = metric.Path
 	client.BaseClient.req, err = http.NewRequest(metric.HTTPMethod, client.service.URIToGetMetric(metric), nil)
@@ -32,7 +32,7 @@ func createNumericClient(metric config.Metric, service config.Service) (client N
 }
 
 // GetMetric returns a numeric(Gauge or Counter) metric by using remote data.
-func (client NumericClient) GetMetric() (val interface{}, err error) {
+func (client Numeric) GetMetric() (val interface{}, err error) {
 	const generalScopeErr = "error getting metric data"
 	var data []byte
 	if data, err = client.getRemoteInfo(); err != nil {
@@ -44,7 +44,7 @@ func (client NumericClient) GetMetric() (val interface{}, err error) {
 		errCause := fmt.Sprintf("can not decode the body: %s. Err: %s", string(data), err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	jPath := "$" + strings.Replace(client.metricJPath, "/", ".", -1)
+	jPath := "$" + strings.Replace(client.BaseClient.metricJPath, "/", ".", -1)
 	if val, err = jsonpath.JsonPathLookup(jsonData, jPath); err != nil {
 		errCause := fmt.Sprintln("can not locate the path: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)

@@ -13,15 +13,15 @@ type HistogramClientOptions struct {
 	Buckets []float64
 }
 
-// HistogramMetricClient implements the Client interface(is able to get histogram metrics through `GetMetric`)
-type HistogramMetricClient struct {
-	NumericClient
+// Histogram implements the Client interface(is able to get histogram metrics through `GetMetric`)
+type Histogram struct {
+	Numeric
 	histogramClientOptions HistogramClientOptions
 }
 
-func createHistogramClient(metric config.Metric, service config.Service) (client HistogramMetricClient, err error) {
+func createHistogram(metric config.Metric, service config.Service) (client Histogram, err error) {
 	const generalScopeErr = "error creating histogram client"
-	client = HistogramMetricClient{}
+	client = Histogram{}
 	client.BaseClient.service = service
 	client.metricJPath = metric.Path
 	client.BaseClient.req, err = http.NewRequest(metric.HTTPMethod, client.service.URIToGetMetric(metric), nil)
@@ -55,7 +55,7 @@ func newHistogram(buckets []float64) HistogramValue {
 }
 
 // GetMetric returns a histogram metric by using remote data.
-func (client HistogramMetricClient) GetMetric() (val interface{}, err error) {
+func (client Histogram) GetMetric() (val interface{}, err error) {
 	generalScopeErr := "error getting histogram values"
 	var metric interface{}
 	if metric, err = client.GetMetric(); err != nil {

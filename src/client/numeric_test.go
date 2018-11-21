@@ -124,7 +124,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadSeq() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -170,7 +170,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadBlockHash() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -216,7 +216,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -262,7 +262,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTimestamp() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -308,7 +308,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadFee() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -354,7 +354,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadVersion() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -400,7 +400,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -446,7 +446,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadUxHash() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -492,7 +492,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnspens() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -538,7 +538,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnconfirmed() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -584,7 +584,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -630,7 +630,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionVersion() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -676,7 +676,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionCommit() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -722,7 +722,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionBranch() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -768,7 +768,7 @@ func (suite *SkycoinStatsSuit) TestMetricOpenConnections() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -814,7 +814,7 @@ func (suite *SkycoinStatsSuit) TestMetricUptime() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -860,7 +860,7 @@ func (suite *SkycoinStatsSuit) TestMetricCsrfEnabled() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -906,7 +906,7 @@ func (suite *SkycoinStatsSuit) TestMetricCspEnabled() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -952,7 +952,7 @@ func (suite *SkycoinStatsSuit) TestMetricWalletApiEnabled() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -998,7 +998,7 @@ func (suite *SkycoinStatsSuit) TestMetricGuiEnabled() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1044,7 +1044,7 @@ func (suite *SkycoinStatsSuit) TestMetricUnversionedApiEnabled() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1090,7 +1090,7 @@ func (suite *SkycoinStatsSuit) TestMetricJsonRpcEnabled() {
 	conf := config.Config()
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
-	mc, err := NewMetricClient(conf.Services[0].Metrics[0], conf.Services[0])
+	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
 	require.Nil(err, "Can not crate the metric")
 
 	// NOTE(denisacostaq@gmail.com): When
