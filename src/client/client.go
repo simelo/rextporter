@@ -20,12 +20,22 @@ func NewClient(metric config.Metric, service config.Service) (Client, error) {
 		errCause := "can not create an api rest metric client from a service of type " + service.Mode
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	// BUG(denisacostaq@gmail.com): type can collide with labels, for example type histogram with values
+	if len(metric.LabelNames()) > 0 {
+		return createVecClient(metric, service)
+	}
+	return createAtomicClient(metric, service)
+}
+
+func createVecClient(metric config.Metric, service config.Service) (Client, error) {
+	if metric.Options.Type == config.KeyTypeHistogram {
+		return createHistogramVec(metric, service)
+	}
+	return createNumericVec(metric, service)
+}
+
+func createAtomicClient(metric config.Metric, service config.Service) (Client, error) {
 	if metric.Options.Type == config.KeyTypeHistogram {
 		return createHistogram(metric, service)
-	}
-	if len(metric.LabelNames()) > 0 {
-		return createNumericVec(metric, service)
 	}
 	return createNumeric(metric, service)
 }

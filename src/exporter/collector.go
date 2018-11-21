@@ -69,8 +69,8 @@ func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) 
 			} else {
 				log.WithError(err).Errorln("collectCounters -> onCollectFail can not set the last success value")
 			}
-		case []client.NumericVal:
-			vals, okVals := counter.lastSuccessValue.([]client.NumericVal)
+		case client.NumericVecVals:
+			vals, okVals := counter.lastSuccessValue.(client.NumericVecVals)
 			if !okVals {
 				log.WithField("vals", vals).Errorln("can not get las success vals")
 			}
@@ -114,7 +114,7 @@ func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) 
 		}
 		counter.lastSuccessValue = val
 	}
-	onCollectVecSuccess := func(counter *CounterMetric, fch chan<- prometheus.Metric, vals []client.NumericVal) {
+	onCollectVecSuccess := func(counter *CounterMetric, fch chan<- prometheus.Metric, vals client.NumericVecVals) {
 		defer recoverNegativeCounter(*counter, fch)
 		for _, val := range vals {
 			if metric, err := prometheus.NewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 0, val.Labels...); err == nil {
@@ -148,8 +148,8 @@ func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) 
 					log.WithField("val", val).Errorln(fmt.Sprintf("unable to get value %+v as float64", val))
 					onCollectFail(collector.Counters[idxCounter], ch)
 				}
-			case []client.NumericVal:
-				counterVecVal, okCounterVecVal := val.([]client.NumericVal)
+			case client.NumericVecVals:
+				counterVecVal, okCounterVecVal := val.(client.NumericVecVals)
 				if okCounterVecVal {
 					onCollectVecSuccess(&(collector.Counters[idxCounter]), ch, counterVecVal)
 				} else {
@@ -179,8 +179,8 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 			} else {
 				log.WithError(err).Errorln("collectGauges -> onCollectFail can not set the last success value")
 			}
-		case []client.NumericVal:
-			vals := gauge.lastSuccessValue.([]client.NumericVal)
+		case client.NumericVecVals:
+			vals := gauge.lastSuccessValue.(client.NumericVecVals)
 			for _, val := range vals {
 				if metric, err := prometheus.NewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, val.Val, val.Labels...); err == nil {
 					fch <- metric
@@ -207,7 +207,7 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 		}
 		gauge.lastSuccessValue = val
 	}
-	onCollectVecSuccess := func(gauge *GaugeMetric, fch chan<- prometheus.Metric, vals []client.NumericVal) {
+	onCollectVecSuccess := func(gauge *GaugeMetric, fch chan<- prometheus.Metric, vals client.NumericVecVals) {
 		for _, val := range vals {
 			if metric, err := prometheus.NewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 0, val.Labels...); err == nil {
 				fch <- metric
@@ -240,8 +240,8 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 					log.WithField("val", val).Errorln(fmt.Sprintf("unable to get value %+v as float64", val))
 					onCollectFail(collector.Gauges[idxGauge], ch)
 				}
-			case []client.NumericVal:
-				gaugeVecVal, okGaugeVecVal := val.([]client.NumericVal)
+			case client.NumericVecVals:
+				gaugeVecVal, okGaugeVecVal := val.(client.NumericVecVals)
 				if okGaugeVecVal {
 					onCollectVecSuccess(&(collector.Gauges[idxGauge]), ch, gaugeVecVal)
 				} else {

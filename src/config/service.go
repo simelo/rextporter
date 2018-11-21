@@ -54,7 +54,7 @@ func (srv Service) URIToGetToken() string {
 	return fmt.Sprintf("%s://%s:%d%s%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath, srv.GenTokenEndpoint)
 }
 
-// FilterMetricsByType will return all the metrics who match whit the 't' parameter in this service.
+// FilterMetricsByType will return all the metrics who match with the 't' parameter in this service.
 func (srv Service) FilterMetricsByType(t string) (metrics []Metric) {
 	tmpMetrics := list.New()
 	for _, metric := range srv.Metrics {
@@ -71,7 +71,7 @@ func (srv Service) FilterMetricsByType(t string) (metrics []Metric) {
 	return metrics
 }
 
-// CountMetricsByType will return the number of metrics who match whit the 't' parameter in this service.
+// CountMetricsByType will return the number of metrics who match with the 't' parameter in this service.
 func (srv Service) CountMetricsByType(t string) (amount int) {
 	for _, metric := range srv.Metrics {
 		if metric.Options.Type == t {

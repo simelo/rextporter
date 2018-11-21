@@ -13,17 +13,20 @@ import (
 
 // NumericVec implements the Client interface(is able to get numeric metrics through `GetMetric` like Gauge and Counter)
 type NumericVec struct {
-	Numeric
+	BaseClient
 	labels     []config.Label
 	labelsName []string
 	itemPath   string
 }
 
-// NumericVal can instance a metric vec item whit the required labels values
-type NumericVal struct {
+// NumericVecItemVal can instances a numeric(Gauge or Counter) vec item with the required labels values
+type NumericVecItemVal struct {
 	Val    float64
 	Labels []string
 }
+
+// NumericVecVals can instances a numeric(Gauge or Counter) vec with values and corresponding labels
+type NumericVecVals []NumericVecItemVal
 
 func createNumericVec(metric config.Metric, service config.Service) (client NumericVec, err error) {
 	const generalScopeErr = "error creating metric vec client"
@@ -66,7 +69,7 @@ func (client NumericVec) GetMetric() (interface{}, error) {
 		errCause := fmt.Sprintln("can not assert the metric type as slice")
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	metricsVal := make([]NumericVal, len(metricCollection))
+	metricsVal := make(NumericVecVals, len(metricCollection))
 	for idxMetric, metric := range metricCollection {
 		mJPath := "$" + strings.Replace(client.itemPath, "/", ".", -1)
 		var iMetricVal interface{}
