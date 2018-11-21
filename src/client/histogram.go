@@ -1,9 +1,12 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/oliveagle/jsonpath"
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
 )
@@ -57,12 +60,23 @@ func newHistogram(buckets []float64) HistogramValue {
 // GetMetric returns a histogram metric by using remote data.
 func (client Histogram) GetMetric() (val interface{}, err error) {
 	generalScopeErr := "error getting histogram values"
-	var metric interface{}
-	if metric, err = client.GetMetric(); err != nil {
-		errCause := fmt.Sprintln("can not get the metric data: ", err.Error())
-		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
+	var data []byte
+	if data, err = client.getRemoteInfo(); err != nil {
+		errCause := fmt.Sprintln("can not get remote info: ", err.Error())
+		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	metricCollection, okMetricCollection := metric.([]interface{})
+	var jsonData interface{}
+	if err = json.Unmarshal(data, &jsonData); err != nil {
+		errCause := fmt.Sprintf("can not decode the body: %s. Err: %s", string(data), err.Error())
+		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	jPath := "$" + strings.Replace(client.metricJPath, "/", ".", -1)
+	if val, err = jsonpath.JsonPathLookup(jsonData, jPath); err != nil {
+		errCause := fmt.Sprintln("can not locate the path: ", err.Error())
+		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	var iMetric interface{}
+	metricCollection, okMetricCollection := iMetric.([]interface{})
 	if !okMetricCollection {
 		errCause := fmt.Sprintln("can not assert the metric type as slice")
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
