@@ -32,7 +32,7 @@ func createMetricsMiddleware() (metricsMiddleware []MetricMiddleware, err error)
 // CounterMetric has the necessary http client to get and updated value for the counter metric
 type CounterMetric struct {
 	Client           client.Client
-	lastSuccessValue float64
+	lastSuccessValue interface{}
 	MetricDesc       *prometheus.Desc
 	StatusDesc       *prometheus.Desc
 }
