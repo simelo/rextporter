@@ -11,21 +11,23 @@ import (
 	"github.com/simelo/rextporter/src/util"
 )
 
-type MetricVecClient struct {
-	MetricClient
+// NumericVecClient implements the Client interface(is able to get numeric metrics through `GetMetric` like Gauge and Counter)
+type NumericVecClient struct {
+	NumericClient
 	labels     []config.Label
 	labelsName []string
 	itemPath   string
 }
 
-type MetricVal struct {
+// NumericVal can instance a metric vec item whit the required labels values
+type NumericVal struct {
 	Val    float64
 	Labels []string
 }
 
-func createVecMetricClient(metric config.Metric, service config.Service) (client MetricVecClient, err error) {
+func createVecMetricClient(metric config.Metric, service config.Service) (client NumericVecClient, err error) {
 	const generalScopeErr = "error creating metric vec client"
-	client = MetricVecClient{}
+	client = NumericVecClient{}
 	client.BaseClient.service = service
 	client.metricJPath = metric.Path
 	client.BaseClient.req, err = http.NewRequest(metric.HTTPMethod, client.service.URIToGetMetric(metric), nil)
@@ -39,7 +41,8 @@ func createVecMetricClient(metric config.Metric, service config.Service) (client
 	return client, nil
 }
 
-func (client MetricVecClient) GetMetric() (interface{}, error) {
+// GetMetric returns a numeric(Gauge or Counter) vector metric by using remote data.
+func (client NumericVecClient) GetMetric() (interface{}, error) {
 	const generalScopeErr = "error getting metric vec data"
 	var data []byte
 	var err error
@@ -52,7 +55,7 @@ func (client MetricVecClient) GetMetric() (interface{}, error) {
 		errCause := fmt.Sprintf("can not decode the body: %s. Err: %s", string(data), err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	cJPath := "$" + strings.Replace(client.metricJPath, "/", ".", -1)
+	cJPath := "$" + strings.Replace(client.BaseClient.metricJPath, "/", ".", -1)
 	var iValColl interface{}
 	if iValColl, err = jsonpath.JsonPathLookup(jsonData, cJPath); err != nil {
 		errCause := fmt.Sprintln("can not locate the path: ", err.Error())
@@ -63,7 +66,7 @@ func (client MetricVecClient) GetMetric() (interface{}, error) {
 		errCause := fmt.Sprintln("can not assert the metric type as slice")
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	metricsVal := make([]MetricVal, len(metricCollection))
+	metricsVal := make([]NumericVal, len(metricCollection))
 	for idxMetric, metric := range metricCollection {
 		mJPath := "$" + strings.Replace(client.itemPath, "/", ".", -1)
 		var iMetricVal interface{}

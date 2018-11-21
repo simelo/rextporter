@@ -13,8 +13,9 @@ type HistogramClientOptions struct {
 	Buckets []float64
 }
 
+// HistogramMetricClient implements the Client interface(is able to get histogram metrics through `GetMetric`)
 type HistogramMetricClient struct {
-	MetricClient
+	NumericClient
 	histogramClientOptions HistogramClientOptions
 }
 
@@ -84,6 +85,7 @@ func (client HistogramMetricClient) getHistogramValue() (val HistogramValue, err
 	return val, err
 }
 
+// GetMetric returns a histogram metric by using remote data.
 func (client HistogramMetricClient) GetMetric() (val interface{}, err error) {
 	val, err = client.getHistogramValue()
 	return val, err

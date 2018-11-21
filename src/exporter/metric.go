@@ -79,11 +79,6 @@ func createCounters() ([]CounterMetric, error) {
 	return counters, nil
 }
 
-type lastSuccessNumericVec struct {
-	val    float64
-	labels []string
-}
-
 // GaugeMetric has the necessary http client to get and updated value for the counter metric
 type GaugeMetric struct {
 	Client           client.Client

@@ -1,9 +1,8 @@
 package client
 
 import (
-	"errors"
-
 	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/util"
 )
 
 // Client is an http wrapper(implement the GetMetric).
@@ -18,7 +17,8 @@ type Client interface {
 func NewMetricClient(metric config.Metric, service config.Service) (Client, error) {
 	const generalScopeErr = "error creating a client to get a metric from remote endpoint"
 	if service.Mode != config.ServiceTypeAPIRest {
-		return nil, errors.New("can not create an api rest metric client from a service of type " + service.Mode)
+		errCause := "can not create an api rest metric client from a service of type " + service.Mode
+		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	// BUG(denisacostaq@gmail.com): type can collide with labels, for example type histogram with values
 	if metric.Options.Type == config.KeyTypeHistogram {
@@ -27,7 +27,7 @@ func NewMetricClient(metric config.Metric, service config.Service) (Client, erro
 	if len(metric.LabelNames()) > 0 {
 		return createVecMetricClient(metric, service)
 	}
-	return createNumberClient(metric, service)
+	return createNumericClient(metric, service)
 }
 
 // TODO(denisacostaq@gmail.com): check out http://localhost:6060/pkg/github.com/prometheus/client_golang/api/#NewClient

@@ -27,9 +27,9 @@ type Metric struct {
 }
 
 // LabelNames return a slice with all the labels name
-func (m Metric) LabelNames() []string {
-	labelNames := make([]string, len(m.Options.Labels))
-	for idxLabel, label := range m.Options.Labels {
+func (metric Metric) LabelNames() []string {
+	labelNames := make([]string, len(metric.Options.Labels))
+	for idxLabel, label := range metric.Options.Labels {
 		labelNames[idxLabel] = label.Name
 	}
 	return labelNames

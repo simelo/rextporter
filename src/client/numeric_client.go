@@ -11,16 +11,16 @@ import (
 	"github.com/simelo/rextporter/src/util"
 )
 
-// MetricClient implements the GetMetric method from `client.Client` interface by using some `.toml` config parameters
+// NumericClient implements the GetMetric method from `client.Client` interface by using some `.toml` config parameters
 // like for example: where is the host? it should be a GET, a POST or some other? ...
 // sa NewMetricClient method.
-type MetricClient struct {
+type NumericClient struct {
 	BaseClient
 }
 
-func createNumberClient(metric config.Metric, service config.Service) (client MetricClient, err error) {
+func createNumericClient(metric config.Metric, service config.Service) (client NumericClient, err error) {
 	const generalScopeErr = "error creating number(gauge | counter) client"
-	client = MetricClient{}
+	client = NumericClient{}
 	client.BaseClient.service = service
 	client.metricJPath = metric.Path
 	client.BaseClient.req, err = http.NewRequest(metric.HTTPMethod, client.service.URIToGetMetric(metric), nil)
@@ -31,9 +31,8 @@ func createNumberClient(metric config.Metric, service config.Service) (client Me
 	return client, nil
 }
 
-// GetMetric returns the metric previously bound through config parameters like:
-// url(endpoint), json path, type and so on.
-func (client MetricClient) GetMetric() (val interface{}, err error) {
+// GetMetric returns a numeric(Gauge or Counter) metric by using remote data.
+func (client NumericClient) GetMetric() (val interface{}, err error) {
 	const generalScopeErr = "error getting metric data"
 	var data []byte
 	if data, err = client.getRemoteInfo(); err != nil {
