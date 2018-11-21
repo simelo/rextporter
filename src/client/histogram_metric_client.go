@@ -54,8 +54,8 @@ func newHistogram(buckets []float64) HistogramValue {
 	return val
 }
 
-// getHistogramValue will return a histogram data structure from the remote endpoint.
-func (client HistogramMetricClient) getHistogramValue() (val HistogramValue, err error) {
+// GetMetric returns a histogram metric by using remote data.
+func (client HistogramMetricClient) GetMetric() (val interface{}, err error) {
 	generalScopeErr := "error getting histogram values"
 	var metric interface{}
 	if metric, err = client.GetMetric(); err != nil {
@@ -67,26 +67,21 @@ func (client HistogramMetricClient) getHistogramValue() (val HistogramValue, err
 		errCause := fmt.Sprintln("can not assert the metric type as slice")
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	val = newHistogram(client.histogramClientOptions.Buckets)
+	histogram := newHistogram(client.histogramClientOptions.Buckets)
 	for _, metricItem := range metricCollection {
-		val.Count++
+		histogram.Count++
 		metricVal, okMetricVal := metricItem.(float64)
 		if !okMetricVal {
 			errCause := fmt.Sprintln("can not assert the metric value to type float")
 			return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		val.Sum += metricVal
+		histogram.Sum += metricVal
 		for _, bucket := range client.histogramClientOptions.Buckets {
 			if bucket <= metricVal {
-				val.Buckets[bucket]++
+				histogram.Buckets[bucket]++
 			}
 		}
 	}
-	return val, err
-}
-
-// GetMetric returns a histogram metric by using remote data.
-func (client HistogramMetricClient) GetMetric() (val interface{}, err error) {
-	val, err = client.getHistogramValue()
+	val = histogram
 	return val, err
 }
