@@ -39,12 +39,15 @@ func newSkycoinCollector() (collector *SkycoinCollector, err error) {
 func (collector *SkycoinCollector) Describe(ch chan<- *prometheus.Desc) {
 	for _, counter := range collector.Counters {
 		ch <- counter.MetricDesc
+		ch <- counter.StatusDesc
 	}
 	for _, gauge := range collector.Gauges {
 		ch <- gauge.MetricDesc
+		ch <- gauge.StatusDesc
 	}
 	for _, histogram := range collector.Histograms {
 		ch <- histogram.MetricDesc
+		ch <- histogram.StatusDesc
 	}
 }
 
