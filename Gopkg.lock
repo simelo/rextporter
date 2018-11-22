@@ -22,11 +22,86 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:315c5f2f60c76d89b871c73f9bd5fe689cad96597afd50fb9992228ef80bdd34"
+  name = "github.com/alecthomas/template"
+  packages = [
+    ".",
+    "parse",
+  ]
+  pruneopts = "UT"
+  revision = "a0175ee3bccc567396460bf5acd36800cb10c49c"
+
+[[projects]]
+  branch = "master"
   digest = "1:d6afaeed1502aa28e80a4ed0981d570ad91b2579193404256ce672ed0a609e0d"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
   pruneopts = "UT"
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
+
+[[projects]]
+  branch = "master"
+  digest = "1:56799cf61213dfeb4b222b3f986c3047e4156b8aabc5c6e7690ceb4c19265eb5"
+  name = "github.com/blynn/nex"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a987c0fc55e2f5a276b00afc2201105838208a80"
+
+[[projects]]
+  branch = "master"
+  digest = "1:2a4afef2ef0e4e4ab66b4f4f6a70bf6551ae8b727184771b5547e2b90245fe58"
+  name = "github.com/cznic/golex"
+  packages = ["lex"]
+  pruneopts = "UT"
+  revision = "e16e6e70fa4c264491038b1f55e5a4fc3548a136"
+
+[[projects]]
+  branch = "master"
+  digest = "1:75e86c90ea584e6b2879656bd8fa4c8fd08f70e8c6d09cca203b09365884092c"
+  name = "github.com/cznic/goyacc"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "81426839345a28e1a70cc7f6020fe4dd09d50c59"
+
+[[projects]]
+  branch = "master"
+  digest = "1:1e461a804fd370a051999c0e046d344c430af4aadb8cf0c3fdc2093d11ea6344"
+  name = "github.com/cznic/mathutil"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6b113ba17c237f4fb3345d6535a5155adcaf1369"
+
+[[projects]]
+  branch = "master"
+  digest = "1:4d3802277a3ec2e08e033a40259eefbc7d1fb224789fc46673319015382d05d8"
+  name = "github.com/cznic/parser"
+  packages = ["yacc"]
+  pruneopts = "UT"
+  revision = "0280f9dc13f53abe19c652b618c480090058850c"
+
+[[projects]]
+  branch = "master"
+  digest = "1:1ec94f18c3941cdbde18b11052791eed70cd8d175495348460aa47fadf0a9471"
+  name = "github.com/cznic/sortutil"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "83eef8afa26da52ca96cc99af5a55c729d8f1e21"
+
+[[projects]]
+  branch = "master"
+  digest = "1:c18715de7a83fd8048ffdfa316a4126da285a6f0bf4ecfb9b75949755e37614e"
+  name = "github.com/cznic/strutil"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2ae56eb84c8e3b15e3133114dd7e2339c342cb44"
+
+[[projects]]
+  branch = "master"
+  digest = "1:5dd7180728a70d29d19ed2d98776ea98c8321daa9d460c97d1b76f351bf1ce73"
+  name = "github.com/cznic/y"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "74c6a86cd8d1a0be4babc9ddd12d17e029764183"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -174,6 +249,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:e18d76e3805afdea8ce0478df357713eb94d72a6a23da9ea18b95291999971c8"
+  name = "github.com/remyoudompheng/bigfft"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "52369c62f4463a21c8ff8531194c5526322b8521"
+
+[[projects]]
+  branch = "master"
   digest = "1:8209ed8bf2336848aa760c11e809f93ba96fffa64d3c2948e970a362a46e534b"
   name = "github.com/shibukawa/configdir"
   packages = ["."]
@@ -291,6 +374,8 @@
   input-imports = [
     "github.com/NYTimes/gziphandler",
     "github.com/alecthomas/template",
+    "github.com/blynn/nex",
+    "github.com/cznic/goyacc",
     "github.com/oliveagle/jsonpath",
     "github.com/prometheus/client_golang/prometheus",
     "github.com/prometheus/client_golang/prometheus/promhttp",
