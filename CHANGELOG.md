@@ -18,32 +18,32 @@ The format is based on [Keep a Changelog](http://www.keepachangelog.com/en/1.0.0
 
   - Change the must operations(whit a panic implication) with a val|err scheme and handle the error(with logs) with out panic.
 
-- \#29](https://github.com/simelo/rextporter/issues/29)
+- [\#29](https://github.com/simelo/rextporter/issues/29)
 
   - Define histogram metrics configuration.
 
-- \#27](https://github.com/simelo/rextporter/issues/27)
+- [\#27](https://github.com/simelo/rextporter/issues/27)
 
   - Solve parse issue to put a prefix in incoming metrics names.
 
-- \#23](https://github.com/simelo/rextporter/issues/23)
+- [\#23](https://github.com/simelo/rextporter/issues/23)
 
   - Detect content encoding when configure a service in proxy mode, proper handling for the default gzip.
 
-- \#19](https://github.com/simelo/rextporter/issues/19)
+- [\#19](https://github.com/simelo/rextporter/issues/19)
 
   - Multiple metrics template, you can define in a config (metrics for file), what metrics will be used by what service.
 
   - Multiple services definition to be monitored.
 
-- \#18](https://github.com/simelo/rextporter/issues/18)
+- [\#18](https://github.com/simelo/rextporter/issues/18)
 
   - Define a service type, `rest_api` (get values trough API and make this the metrics as defined in metric conf), or `forward_metrics` (forward some exposed metrics with the original metric name changed with the service name as prefix).
 
-- \#14](https://github.com/simelo/rextporter/issues/14)
+- [\#14](https://github.com/simelo/rextporter/issues/14)
 
   - Use a default configuration file path and initialize it if not exist.
 
-- \#13](https://github.com/simelo/rextporter/issues/13)
+- [\#13](https://github.com/simelo/rextporter/issues/13)
 
   - Be able to read service configuration from file.
