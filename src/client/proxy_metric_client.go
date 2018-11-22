@@ -65,6 +65,7 @@ func (client *ProxyMetricClient) getRemoteInfo() (data []byte, err error) {
 			errCause := fmt.Sprintln("can not create gzip reader.", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
+		defer reader.Close()
 	default:
 		reader = resp.Body
 	}

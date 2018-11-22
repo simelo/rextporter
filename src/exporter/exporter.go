@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
+	"strings"
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/prometheus/client_golang/prometheus"
@@ -17,34 +19,33 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func findMetricsName(metricsData []byte) (metricsName [][]byte) {
-	lines := bytes.Split(metricsData, []byte("\n"))
-	var typeLines []byte
-	for _, line := range lines {
-		if bytes.HasPrefix(line, []byte("# TYPE ")) {
-			typeLines = append(typeLines, line...)
-		}
+func findMetricsName(metricsData string) (metricsNames []string) {
+	rex := regexp.MustCompile(`# TYPE [a-zA-Z_:][a-zA-Z0-9_:]*`)
+	metricsNameLines := rex.FindAllString(metricsData, -1)
+	metricsNames = make([]string, len(metricsNameLines))
+	for idx, metricsNameLine := range metricsNameLines {
+		metricsNameLineColumns := strings.Split(metricsNameLine, " ")
+		// FIXME(denissacostaq@gmail.com): be careful indexing here
+		metricsNames[idx] = metricsNameLineColumns[2]
 	}
-	splittedTypeLines := bytes.Split(typeLines, []byte("# TYPE "))
-	// NOTE(denisacostaq@gmail.com): remove the first empty val a the left of "# TYPE " with the 1:
-	for _, splittedType := range splittedTypeLines[1:] {
-		splittedTypeColumns := bytes.Split(splittedType, []byte(" "))
-		metricsName = append(metricsName, splittedTypeColumns[0])
-	}
-	metricsName = metricsName[1:]
-	return metricsName
+	return metricsNames
 }
 
-func appendPrefixForMetrics(prefix []byte, metricsData []byte) (prefixedMetricsData []byte) {
+func appendPrefixForMetrics(prefix string, metricsData string) ([]byte, error) {
 	metricsName := findMetricsName(metricsData)
-	prefixedMetricsData = make([]byte, len(metricsData))
-	copy(prefixedMetricsData, metricsData)
 	for _, metricName := range metricsName {
-		newName := append(prefix, []byte("_")...)
-		newName = append(newName, metricName...)
-		prefixedMetricsData = bytes.Replace(prefixedMetricsData, append(metricName, []byte(" ")...), append(newName, []byte(" ")...), -1)
+		repl := strings.NewReplacer(
+			"# HELP "+metricName+" ", "# HELP "+prefix+"_"+metricName+" ",
+			"# TYPE "+metricName+" ", "# TYPE "+prefix+"_"+metricName+" ",
+		)
+		metricsData = repl.Replace(metricsData)
+		metricsData = strings.Replace(metricsData, "\n"+metricName, "\n"+prefix+"_"+metricName, -1)
 	}
-	return prefixedMetricsData
+	if len(metricsName) == 0 {
+		err := fmt.Errorf("data from %s not appear to be from a metrics(trough prometheus instrumentation) endpoint", string(prefix))
+		log.WithError(err).Errorln("append prefix error, content ignored")
+	}
+	return []byte(metricsData), nil
 }
 
 func exposedMetricsMiddleware(metricsMiddleware []MetricMiddleware, promHandler http.Handler) http.Handler {
@@ -55,17 +56,17 @@ func exposedMetricsMiddleware(metricsMiddleware []MetricMiddleware, promHandler 
 				if exposedMetricsData, err := cl.client.GetExposedMetrics(); err != nil {
 					log.WithError(err).Error("error getting metrics from service " + cl.client.Name)
 				} else {
-					prefixed := appendPrefixForMetrics([]byte(cl.client.Name), exposedMetricsData)
-					var count int
-					if count, err = recorder.Write(prefixed); err != nil || count != len(prefixed) {
-						if err != nil {
-							log.WithError(err).Errorln("error writing prefixed content")
-						}
-						if count != len(prefixed) {
-							log.WithFields(log.Fields{
-								"wrote":    count,
-								"required": len(prefixed),
-							}).Errorln("no enough content wrote")
+					if prefixed, err := appendPrefixForMetrics(cl.client.Name, string(exposedMetricsData)); err == nil {
+						if count, err := recorder.Write(prefixed); err != nil || count != len(prefixed) {
+							if err != nil {
+								log.WithError(err).Errorln("error writing prefixed content")
+							}
+							if count != len(prefixed) {
+								log.WithFields(log.Fields{
+									"wrote":    count,
+									"required": len(prefixed),
+								}).Errorln("no enough content wrote")
+							}
 						}
 					}
 				}
@@ -81,8 +82,6 @@ func exposedMetricsMiddleware(metricsMiddleware []MetricMiddleware, promHandler 
 			recorder := httptest.NewRecorder()
 			promHandler.ServeHTTP(recorder, r)
 			var reader io.ReadCloser
-			// BUG(denisacostaq@gmail.com): close this reader.
-			// defer reader.Close()
 			switch recorder.Header().Get("Content-Encoding") {
 			case "gzip":
 				reader, err = gzip.NewReader(recorder.Body)
@@ -93,6 +92,7 @@ func exposedMetricsMiddleware(metricsMiddleware []MetricMiddleware, promHandler 
 			default:
 				reader = ioutil.NopCloser(bytes.NewReader(recorder.Body.Bytes()))
 			}
+			defer reader.Close()
 			if data, err = ioutil.ReadAll(reader); err != nil {
 				log.WithError(err).Errorln("can not read recorded default data")
 				return nil, err

@@ -6,7 +6,7 @@ test: ## Run test with GOARCH=Default
 	go test -count=1 github.com/simelo/rextporter/src/client
 	if ! screen -list | grep -q "fakeSkycoinForIntegrationTest"; then echo "creating screen fakeSkycoinForIntegrationTest"; screen -L -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; else echo "fakeSkycoinForIntegrationTest screen already exist. quiting it to create a new one"; screen -S fakeSkycoinForIntegrationTest -X quit; screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; fi
 	sleep 3
-	go test -count=1 github.com/simelo/rextporter/test/integration -args -test.v
+	go test -count=1 -cpu=1 -parallel=1 github.com/simelo/rextporter/test/integration -args -test.v
 	# screen -list can return a not 0 value, this is interpreted as a fail for travis, so use || true
 	screen -list || true
 	screen -S fakeSkycoinForIntegrationTest -X quit
@@ -18,7 +18,7 @@ test-386: ## Run tests  with GOARCH=386
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/client
 	if ! screen -list | grep -q "fakeSkycoinForIntegrationTest"; then echo "creating screen fakeSkycoinForIntegrationTest"; screen -L -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; else echo "fakeSkycoinForIntegrationTest screen already exist. quiting it to create a new one"; screen -S fakeSkycoinForIntegrationTest -X quit; screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; fi
 	sleep 3
-	GOARCH=386 go test -count=1 github.com/simelo/rextporter/test/integration -args -test.v
+	GOARCH=386 go test -cpu=1 -parallel=1  -count=1 github.com/simelo/rextporter/test/integration -args -test.v
 	# screen -list can return a not 0 value, this is interpreted as a fail for travis, so use || true
 	screen -list || true
 	screen -S fakeSkycoinForIntegrationTest -X quit
@@ -29,7 +29,7 @@ test-amd64: ## Run tests with GOARCH=amd64
 	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/src/client
 	if ! screen -list | grep -q "fakeSkycoinForIntegrationTest"; then echo "creating screen fakeSkycoinForIntegrationTest"; screen -L -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; else echo "fakeSkycoinForIntegrationTest screen already exist. quiting it to create a new one"; screen -S fakeSkycoinForIntegrationTest -X quit; screen -dm -S fakeSkycoinForIntegrationTest go run test/integration/fake_skycoin_node.go; fi
 	sleep 3
-	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/test/integration -args -test.v
+	GOARCH=amd64 go test -cpu=1 -parallel=1  -count=1 github.com/simelo/rextporter/test/integration -args -test.v
 	# screen -list can return a not 0 value, this is interpreted as a fail for travis, so use || true
 	screen -list || true
 	screen -S fakeSkycoinForIntegrationTest -X quit
