@@ -2,7 +2,6 @@ package client
 
 import (
 	"errors"
-	"log"
 
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
@@ -30,18 +29,10 @@ func NewClient(metric config.Metric, service config.Service) (Client, error) {
 }
 
 func createVecClient(metric config.Metric, service config.Service) (Client, error) {
-	if metric.Options.Type == config.KeyTypeHistogram {
-		// FIXME(denisacostaq@gmail.com): work on this feacture
-		var v HistogramVec
-		var err error
-		if v, err = createHistogramVec(metric, service); err != nil {
-			log.Println(v, err)
-		}
-		return v, errors.New("create histogram vec is not supported yet, see return createHistogramVec(metric, service)")
-	} else if metric.Options.Type == config.KeyTypeSummary {
-		return HistogramVec{}, errors.New("create summary vec is not supported yet")
+	if metric.Options.Type == config.KeyTypeCounter || metric.Options.Type == config.KeyTypeGauge {
+		return createNumericVec(metric, service)
 	}
-	return createNumericVec(metric, service)
+	return NumericVec{}, errors.New("histogram vec and summary vec are not supported yet")
 }
 
 func createAtomicClient(metric config.Metric, service config.Service) (Client, error) {
