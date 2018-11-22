@@ -58,10 +58,9 @@ func newHistogram(buckets []float64) HistogramValue {
 }
 
 // GetMetric returns a histogram metric by using remote data.
-func (client Histogram) GetMetric() (interface{}, error) {
+func (client Histogram) GetMetric() (val interface{}, err error) {
 	generalScopeErr := "error getting histogram values"
 	var data []byte
-	var err error
 	if data, err = client.getRemoteInfo(); err != nil {
 		errCause := fmt.Sprintln("can not get remote info: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
@@ -72,28 +71,33 @@ func (client Histogram) GetMetric() (interface{}, error) {
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	jPath := "$" + strings.Replace(client.metricJPath, "/", ".", -1)
-	var val interface{}
 	if val, err = jsonpath.JsonPathLookup(jsonData, jPath); err != nil {
 		errCause := fmt.Sprintln("can not locate the path: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	return createHistogramFromData(client.histogramClientOptions.Buckets, val)
+	histogram, err := createHistogramFromData(client.histogramClientOptions.Buckets, val)
+	if err != nil {
+		errCause := fmt.Sprintf("can not create histogram value from data %+v.\n%s\n", val, err.Error())
+		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	val = histogram
+	return val, err
 }
 
-func createHistogramFromData(buckets []float64, data interface{}) (val interface{}, err error) {
+func createHistogramFromData(buckets []float64, data interface{}) (histogram HistogramValue, err error) {
 	generalScopeErr := "creating histogram from data"
 	collection, okCollection := data.([]interface{})
 	if !okCollection {
 		errCause := fmt.Sprintln("can not assert the metric type as slice")
-		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
+		return histogram, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	histogram := newHistogram(buckets)
+	histogram = newHistogram(buckets)
 	for _, item := range collection {
 		histogram.Count++
 		metricVal, okMetricVal := item.(float64)
 		if !okMetricVal {
 			errCause := fmt.Sprintf("can not assert the metric value %+v to type float", item)
-			return val, util.ErrorFromThisScope(errCause, generalScopeErr)
+			return histogram, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		histogram.Sum += metricVal
 		for _, bucket := range buckets {
@@ -102,6 +106,5 @@ func createHistogramFromData(buckets []float64, data interface{}) (val interface
 			}
 		}
 	}
-	val = histogram
-	return val, err
+	return histogram, err
 }
