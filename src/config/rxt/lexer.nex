@@ -1,42 +1,50 @@
 
-/[#].*\n/               { /* eat up comments */ }
-/\n[ ]*/                { l = len(token()) - 1; println(indent(l), l) }
-/[ \t\n]+/              { /* eat up whitespace */ }
+/[#].*\n/             { /* eat up comments */ }
+/\n[ ]*/              { indent(len(token()) - 1) }
+/,[ \n\t]+/           { emit_str("PNC", token()) }
+/[ \t\n]+/            { /* eat up whitespace */ }
 /DATASET|FOR SERVICE|FOR STACK|DEFINE AUTH|AS|SET|TO|GET|POST|FROM|EXTRACT USING|METRIC|NAME|TYPE|GAUGE|COUNTER|HISTOGRAM|SUMMARY|DESCRIPTION|LABELS/ { println("KEY", token()) }
-/"[^"]*"/               { println("STR", token()) }
-/'[^']*'/               { println("STR", token()) }
-/[a-z_][a-z0-9_]*/    { println("VAR", token()) }
+/"[^"]*"/             { emit_str("STR", token()) }
+/'[^']*'/             { emit_str("STR", token()) }
+/[a-z_][a-z0-9_]*/    { emit_str("VAR", token()) }
 //
 package main
 import "os"
 func main() {
   lex := NewLexer(os.Stdin)
   indent_level := 0
-  l := 0
   indent_stack := make([]int, 5)
   token := func() string { return lex.Text() }
-  indent := func(level int) string {
+  emit_str := func(tokenid, value string) {
+    println( tokenid, value )
+  }
+  emit_int := func(tokenid string, value int) {
+    println( tokenid, value )
+  }
+  indent := func(level int) {
     if level > indent_level {
       // Open block
       indent_stack = append(indent_stack, indent_level)
       indent_level = level
-      return "IND"
+      emit_int( "BLK" , indent_level )
     } else {
       if level == indent_level {
         // Same block
-        return "IND"
+        emit_int( "EOL" , indent_level )
       } else {
         // Close block
         idx := len(indent_stack)
         for level < indent_level {
+          emit_int( "EOB" , indent_level )
           idx = idx - 1
           indent_level = indent_stack[idx]
         }
         if level == indent_level {
           indent_stack = indent_stack[:idx]
-          return "DED"
+          emit_int( "EOL" , indent_level )
+        } else {
+          emit_int( "BIE" , indent_level )
         }
-        return "ERR"
       }
     }
   }

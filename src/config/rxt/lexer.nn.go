@@ -264,6 +264,49 @@ var dfas = []dfa{
 		},
 	}, []int{ /* Start-of-input transitions */ -1, -1, -1}, []int{ /* End-of-input transitions */ -1, -1, -1}, nil},
 
+	// ,[ \n\t]+
+	{[]bool{false, false, true}, []func(rune) int{ // Transitions
+		func(r rune) int {
+			switch r {
+			case 9:
+				return -1
+			case 10:
+				return -1
+			case 32:
+				return -1
+			case 44:
+				return 1
+			}
+			return -1
+		},
+		func(r rune) int {
+			switch r {
+			case 9:
+				return 2
+			case 10:
+				return 2
+			case 32:
+				return 2
+			case 44:
+				return -1
+			}
+			return -1
+		},
+		func(r rune) int {
+			switch r {
+			case 9:
+				return 2
+			case 10:
+				return 2
+			case 32:
+				return 2
+			case 44:
+				return -1
+			}
+			return -1
+		},
+	}, []int{ /* Start-of-input transitions */ -1, -1, -1}, []int{ /* End-of-input transitions */ -1, -1, -1}, nil},
+
 	// [ \t\n]+
 	{[]bool{false, true}, []func(rune) int{ // Transitions
 		func(r rune) int {
@@ -6423,31 +6466,38 @@ func (yylex *Lexer) pop() {
 func main() {
 	lex := NewLexer(os.Stdin)
 	indent_level := 0
-	l := 0
 	indent_stack := make([]int, 5)
 	token := func() string { return lex.Text() }
-	indent := func(level int) string {
+	emit_str := func(tokenid, value string) {
+		println(tokenid, value)
+	}
+	emit_int := func(tokenid string, value int) {
+		println(tokenid, value)
+	}
+	indent := func(level int) {
 		if level > indent_level {
 			// Open block
 			indent_stack = append(indent_stack, indent_level)
 			indent_level = level
-			return "IND"
+			emit_int("BLK", indent_level)
 		} else {
 			if level == indent_level {
 				// Same block
-				return "IND"
+				emit_int("EOL", indent_level)
 			} else {
 				// Close block
 				idx := len(indent_stack)
 				for level < indent_level {
+					emit_int("EOB", indent_level)
 					idx = idx - 1
 					indent_level = indent_stack[idx]
 				}
 				if level == indent_level {
 					indent_stack = indent_stack[:idx]
-					return "DED"
+					emit_int("EOL", indent_level)
+				} else {
+					emit_int("BIE", indent_level)
 				}
-				return "ERR"
 			}
 		}
 	}
@@ -6460,27 +6510,30 @@ func main() {
 				}
 			case 1:
 				{
-					l = len(token()) - 1
-					println(indent(l), l)
+					indent(len(token()) - 1)
 				}
 			case 2:
-				{ /* eat up whitespace */
+				{
+					emit_str("PNC", token())
 				}
 			case 3:
-				{
-					println("KEY", token())
+				{ /* eat up whitespace */
 				}
 			case 4:
 				{
-					println("STR", token())
+					println("KEY", token())
 				}
 			case 5:
 				{
-					println("STR", token())
+					emit_str("STR", token())
 				}
 			case 6:
 				{
-					println("VAR", token())
+					emit_str("STR", token())
+				}
+			case 7:
+				{
+					emit_str("VAR", token())
 				}
 			default:
 				break OUTER0
