@@ -58,9 +58,10 @@ func newHistogram(buckets []float64) HistogramValue {
 }
 
 // GetMetric returns a histogram metric by using remote data.
-func (client Histogram) GetMetric() (val interface{}, err error) {
+func (client Histogram) GetMetric() (interface{}, error) {
 	generalScopeErr := "error getting histogram values"
 	var data []byte
+	var err error
 	if data, err = client.getRemoteInfo(); err != nil {
 		errCause := fmt.Sprintln("can not get remote info: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
@@ -71,26 +72,31 @@ func (client Histogram) GetMetric() (val interface{}, err error) {
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	jPath := "$" + strings.Replace(client.metricJPath, "/", ".", -1)
+	var val interface{}
 	if val, err = jsonpath.JsonPathLookup(jsonData, jPath); err != nil {
 		errCause := fmt.Sprintln("can not locate the path: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	var iMetric interface{}
-	metricCollection, okMetricCollection := iMetric.([]interface{})
-	if !okMetricCollection {
+	return createHistogramFromData(client.histogramClientOptions.Buckets, val)
+}
+
+func createHistogramFromData(buckets []float64, data interface{}) (val interface{}, err error) {
+	generalScopeErr := "creating histogram from data"
+	collection, okCollection := data.([]interface{})
+	if !okCollection {
 		errCause := fmt.Sprintln("can not assert the metric type as slice")
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	histogram := newHistogram(client.histogramClientOptions.Buckets)
-	for _, metricItem := range metricCollection {
+	histogram := newHistogram(buckets)
+	for _, item := range collection {
 		histogram.Count++
-		metricVal, okMetricVal := metricItem.(float64)
+		metricVal, okMetricVal := item.(float64)
 		if !okMetricVal {
-			errCause := fmt.Sprintln("can not assert the metric value to type float")
+			errCause := fmt.Sprintf("can not assert the metric value %+v to type float", item)
 			return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		histogram.Sum += metricVal
-		for _, bucket := range client.histogramClientOptions.Buckets {
+		for _, bucket := range buckets {
 			if bucket <= metricVal {
 				histogram.Buckets[bucket]++
 			}
