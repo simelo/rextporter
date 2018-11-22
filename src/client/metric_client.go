@@ -20,13 +20,19 @@ type BaseClient struct {
 	service config.Service
 }
 
+// HistogramClientOptions hold the necessary reference bucket to create an histogram
+type HistogramClientOptions struct {
+	Buckets []float64
+}
+
 // MetricClient implements the getRemoteInfo method from `client.Client` interface by using some `.toml` config parameters
 // like for example: where is the host? it should be a GET, a POST or some other? ...
 // sa NewMetricClient method.
 type MetricClient struct {
 	BaseClient
-	token       string
-	metricJPath string
+	token                  string
+	metricJPath            string
+	histogramClientOptions HistogramClientOptions
 }
 
 // NewMetricClient will put all the required info to be able to do http requests to get the remote data.
@@ -38,6 +44,11 @@ func NewMetricClient(metric config.Metric, service config.Service) (client *Metr
 	client = new(MetricClient)
 	client.BaseClient.service = service
 	client.metricJPath = metric.Path
+	if strings.Compare(metric.Options.Type, config.KeyTypeHistogram) == 0 {
+		client.histogramClientOptions = HistogramClientOptions{
+			Buckets: metric.HistogramOptions.Buckets,
+		}
+	}
 	client.BaseClient.req, err = http.NewRequest(metric.HTTPMethod, client.service.URIToGetMetric(metric), nil)
 	if err != nil {
 		errCause := fmt.Sprintln("can not create the request: ", err.Error())
@@ -137,4 +148,54 @@ func (client *MetricClient) GetMetric() (val interface{}, err error) {
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return val, nil
+}
+
+// HistogramValue hold the required values to create a histogram metric, the Count, Sum and buckets.
+type HistogramValue struct {
+	Count   uint64
+	Sum     float64
+	Buckets map[float64]uint64
+}
+
+func newHistogram(buckets []float64) HistogramValue {
+	val := HistogramValue{
+		Count:   0,
+		Sum:     0,
+		Buckets: make(map[float64]uint64, len(buckets)),
+	}
+	for _, bucket := range buckets {
+		val.Buckets[bucket] = 0
+	}
+	return val
+}
+
+// GetHistogramValue will return a histogram data structure from the remote endpoint.
+func (client *MetricClient) GetHistogramValue() (val HistogramValue, err error) {
+	generalScopeErr := "error getting histogram values"
+	var metric interface{}
+	if metric, err = client.GetMetric(); err != nil {
+		errCause := fmt.Sprintln("can not get the metric data: ", err.Error())
+		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	metricCollection, okMetricCollection := metric.([]interface{})
+	if !okMetricCollection {
+		errCause := fmt.Sprintln("can not assert the metric type as slice")
+		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	val = newHistogram(client.histogramClientOptions.Buckets)
+	for _, metricItem := range metricCollection {
+		val.Count++
+		metricVal, okMetricVal := metricItem.(float64)
+		if !okMetricVal {
+			errCause := fmt.Sprintln("can not assert the metric value to type float")
+			return val, util.ErrorFromThisScope(errCause, generalScopeErr)
+		}
+		val.Sum += metricVal
+		for _, bucket := range client.histogramClientOptions.Buckets {
+			if bucket <= metricVal {
+				val.Buckets[bucket]++
+			}
+		}
+	}
+	return val, err
 }
