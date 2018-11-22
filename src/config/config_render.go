@@ -198,6 +198,7 @@ func (confData mainConfigData) existMetricsForServicesConfigFile() bool {
 func (confData mainConfigData) createMetricsForServicesConfFile() (err error) {
 	generalScopeErr := "error creating metrics for services config file"
 	if confData.existMetricsForServicesConfigFile() {
+		// FIXME(denisacostaq@gmail.com): check each metric file and create one of not exist
 		return nil
 	}
 	tmpl := template.New("metricsForServiceConfig")
@@ -261,7 +262,7 @@ func (confData mainConfigData) createMainConfigFile() (err error) {
 	return err
 }
 
-func serviceDefaultConfigPath(conf *configdir.Config) (path string) {
+func servicesDefaultConfigPath(conf *configdir.Config) (path string) {
 	return file.DefaultConfigPath(servicesConfigFileName, conf)
 }
 
@@ -283,7 +284,7 @@ func walletMetricsConfigPath(conf *configdir.Config) (path string) {
 
 func defaultTmplData(conf *configdir.Config) (tmplData templateData) {
 	tmplData = templateData{
-		ServicesConfigPath:     serviceDefaultConfigPath(conf),
+		ServicesConfigPath:     servicesDefaultConfigPath(conf),
 		MetricsForServicesPath: metricsForServicesDefaultConfigPath(conf),
 	}
 	return tmplData
@@ -359,6 +360,7 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 			errCause := "error reading template data from file: " + err.Error()
 			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
+		// BUG(denisacostaq@gmail.com): if file not exist, metricsForServicesTmplDataFromFile panics
 		if metricsForServiceTmplData, err = tmplData.metricsForServicesTmplDataFromFile(); err != nil {
 			errCause := "error reading template data from file: " + err.Error()
 			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)

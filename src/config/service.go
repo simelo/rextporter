@@ -85,6 +85,9 @@ func (srv Service) validateProxy() (errs []error) {
 	if !isValidURL(srv.URIToGetExposedMetric()) {
 		errs = append(errs, errors.New("can not create a valid url to get the exposed metric"))
 	}
+	if len(srv.Metrics) != 0 {
+		errs = append(errs, fmt.Errorf("a proxy service should not have metrics defined for %s service,  but found %d", srv.Name, len(srv.Metrics)))
+	}
 	return errs
 }
 

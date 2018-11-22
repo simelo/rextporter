@@ -93,6 +93,10 @@ func (client *MetricClient) getRemoteInfo() (data []byte, err error) {
 			errCause := fmt.Sprintln("can not do the request: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
+		if resp.StatusCode != http.StatusOK {
+			errCause := fmt.Sprintf("no success response, status %s", resp.Status)
+			return resp, util.ErrorFromThisScope(errCause, generalScopeErr)
+		}
 		return resp, nil
 	}
 	var resp *http.Response
