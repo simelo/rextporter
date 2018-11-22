@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](http://www.keepachangelog.com/en/1.0.0
 
 ### Added
 
+- [\#30](https://github.com/simelo/rextporter/issues/30)
+
+  - Capability to define multiple service modes.
+
 - [\#37](https://github.com/simelo/rextporter/issues/37)
 
   - Be able to define vector metrics for gauges and counters.
