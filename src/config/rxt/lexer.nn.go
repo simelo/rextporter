@@ -6514,7 +6514,7 @@ func main() {
 				}
 			case 2:
 				{
-					emit_str("PNC", token())
+					emit_str("PNC", token()[:1])
 				}
 			case 3:
 				{ /* eat up whitespace */

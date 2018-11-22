@@ -1,7 +1,7 @@
 
 /[#].*\n/             { /* eat up comments */ }
 /\n[ ]*/              { indent(len(token()) - 1) }
-/,[ \n\t]+/           { emit_str("PNC", token()) }
+/,[ \n\t]+/           { emit_str("PNC", token()[:1]) }
 /[ \t\n]+/            { /* eat up whitespace */ }
 /DATASET|FOR SERVICE|FOR STACK|DEFINE AUTH|AS|SET|TO|GET|POST|FROM|EXTRACT USING|METRIC|NAME|TYPE|GAUGE|COUNTER|HISTOGRAM|SUMMARY|DESCRIPTION|LABELS/ { println("KEY", token()) }
 /"[^"]*"/             { emit_str("STR", token()) }

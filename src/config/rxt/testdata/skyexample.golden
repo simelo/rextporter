@@ -116,23 +116,21 @@ KEY COUNTER
 EOL 16
 KEY LABELS
 STR "state"
-PNC , 
+PNC ,
 STR "outgoing"
-PNC , 
+PNC ,
 STR "listen_port"
-PNC , 
+PNC ,
 STR "user_agent"
 PNC ,
-                       
 STR "is_trusted"
-PNC , 
+PNC ,
 STR "burn_factor"
-PNC , 
+PNC ,
 STR "max_txn_size"
 PNC ,
-                       
 STR "max_decimals"
-PNC , 
+PNC ,
 STR "height"
 EOL 16
 KEY SET
