@@ -20,8 +20,8 @@ const (
 // where is it http://localhost:1234 (Location + : + Port), what auth kind you need to use?
 // what is the header key you in which you need to send the token, and so on.
 type Service struct {
-	Name string `json:"name"`
-	Mode string `json:"mode"`
+	Name  string   `json:"name"`
+	Modes []string `json:"modes"`
 	// Scheme is http or https
 	Scheme               string   `json:"scheme"`
 	Port                 uint16   `json:"port"`
@@ -128,16 +128,18 @@ func (srv Service) validate() (errs []error) {
 	// if len(srv.BasePath) == 0 {
 	// 	// TODO(denisacosta): What make sense in this?
 	// }
-	switch srv.Mode {
-	case ServiceTypeProxy:
-		errs = append(errs, srv.validateProxy()...)
-	case ServiceTypeAPIRest:
-		errs = append(errs, srv.validateAPIRest()...)
-	default:
-		if len(srv.Mode) == 0 {
-			errs = append(errs, fmt.Errorf("mode is required in service"))
-		} else {
-			errs = append(errs, fmt.Errorf("mode should be %s or %s", ServiceTypeProxy, ServiceTypeAPIRest))
+	for _, mode := range srv.Modes {
+		switch mode {
+		case ServiceTypeProxy:
+			errs = append(errs, srv.validateProxy()...)
+		case ServiceTypeAPIRest:
+			errs = append(errs, srv.validateAPIRest()...)
+		default:
+			if len(mode) == 0 {
+				errs = append(errs, fmt.Errorf("mode is required in service"))
+			} else {
+				errs = append(errs, fmt.Errorf("mode allow instances of %s or %s only", ServiceTypeAPIRest, ServiceTypeProxy))
+			}
 		}
 	}
 	for _, metric := range srv.Metrics {

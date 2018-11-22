@@ -12,8 +12,8 @@ type ServiceConfigFromFile struct {
 	filePath string
 }
 
-// NewServiceConfigFromFile create a config reader configure to read config from the file in path parameter
-func NewServiceConfigFromFile(path string) (conf *ServiceConfigFromFile) {
+// NewServicesConfigFromFile create a config reader configure to read config from the file in path parameter
+func NewServicesConfigFromFile(path string) (conf *ServiceConfigFromFile) {
 	conf = &ServiceConfigFromFile{}
 	conf.filePath = path
 	return conf
@@ -23,7 +23,7 @@ func NewServiceConfigFromFile(path string) (conf *ServiceConfigFromFile) {
 func (srvConf ServiceConfigFromFile) GetConfig() (services []Service, err error) {
 	generalScopeErr := "error reading config from file"
 	if len(srvConf.filePath) == 0 {
-		errCause := fmt.Sprintln("file path should not be empty, are you using the 'NewServiceConfigFromFile' function to get an instance?")
+		errCause := fmt.Sprintln("file path should not be empty, are you using the 'NewServicesConfigFromFile' function to get an instance?")
 		return services, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	viper.SetConfigFile(srvConf.filePath)

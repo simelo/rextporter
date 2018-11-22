@@ -73,16 +73,16 @@ func newMetricsConfig(path string) (metricsConf []Metric, err error) {
 	return metricsConf, nil
 }
 
-// newServiceConfigFromFile desserialize a service config from the 'toml' file path
-func newServiceConfigFromFile(path string, conf mainConfigData) (servicesConf []Service, err error) {
+// newServicesConfigFromFile desserialize a service config from the 'toml' file path
+func newServicesConfigFromFile(path string, conf mainConfigData) (servicesConf []Service, err error) {
 	const generalScopeErr = "error reading service config"
-	serviceConfReader := NewServiceConfigFromFile(path)
-	if servicesConf, err = serviceConfReader.GetConfig(); err != nil {
+	servicesConfReader := NewServicesConfigFromFile(path)
+	if servicesConf, err = servicesConfReader.GetConfig(); err != nil {
 		errCause := "error reading service config"
 		return servicesConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	for idxService, service := range servicesConf {
-		if service.Mode == ServiceTypeAPIRest {
+		if util.StrSliceContains(service.Modes, ServiceTypeAPIRest) {
 			if servicesConf[idxService].Metrics, err = newMetricsConfig(conf.MetricsConfigPath(service.Name)); err != nil {
 				errCause := "error reading metrics config: " + err.Error()
 				panic(util.ErrorFromThisScope(errCause, generalScopeErr))
@@ -104,7 +104,7 @@ func NewConfigFromFileSystem(mainConfigPath string) {
 		errCause := "error reading metrics config: " + err.Error()
 		panic(errCause)
 	}
-	if rootConfig.Services, err = newServiceConfigFromFile(conf.ServicesConfigPath(), conf); err != nil {
+	if rootConfig.Services, err = newServicesConfigFromFile(conf.ServicesConfigPath(), conf); err != nil {
 		errCause := "root cause: " + err.Error()
 		panic(util.ErrorFromThisScope(errCause, generalScopeErr))
 	}
@@ -137,7 +137,7 @@ func (conf RootConfig) FilterServicesByType(t string) (services []Service) {
 func filterServicesByType(t string, services []Service) (filteredService []Service) {
 	tmpServices := list.New()
 	for _, service := range services {
-		if service.Mode == t {
+		if util.StrSliceContains(service.Modes, t) {
 			tmpServices.PushBack(service)
 		}
 	}
