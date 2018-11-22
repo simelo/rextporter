@@ -125,6 +125,9 @@ func (srv Service) validate() (errs []error) {
 	// if len(srv.BasePath) == 0 {
 	// 	// TODO(denisacosta): What make sense in this?
 	// }
+	if len(srv.Modes) == 0 {
+		errs = append(errs, fmt.Errorf("you you have to define at least a service mode, possibles are: %s or %s", ServiceTypeAPIRest, ServiceTypeProxy))
+	}
 	for _, mode := range srv.Modes {
 		switch mode {
 		case ServiceTypeProxy:

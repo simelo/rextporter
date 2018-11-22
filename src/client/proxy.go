@@ -22,7 +22,7 @@ type ProxyMetricClient struct {
 // NewProxyMetricClient will put all the required info to be able to do http requests to get the remote data.
 func NewProxyMetricClient(service config.Service) (client *ProxyMetricClient, err error) {
 	const generalScopeErr = "error creating a forward_metrics client to get the metrics from remote endpoint"
-	if util.StrSliceContains(service.Modes, config.ServiceTypeProxy) {
+	if !util.StrSliceContains(service.Modes, config.ServiceTypeProxy) {
 		return client, errors.New("can not create a forward_metrics metric client from a service whitout type " + config.ServiceTypeProxy)
 	}
 	client = new(ProxyMetricClient)
