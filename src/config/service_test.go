@@ -64,6 +64,17 @@ func (suite *serviceConfSuite) TestNotEmptyMode() {
 	suite.Len(serviceConf.validate(), 1)
 }
 
+func (suite *serviceConfSuite) TestBothModes() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	var serviceConf = suite.ServiceConf
+	serviceConf.Modes = []string{ServiceTypeProxy, ServiceTypeAPIRest}
+
+	// NOTE(denisacostaq@gmail.com): When
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Len(serviceConf.validate(), 0)
+}
+
 func (suite *serviceConfSuite) TestNotValidMode() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var serviceConf = suite.ServiceConf
