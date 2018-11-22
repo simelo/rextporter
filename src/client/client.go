@@ -37,7 +37,9 @@ func createVecClient(metric config.Metric, service config.Service) (Client, erro
 		if v, err = createHistogramVec(metric, service); err != nil {
 			log.Println(v, err)
 		}
-		return v, errors.New("not supported yet, see return createHistogramVec(metric, service)")
+		return v, errors.New("create histogram vec is not supported yet, see return createHistogramVec(metric, service)")
+	} else if metric.Options.Type == config.KeyTypeSummary {
+		return HistogramVec{}, errors.New("create summary vec is not supported yet")
 	}
 	return createNumericVec(metric, service)
 }
