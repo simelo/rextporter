@@ -10,36 +10,40 @@ The format is based on [Keep a Changelog](http://www.keepachangelog.com/en/1.0.0
 
 ### Added
 
- * [\#34](https://github.com/simelo/rextporter/issues/34)
+- [\#37](https://github.com/simelo/rextporter/issues/37)
 
-   - Change the must operations(whit a panic implication) with a val|err scheme and handle the error(with logs) with out panic.
+  - Be able to define vector metrics for gauges and counters.
 
- * [\#29](https://github.com/simelo/rextporter/issues/29)
+- [\#34](https://github.com/simelo/rextporter/issues/34)
 
-   - Define histogram metrics configuration.
+  - Change the must operations(whit a panic implication) with a val|err scheme and handle the error(with logs) with out panic.
 
- * [\#27](https://github.com/simelo/rextporter/issues/27)
+- \#29](https://github.com/simelo/rextporter/issues/29)
 
-   - Solve parse issue to put a prefix in incoming metrics names.
+  - Define histogram metrics configuration.
 
- * [\#23](https://github.com/simelo/rextporter/issues/23)
+- \#27](https://github.com/simelo/rextporter/issues/27)
 
-   - Detect content encoding when configure a service in proxy mode, proper handling for the default gzip.
+  - Solve parse issue to put a prefix in incoming metrics names.
 
- * [\#19](https://github.com/simelo/rextporter/issues/19)
+- \#23](https://github.com/simelo/rextporter/issues/23)
 
-   - Multiple metrics template, you can define in a config (metrics for file), what metrics will be used by what service.
+  - Detect content encoding when configure a service in proxy mode, proper handling for the default gzip.
 
-   - Multiple services definition to be monitored.
+- \#19](https://github.com/simelo/rextporter/issues/19)
 
- * [\#18](https://github.com/simelo/rextporter/issues/18)
+  - Multiple metrics template, you can define in a config (metrics for file), what metrics will be used by what service.
 
-   - Define a service type, `rest_api` (get values trough API and make this the metrics as defined in metric conf), or `forward_metrics` (forward some exposed metrics with the original metric name changed with the service name as prefix).
+  - Multiple services definition to be monitored.
 
- * [\#14](https://github.com/simelo/rextporter/issues/14)
+- \#18](https://github.com/simelo/rextporter/issues/18)
 
-   - Use a default configuration file path and initialize it if not exist.
+  - Define a service type, `rest_api` (get values trough API and make this the metrics as defined in metric conf), or `forward_metrics` (forward some exposed metrics with the original metric name changed with the service name as prefix).
 
- * [\#13](https://github.com/simelo/rextporter/issues/13)
+- \#14](https://github.com/simelo/rextporter/issues/14)
 
-   - Be able to read service configuration from file.
+  - Use a default configuration file path and initialize it if not exist.
+
+- \#13](https://github.com/simelo/rextporter/issues/13)
+
+  - Be able to read service configuration from file.

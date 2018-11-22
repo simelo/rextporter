@@ -6,3 +6,6 @@ usar varios archivos de ejemplo de configuracion no comentar, descometar seguida
 
 
 configurar un node de skycoin
+
+
+enable HistogramVec and SummaryVec metrics

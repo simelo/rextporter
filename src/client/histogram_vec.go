@@ -26,6 +26,7 @@ type HistogramVecItemVal struct {
 	Labels []string
 }
 
+// HistogramVecVals is a shortcut for HistogramVecItemVal slice(related to metric vector)
 type HistogramVecVals []HistogramVecItemVal
 
 func createHistogramVec(metric config.Metric, service config.Service) (client HistogramVec, err error) {
