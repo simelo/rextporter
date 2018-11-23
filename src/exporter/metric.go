@@ -31,7 +31,7 @@ func createMetricsMiddleware(conf config.RootConfig) (metricsMiddleware []Metric
 
 // CounterMetric has the necessary http client to get and updated value for the counter metric
 type CounterMetric struct {
-	Client           client.Client
+	scrapper         scrapper.Scrapper
 	lastSuccessValue interface{}
 	MetricDesc       *prometheus.Desc
 	StatusDesc       *prometheus.Desc
@@ -44,10 +44,11 @@ func createCounter(metricConf config.Metric, srvConf config.Service) (metric Cou
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	numScrapper := scrapper.NewNumeric(metricClient, scrapper.JsonParser{}, metricConf.Path)
 	labels := metricConf.LabelNames()
 	metric = CounterMetric{
 		// FIXME(denisacostaq@gmail.com): if you use a duplicated name can panic?
-		Client:     metricClient,
+		scrapper:   numScrapper,
 		MetricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
 		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", labels, nil),
 	}

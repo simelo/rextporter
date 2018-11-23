@@ -136,7 +136,7 @@ func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) 
 		counter.lastSuccessValue = vals
 	}
 	for idxCounter := range collector.Counters {
-		if val, err := collector.Counters[idxCounter].Client.GetMetric(); err != nil {
+		if val, err := collector.Counters[idxCounter].scrapper.GetMetric(); err != nil {
 			log.WithError(err).Errorln("can not get the data")
 			onCollectFail(collector.Counters[idxCounter], ch)
 		} else {
