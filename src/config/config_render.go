@@ -96,6 +96,39 @@ const skycoinMetricsConfigFileContentTemplate = `
 		buckets = [1, 2, 3]
 
 
+[[metrics]]
+	name = "burn_factor_by_service"
+	url = "/api/v1/network/connections"
+	httpMethod = "GET"
+	path = "/connections"
+
+	[metrics.options]
+		type = "Gauge"
+		itemPath = "/unconfirmed_verify_transaction/burn_factor"
+		description = "I am running since"
+		
+	[[metrics.options.labels]]
+		name = "ip_port"
+		path = "/address"
+
+[[metrics]]
+	name = "connectedAtBySocketAndByBurnFactor"
+	url = "/api/v1/network/connections"
+	httpMethod = "GET"
+	path = "/connections"
+
+	[metrics.options]
+		type = "Gauge"
+		itemPath = "/unconfirmed_verify_transaction/burn_factor"
+		description = "Connections amount"
+		
+		[[metrics.options.labels]]
+		  name = "ip:port"
+			path = "/address"
+
+		[[metrics.options.labels]]
+		  name = "ip:port"
+			path = "/address"
 
 
 # TODO(denisacostaq@gmail.com):

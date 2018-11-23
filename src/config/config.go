@@ -111,7 +111,7 @@ func NewConfigFromFileSystem(mainConfigPath string) {
 	rootConfig.validate()
 }
 
-// FilterMetricsByType will return all the metrics who match whit the 't' parameter.
+// FilterMetricsByType will return all the metrics who match with the 't' parameter.
 func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
 	tmpMetrics := list.New()
 	for _, service := range conf.Services {
@@ -129,7 +129,7 @@ func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
 	return metrics
 }
 
-// FilterServicesByType will return all the services who match whit the 't' parameter.
+// FilterServicesByType will return all the services who match with the 't' parameter.
 func (conf RootConfig) FilterServicesByType(t string) (services []Service) {
 	return filterServicesByType(t, conf.Services)
 }

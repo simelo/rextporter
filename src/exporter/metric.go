@@ -31,24 +31,25 @@ func createMetricsMiddleware() (metricsMiddleware []MetricMiddleware, err error)
 
 // CounterMetric has the necessary http client to get and updated value for the counter metric
 type CounterMetric struct {
-	Client           *client.MetricClient
-	lastSuccessValue float64
+	Client           client.Client
+	lastSuccessValue interface{}
 	MetricDesc       *prometheus.Desc
 	StatusDesc       *prometheus.Desc
 }
 
 func createCounter(metricConf config.Metric, srvConf config.Service) (metric CounterMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
-	var metricClient *client.MetricClient
-	if metricClient, err = client.NewMetricClient(metricConf, srvConf); err != nil {
+	var metricClient client.Client
+	if metricClient, err = client.NewClient(metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	labels := metricConf.LabelNames()
 	metric = CounterMetric{
 		// FIXME(denisacostaq@gmail.com): if you use a duplicated name can panic?
 		Client:     metricClient,
-		MetricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, nil, nil),
-		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
+		MetricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
+		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", labels, nil),
 	}
 	return metric, err
 }
@@ -80,23 +81,24 @@ func createCounters() ([]CounterMetric, error) {
 
 // GaugeMetric has the necessary http client to get and updated value for the counter metric
 type GaugeMetric struct {
-	Client           *client.MetricClient
-	lastSuccessValue float64
+	Client           client.Client
+	lastSuccessValue interface{}
 	MetricDesc       *prometheus.Desc
 	StatusDesc       *prometheus.Desc
 }
 
 func createGauge(metricConf config.Metric, srvConf config.Service) (metric GaugeMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
-	var metricClient *client.MetricClient
-	if metricClient, err = client.NewMetricClient(metricConf, srvConf); err != nil {
+	var metricClient client.Client
+	if metricClient, err = client.NewClient(metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	labels := metricConf.LabelNames()
 	metric = GaugeMetric{
 		Client:     metricClient,
-		MetricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, nil, nil),
-		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
+		MetricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
+		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", labels, nil),
 	}
 	return metric, err
 }
@@ -128,7 +130,7 @@ func createGauges() ([]GaugeMetric, error) {
 
 // HistogramMetric has the necessary http client to get and updated value for the histogram metric
 type HistogramMetric struct {
-	Client           *client.MetricClient
+	Client           client.Client
 	lastSuccessValue client.HistogramValue
 	MetricDesc       *prometheus.Desc
 	StatusDesc       *prometheus.Desc
@@ -136,15 +138,16 @@ type HistogramMetric struct {
 
 func createHistogram(metricConf config.Metric, service config.Service) (metric HistogramMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
-	var metricClient *client.MetricClient
-	if metricClient, err = client.NewMetricClient(metricConf, service); err != nil {
+	var metricClient client.Client
+	if metricClient, err = client.NewClient(metricConf, service); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	labels := metricConf.LabelNames()
 	metric = HistogramMetric{
 		Client:     metricClient,
-		MetricDesc: prometheus.NewDesc(service.MetricName(metricConf.Name), metricConf.Options.Description, nil, nil),
-		StatusDesc: prometheus.NewDesc(service.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+service.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
+		MetricDesc: prometheus.NewDesc(service.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
+		StatusDesc: prometheus.NewDesc(service.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+service.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", labels, nil),
 	}
 	return metric, err
 }
