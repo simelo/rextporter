@@ -1,11 +1,7 @@
 documment over the [examples](https://github.com/denisacostaq/rextporter/blob/master/examples) about the meaning configs.
 
-usar un archivo de configuracion en hom por defecto si no existe
+use a config file from home if none exist
 
-usar varios archivos de ejemplo de configuracion no comentar, descometar seguidamente.
-
-
-configurar un node de skycoin
-
+config a skycoin node
 
 enable HistogramVec and SummaryVec metrics
