@@ -26,6 +26,7 @@ type Service struct {
 	Scheme               string   `json:"scheme"`
 	Port                 uint16   `json:"port"`
 	BasePath             string   `json:"basePath"`
+	MetricsToForwardPath string   `json:"metrics_to_forward"`
 	AuthType             string   `json:"authType"`
 	TokenHeaderKey       string   `json:"tokenHeaderKey"`
 	GenTokenEndpoint     string   `json:"genTokenEndpoint"`
@@ -46,7 +47,7 @@ func (srv Service) URIToGetMetric(metric Metric) string {
 
 // URIToGetExposedMetric build the URI from where you will to get the exposed metrics.
 func (srv Service) URIToGetExposedMetric() string {
-	return fmt.Sprintf("%s://%s:%d%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath)
+	return fmt.Sprintf("%s://%s:%d%s%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath, srv.MetricsToForwardPath)
 }
 
 // URIToGetToken build the URI from where you will to get the token
@@ -85,8 +86,8 @@ func (srv Service) validateProxy() (errs []error) {
 	if !isValidURL(srv.URIToGetExposedMetric()) {
 		errs = append(errs, errors.New("can not create a valid url to get the exposed metric"))
 	}
-	if len(srv.Metrics) != 0 {
-		errs = append(errs, fmt.Errorf("a proxy service should not have metrics defined for %s service,  but found %d", srv.Name, len(srv.Metrics)))
+	if len(srv.MetricsToForwardPath) == 0 {
+		errs = append(errs, errors.New("you need to define metricsToForwardPath if you enable proxy(forward_metrics) mode"))
 	}
 	return errs
 }
@@ -122,9 +123,6 @@ func (srv Service) validate() (errs []error) {
 	if srv.Port < 1 || srv.Port > 65535 {
 		errs = append(errs, errors.New("port must be betwen 1 and 65535"))
 	}
-	// if len(srv.BasePath) == 0 {
-	// 	// TODO(denisacosta): What make sense in this?
-	// }
 	if len(srv.Modes) == 0 {
 		errs = append(errs, fmt.Errorf("you you have to define at least a service mode, possibles are: %s or %s", ServiceTypeAPIRest, ServiceTypeProxy))
 	}

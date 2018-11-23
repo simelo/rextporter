@@ -67,6 +67,7 @@ func (suite *serviceConfSuite) TestNotEmptyMode() {
 func (suite *serviceConfSuite) TestBothModes() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var serviceConf = suite.ServiceConf
+	serviceConf.MetricsToForwardPath = "/metrics"
 	serviceConf.Modes = []string{ServiceTypeProxy, ServiceTypeAPIRest}
 
 	// NOTE(denisacostaq@gmail.com): When

@@ -61,7 +61,6 @@ const serviceConfigFileContentTemplate = `
   modes = ["rest_api"]
   scheme = "http"
   port = 8080
-  basePath = ""
   authType = "CSRF"
   tokenHeaderKey = "X-CSRF-Token"
   genTokenEndpoint = "/api/v1/csrf"
