@@ -1,5 +1,10 @@
 package scrapper
 
+import (
+	"github.com/simelo/rextporter/src/client"
+	"github.com/simelo/rextporter/src/util"
+)
+
 // Scrapper get metrics from raw data
 type Scrapper interface {
 	// GetMetric receive some data as input and should return the metric val
@@ -12,16 +17,16 @@ type BodyParser interface {
 	pathLookup(path string, val interface{}) (node interface{}, err error)
 }
 
-func getData(cl client.Client, p client.Parser) (data interface{}, err error) {
+func getData(cl client.Client, p BodyParser) (data interface{}, err error) {
 	const generalScopeErr = "error getting data"
 	var body []byte
-	if body, err = cl.GetData() {
+	if body, err = cl.GetData(); err != nil {
 		errCause := "client can not get data"
-		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
+		return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if data, err = p.DecodeBody(body); err != nil {
+	if data, err = p.decodeBody(body); err != nil {
 		errCause := "client can not decode the body"
-		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
+		return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return data, err
 }

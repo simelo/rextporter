@@ -22,8 +22,9 @@ func (p JsonParser) decodeBody(body []byte) (val interface{}, err error) {
 }
 
 func (p JsonParser) pathLookup(path string, val interface{}) (node interface{}, err error) {
+	generalScopeErr := "error looking for node in val"
 	jPath := "$" + strings.Replace(path, "/", ".", -1)
-	if node, err = jsonpath.JsonPathLookup(iBody, jPath); err != nil {
+	if node, err = jsonpath.JsonPathLookup(val, jPath); err != nil {
 		errCause := fmt.Sprintln("can not locate the path: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
