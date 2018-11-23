@@ -6493,14 +6493,18 @@ func main() {
 				emit_int("EOL", indent_level)
 			} else {
 				// Close block
+				if level == 0 && indent_level == 0 {
+					return
+				}
+
 				idx := len(indent_stack)
-				for level < indent_level {
+				for level < indent_level && idx > 0 {
 					emit_int("EOB", indent_level)
 					idx = idx - 1
 					indent_level = indent_stack[idx]
 				}
+				indent_stack = indent_stack[:idx]
 				if level == indent_level {
-					indent_stack = indent_stack[:idx]
 					emit_int("EOL", indent_level)
 				} else {
 					emit_int("BIE", indent_level)
@@ -6509,6 +6513,10 @@ func main() {
 		}
 	}
 	func(yylex *Lexer) {
+		if !yylex.stale {
+			{ /* nothing to do at start of file  */
+			}
+		}
 	OUTER0:
 		for {
 			switch yylex.next(0) {
@@ -6548,6 +6556,7 @@ func main() {
 			continue
 		}
 		yylex.pop()
-
+		{ /* nothing to do at end of file */
+		}
 	}(lex)
 }
