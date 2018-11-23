@@ -228,7 +228,7 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 		gauge.lastSuccessValue = vals
 	}
 	for idxGauge := range collector.Gauges {
-		if val, err := collector.Gauges[idxGauge].Client.GetMetric(); err != nil {
+		if val, err := collector.Gauges[idxGauge].scrapper.GetMetric(); err != nil {
 			log.WithError(err).Errorln("can not get the data")
 			onCollectFail(collector.Gauges[idxGauge], ch)
 		} else {

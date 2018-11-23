@@ -3,6 +3,7 @@ package exporter
 import (
 	"fmt"
 
+	"github.com/denisacostaq/rextporter/src/scrapper"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/config"
@@ -79,7 +80,7 @@ func createCounters(conf config.RootConfig) ([]CounterMetric, error) {
 
 // GaugeMetric has the necessary http client to get and updated value for the counter metric
 type GaugeMetric struct {
-	Client           client.Client
+	scrapper         scrapper.Scrapper
 	lastSuccessValue interface{}
 	MetricDesc       *prometheus.Desc
 	StatusDesc       *prometheus.Desc
@@ -92,9 +93,10 @@ func createGauge(metricConf config.Metric, srvConf config.Service) (metric Gauge
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	numScrapper := scrapper.NewNumeric(metricClient, scrapper.JsonParser{}, metricConf.Path)
 	labels := metricConf.LabelNames()
 	metric = GaugeMetric{
-		Client:     metricClient,
+		scrapper:   numScrapper,
 		MetricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
 		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", labels, nil),
 	}
