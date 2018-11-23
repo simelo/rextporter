@@ -1,14 +1,15 @@
 package scrapper
 
-// Scrapper receive some data as input and should return the metric val
+// Scrapper get metrics from raw data
 type Scrapper interface {
+	// GetMetric receive some data as input and should return the metric val
 	GetMetric() (val interface{}, err error)
 }
 
-// BodyParser decode body from different formats
+// BodyParser decode body from different formats, an get some data node
 type BodyParser interface {
-	// DecodeBody receive a body to be decoded.
-	DecodeBody(body []byte) (val interface{}, err error)
+	decodeBody(body []byte) (val interface{}, err error)
+	pathLookup(path string, val interface{}) (node interface{}, err error)
 }
 
 func getData(cl client.Client, p client.Parser) (data interface{}, err error) {

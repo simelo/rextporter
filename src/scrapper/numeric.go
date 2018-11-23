@@ -12,12 +12,12 @@ import (
 // Numeric scrapper can get numeric(gauges or counters) metrics
 type Numeric struct {
 	client   client.Client
-	parser   client.BodyParser
+	parser   BodyParser
 	jsonPath string
 }
 
 func NewNumeric(cl, client.Client, p client.BodyParser, path string) Scrapper {
-	return Numeric{client: cl, parser: p, jsonPath: jsonPath}
+	return Numeric{client: cl, parser: p, jsonPath: jPath}
 }
 
 func (n Numeric) GetMetric() (val interface{}, err error) {
@@ -27,10 +27,10 @@ func (n Numeric) GetMetric() (val interface{}, err error) {
 		errCause := "client can not decode the body"
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	jPath := "$" + strings.Replace(n.jsonPath, "/", ".", -1)
-	if val, err = jsonpath.JsonPathLookup(iBody, jPath); err != nil {
-		errCause := fmt.Sprintln("can not locate the path: ", err.Error())
+	if val, err = parser.pathLookup(n.jsonPath, iBody); err != nil {
+		errCause := fmt.Sprintln("can not get node: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+
 	return val, err
 }
