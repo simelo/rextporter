@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 
+	"github.com/denisacostaq/rextporter/src/config"
 	"github.com/simelo/rextporter/src/exporter"
 )
 
@@ -13,7 +14,8 @@ func main() {
 	defaultHandlerEndpint := "/metrics"
 	handlerEndpint := flag.String("handler", defaultHandlerEndpint, "Handler endpoint.")
 	flag.Parse()
-	exporter.ExportMetrics(*mainConfigFile, *handlerEndpint, uint16(*listenPort))
+	conf := config.NewConfigFromFileSystem(*mainConfigFile)
+	exporter.ExportMetrics(handlerEndpint, uint16(*listenPort), conf)
 	waitForEver := make(chan bool)
 	<-waitForEver
 }
