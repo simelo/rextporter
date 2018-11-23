@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/denisacostaq/rextporter/src/config"
+	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/exporter"
 )
 
