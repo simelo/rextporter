@@ -26,7 +26,7 @@ type BodyParser interface {
 	pathLookup(path string, val interface{}) (node interface{}, err error)
 }
 
-// NewClient will put all the required info to scrap metrics from the body returned by the client.
+// NewScrapper will put all the required info to scrap metrics from the body returned by the client.
 func NewScrapper(client client.Client, parser BodyParser, metric config.Metric) (Scrapper, error) {
 	const generalScopeErr = "error creating scrapper"
 	if len(metric.LabelNames()) > 0 {
@@ -43,9 +43,12 @@ func createVecScrapper(client client.Client, parser BodyParser, metric config.Me
 }
 
 func createAtomicScrapper(client client.Client, parser BodyParser, metric config.Metric) (Scrapper, error) {
-	// if metric.Options.Type == config.KeyTypeHistogram {
-	// 	return createHistogram(metric, service)
-	// }
+	if metric.Options.Type == config.KeyTypeSummary {
+		return Histogram{}, errors.New("summary scrapper is not supported yet")
+	}
+	if metric.Options.Type == config.KeyTypeHistogram {
+		return newHistogram(client, parser, metric), nil
+	}
 	return newNumeric(client, parser, metric.Path), nil
 }
 
