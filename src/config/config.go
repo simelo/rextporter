@@ -17,36 +17,21 @@ type RootConfig struct {
 	Services []Service `json:"services"`
 }
 
-var rootConfig RootConfig
-
-// Config TODO(denisacostaq@gmail.com): make a singleton
-func Config() RootConfig {
-	//if b, err := json.MarshalIndent(rootConfig, "", " "); err != nil {
-	//	log.Println("Error marshaling:", err)
-	//} else {
-	//	os.Stdout.Write(b)
-	//	log.Println("\n\n\n\n\n")
-	//}
-	// TODO(denisacostaq@gmail.com): Make it a singleton
-	return rootConfig
-}
-
 // NewConfigFromRawString allow you to define a `.toml` config in the fly, a raw string with the "config content"
-func NewConfigFromRawString(strConf string) error {
+func NewConfigFromRawString(strConf string) (conf RootConfig, err error) {
 	const generalScopeErr = "error creating a config instance"
 	viper.SetConfigType("toml")
 	buff := bytes.NewBuffer([]byte(strConf))
-	if err := viper.ReadConfig(buff); err != nil {
+	if err = viper.ReadConfig(buff); err != nil {
 		errCause := fmt.Sprintln("can not read the buffer: ", err.Error())
-		return util.ErrorFromThisScope(errCause, generalScopeErr)
+		return conf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	rootConfig = RootConfig{}
-	if err := viper.Unmarshal(&rootConfig); err != nil {
+	if err = viper.Unmarshal(&conf); err != nil {
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
-		return util.ErrorFromThisScope(errCause, generalScopeErr)
+		return conf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	rootConfig.validate()
-	return nil
+	conf.validate()
+	return conf, err
 }
 
 // newMetricsConfig desserialize a metrics config from the 'toml' file path
@@ -95,8 +80,7 @@ func newServicesConfigFromFile(path string, conf mainConfigData) (servicesConf [
 // NewConfigFromFileSystem will read the config from the file system, you should send the
 // metric config file path and service config file path into metricsPath, servicePath respectively.
 // This function can cause a panic.
-// TODO(denisacostaq@gmail.com): make this a singleton
-func NewConfigFromFileSystem(mainConfigPath string) {
+func NewConfigFromFileSystem(mainConfigPath string) (rootConf RootConfig) {
 	const generalScopeErr = "error getting config values from file system"
 	var conf mainConfigData
 	var err error
@@ -104,11 +88,12 @@ func NewConfigFromFileSystem(mainConfigPath string) {
 		errCause := "error reading metrics config: " + err.Error()
 		panic(errCause)
 	}
-	if rootConfig.Services, err = newServicesConfigFromFile(conf.ServicesConfigPath(), conf); err != nil {
+	if rootConf.Services, err = newServicesConfigFromFile(conf.ServicesConfigPath(), conf); err != nil {
 		errCause := "root cause: " + err.Error()
 		panic(util.ErrorFromThisScope(errCause, generalScopeErr))
 	}
-	rootConfig.validate()
+	rootConf.validate()
+	return rootConf
 }
 
 // FilterMetricsByType will return all the metrics who match with the 't' parameter.

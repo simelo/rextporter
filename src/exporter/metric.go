@@ -14,9 +14,8 @@ type MetricMiddleware struct {
 	client *client.ProxyMetricClient
 }
 
-func createMetricsMiddleware() (metricsMiddleware []MetricMiddleware, err error) {
+func createMetricsMiddleware(conf config.RootConfig) (metricsMiddleware []MetricMiddleware, err error) {
 	generalScopeErr := "can not create metrics Middleware"
-	conf := config.Config()
 	services := conf.FilterServicesByType(config.ServiceTypeProxy)
 	for _, service := range services {
 		var cl *client.ProxyMetricClient
@@ -54,9 +53,8 @@ func createCounter(metricConf config.Metric, srvConf config.Service) (metric Cou
 	return metric, err
 }
 
-func createCounters() ([]CounterMetric, error) {
+func createCounters(conf config.RootConfig) ([]CounterMetric, error) {
 	generalScopeErr := "can not create counters"
-	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
 	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
 	var counterMetricsAmount = 0
 	for _, service := range services {
@@ -103,9 +101,8 @@ func createGauge(metricConf config.Metric, srvConf config.Service) (metric Gauge
 	return metric, err
 }
 
-func createGauges() ([]GaugeMetric, error) {
+func createGauges(conf config.RootConfig) ([]GaugeMetric, error) {
 	generalScopeErr := "can not create gauges"
-	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
 	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
 	var gaugeMetricsAmount = 0
 	for _, service := range services {
@@ -152,9 +149,8 @@ func createHistogram(metricConf config.Metric, service config.Service) (metric H
 	return metric, err
 }
 
-func createHistograms() ([]HistogramMetric, error) {
+func createHistograms(conf config.RootConfig) ([]HistogramMetric, error) {
 	generalScopeErr := "can not create histograms"
-	conf := config.Config() // TODO(denisacostaq@gmail.com): recive conf as parameter
 	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
 	var histogramMetricsAmount = 0
 	for _, service := range services {

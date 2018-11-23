@@ -6,6 +6,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
+	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 )
@@ -17,18 +18,18 @@ type SkycoinCollector struct {
 	Histograms []HistogramMetric
 }
 
-func newSkycoinCollector() (collector *SkycoinCollector, err error) {
+func newSkycoinCollector(conf config.RootConfig) (collector *SkycoinCollector, err error) {
 	const generalScopeErr = "error creating collector"
 	collector = &SkycoinCollector{}
-	if collector.Counters, err = createCounters(); err != nil {
+	if collector.Counters, err = createCounters(conf); err != nil {
 		errCause := fmt.Sprintln("error creating counters: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if collector.Gauges, err = createGauges(); err != nil {
+	if collector.Gauges, err = createGauges(conf); err != nil {
 		errCause := fmt.Sprintln("error creating gauges: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if collector.Histograms, err = createHistograms(); err != nil {
+	if collector.Histograms, err = createHistograms(conf); err != nil {
 		errCause := fmt.Sprintln("error creating histograms: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

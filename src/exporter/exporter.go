@@ -130,13 +130,13 @@ func exposedMetricsMiddleware(metricsMiddleware []MetricMiddleware, promHandler 
 
 // ExportMetrics will read the config from mainConfigFile if any or use a default one.
 func ExportMetrics(mainConfigFile, handlerEndpoint string, listenPort uint16) (srv *http.Server) {
-	config.NewConfigFromFileSystem(mainConfigFile)
-	if collector, err := newSkycoinCollector(); err != nil {
+	conf := config.NewConfigFromFileSystem(mainConfigFile)
+	if collector, err := newSkycoinCollector(conf); err != nil {
 		log.WithError(err).Panicln("Can not create metrics")
 	} else {
 		prometheus.MustRegister(collector)
 	}
-	metricsMiddleware, err := createMetricsMiddleware()
+	metricsMiddleware, err := createMetricsMiddleware(conf)
 	if err != nil {
 		log.WithError(err).Panicln("Can not create forward_metrics metrics")
 	}
