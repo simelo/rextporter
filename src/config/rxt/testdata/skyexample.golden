@@ -165,7 +165,7 @@ STR "label_path:max_decimals"
 KEY TO
 STR "unconfirmed_verify_transaction.max_decimals"
 EOB 16
-EOB 8
+EOB 12
 EOB 8
 EOB 4
-EOB 0
+EOL 0

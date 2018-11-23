@@ -233,37 +233,6 @@ var dfas = []dfa{
 		},
 	}, []int{ /* Start-of-input transitions */ -1, -1, -1, -1}, []int{ /* End-of-input transitions */ -1, -1, -1, -1}, nil},
 
-	// \n[ ]*
-	{[]bool{false, true, true}, []func(rune) int{ // Transitions
-		func(r rune) int {
-			switch r {
-			case 10:
-				return 1
-			case 32:
-				return -1
-			}
-			return -1
-		},
-		func(r rune) int {
-			switch r {
-			case 10:
-				return -1
-			case 32:
-				return 2
-			}
-			return -1
-		},
-		func(r rune) int {
-			switch r {
-			case 10:
-				return -1
-			case 32:
-				return 2
-			}
-			return -1
-		},
-	}, []int{ /* Start-of-input transitions */ -1, -1, -1}, []int{ /* End-of-input transitions */ -1, -1, -1}, nil},
-
 	// ,[ \n\t]+
 	{[]bool{false, false, true}, []func(rune) int{ // Transitions
 		func(r rune) int {
@@ -307,13 +276,48 @@ var dfas = []dfa{
 		},
 	}, []int{ /* Start-of-input transitions */ -1, -1, -1}, []int{ /* End-of-input transitions */ -1, -1, -1}, nil},
 
-	// [ \t\n]+
+	// \n[ \t\n]+
+	{[]bool{false, false, true}, []func(rune) int{ // Transitions
+		func(r rune) int {
+			switch r {
+			case 9:
+				return -1
+			case 10:
+				return 1
+			case 32:
+				return -1
+			}
+			return -1
+		},
+		func(r rune) int {
+			switch r {
+			case 9:
+				return 2
+			case 10:
+				return 2
+			case 32:
+				return 2
+			}
+			return -1
+		},
+		func(r rune) int {
+			switch r {
+			case 9:
+				return 2
+			case 10:
+				return 2
+			case 32:
+				return 2
+			}
+			return -1
+		},
+	}, []int{ /* Start-of-input transitions */ -1, -1, -1}, []int{ /* End-of-input transitions */ -1, -1, -1}, nil},
+
+	// [ \t]+
 	{[]bool{false, true}, []func(rune) int{ // Transitions
 		func(r rune) int {
 			switch r {
 			case 9:
-				return 1
-			case 10:
 				return 1
 			case 32:
 				return 1
@@ -323,8 +327,6 @@ var dfas = []dfa{
 		func(r rune) int {
 			switch r {
 			case 9:
-				return 1
-			case 10:
 				return 1
 			case 32:
 				return 1
@@ -6474,7 +6476,12 @@ func main() {
 	emit_int := func(tokenid string, value int) {
 		println(tokenid, value)
 	}
-	indent := func(level int) {
+	indent := func(whitespace string) {
+		level := len(whitespace) - 1
+		idx_last_eol := strings.LastIndexByte(whitespace, 10)
+		if idx_last_eol != -1 {
+			level -= idx_last_eol
+		}
 		if level > indent_level {
 			// Open block
 			indent_stack = append(indent_stack, indent_level)
@@ -6510,11 +6517,11 @@ func main() {
 				}
 			case 1:
 				{
-					indent(len(token()) - 1)
+					emit_str("PNC", token()[:1])
 				}
 			case 2:
 				{
-					emit_str("PNC", token()[:1])
+					indent(token())
 				}
 			case 3:
 				{ /* eat up whitespace */

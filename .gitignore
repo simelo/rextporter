@@ -22,4 +22,5 @@ screenlog.*
 # Temp files
 *.swo
 *.swp
+*.orig
 

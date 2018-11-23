@@ -1,8 +1,8 @@
 
 /[#].*\n/             { /* eat up comments */ }
-/\n[ ]*/              { indent(len(token()) - 1) }
 /,[ \n\t]+/           { emit_str("PNC", token()[:1]) }
-/[ \t\n]+/            { /* eat up whitespace */ }
+/\n[ \t\n]+/          { indent( token() ) }
+/[ \t]+/              { /* eat up whitespace */ }
 /DATASET|FOR SERVICE|FOR STACK|DEFINE AUTH|AS|SET|TO|GET|POST|FROM|EXTRACT USING|METRIC|NAME|TYPE|GAUGE|COUNTER|HISTOGRAM|SUMMARY|DESCRIPTION|LABELS/ { println("KEY", token()) }
 /"[^"]*"/             { emit_str("STR", token()) }
 /'[^']*'/             { emit_str("STR", token()) }
@@ -21,7 +21,12 @@ func main() {
   emit_int := func(tokenid string, value int) {
     println( tokenid, value )
   }
-  indent := func(level int) {
+  indent := func(whitespace string) {
+    level := len(whitespace) - 1
+    idx_last_eol := strings.LastIndexByte(whitespace, 10)
+    if idx_last_eol != -1 {
+      level -= idx_last_eol
+    }
     if level > indent_level {
       // Open block
       indent_stack = append(indent_stack, indent_level)
