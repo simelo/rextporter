@@ -5,6 +5,12 @@ type Scrapper interface {
 	GetMetric() (val interface{}, err error)
 }
 
+// BodyParser decode body from different formats
+type BodyParser interface {
+	// DecodeBody receive a body to be decoded.
+	DecodeBody(body []byte) (val interface{}, err error)
+}
+
 func getData(cl client.Client, p client.Parser) (data interface{}, err error) {
 	const generalScopeErr = "error getting data"
 	var body []byte
