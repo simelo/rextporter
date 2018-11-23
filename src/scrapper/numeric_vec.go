@@ -52,9 +52,9 @@ func (nv NumericVec) GetMetric() (val interface{}, err error) {
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	metricsVal := make(NumericVecVals, len(metricCollection))
-	for idxMetric, metric := range metricCollection {
+	for idxMetric, metricItem := range metricCollection {
 		var iMetricVal interface{}
-		if iMetricVal, err = nv.parser.pathLookup(nv.itemPath, metric); err != nil {
+		if iMetricVal, err = nv.parser.pathLookup(nv.itemPath, metricItem); err != nil {
 			errCause := fmt.Sprintln("can not locate the metric val: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
@@ -67,13 +67,13 @@ func (nv NumericVec) GetMetric() (val interface{}, err error) {
 		metricsVal[idxMetric].Labels = make([]string, len(nv.labels))
 		for idxLabel, label := range nv.labels {
 			var iLabelVal interface{}
-			if iLabelVal, err = nv.parser.pathLookup(nv.itemPath, label.Path); err != nil {
+			if iLabelVal, err = nv.parser.pathLookup(label.Path, metricItem); err != nil {
 				errCause := fmt.Sprintln("can not locate the path for label: ", err.Error())
 				return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
 			labelVal, okLabelVal := iLabelVal.(string)
 			if !okLabelVal {
-				errCause := fmt.Sprintf("can not assert metric label %s %+v as string", label.Name, iMetricVal)
+				errCause := fmt.Sprintf("can not assert metric label %s %+v as string", label.Name, iLabelVal)
 				return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
 			metricsVal[idxMetric].Labels[idxLabel] = labelVal
