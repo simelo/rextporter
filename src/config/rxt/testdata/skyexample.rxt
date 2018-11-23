@@ -28,7 +28,7 @@ DATASET
                 TYPE COUNTER
                 SET "path" TO "blockchain.head.seq"
 
-    GET rest_api AT '/api/v1/network/connections'
+    GET rest_api FROM '/api/v1/network/connections'
         SET "auth" TO "skyauth"
         EXTRACT USING "jsonpath"
             METRIC

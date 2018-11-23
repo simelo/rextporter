@@ -1,4 +1,3 @@
-EOL 0
 KEY DATASET
 BLK 4
 KEY FOR SERVICE
@@ -6,6 +5,7 @@ VAR skycoin
 EOL 4
 KEY FOR STACK
 VAR skyfiber
+EOL 4
 KEY DEFINE AUTH
 VAR rest_csrf
 KEY AS
@@ -30,20 +30,24 @@ KEY SET
 STR "json_path"
 KEY TO
 STR "csrf_token"
+EOB 8
+EOL 4
 KEY GET
 VAR forward_metrics
 KEY FROM
 STR '/api/v2/metrics'
-EOL 8
+BLK 8
 KEY SET
 STR "prefix"
 KEY TO
 STR "skycoinexample"
+EOB 8
+EOL 4
 KEY GET
 VAR rest_api
 KEY FROM
 STR '/api/v1/health'
-EOL 8
+BLK 8
 KEY SET
 STR "auth"
 KEY TO
@@ -92,12 +96,15 @@ KEY SET
 STR "path"
 KEY TO
 STR "blockchain.head.seq"
-KEY GET
-VAR rest_api
-STR '/api/v1/network/connections'
 EOB 16
 EOB 12
-EOL 8
+EOB 8
+EOL 4
+KEY GET
+VAR rest_api
+KEY FROM
+STR '/api/v1/network/connections'
+BLK 8
 KEY SET
 STR "auth"
 KEY TO
@@ -157,3 +164,8 @@ KEY SET
 STR "label_path:max_decimals"
 KEY TO
 STR "unconfirmed_verify_transaction.max_decimals"
+EOB 16
+EOB 8
+EOB 8
+EOB 4
+EOB 0
