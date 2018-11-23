@@ -11,6 +11,12 @@ type Scrapper interface {
 	GetMetric() (val interface{}, err error)
 }
 
+type BaseScrapper struct {
+	client   client.Client
+	parser   BodyParser
+	jsonPath string
+}
+
 // BodyParser decode body from different formats, an get some data node
 type BodyParser interface {
 	decodeBody(body []byte) (val interface{}, err error)

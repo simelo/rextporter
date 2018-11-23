@@ -9,13 +9,11 @@ import (
 
 // Numeric scrapper can get numeric(gauges or counters) metrics
 type Numeric struct {
-	client   client.Client
-	parser   BodyParser
-	jsonPath string
+	BaseScrapper
 }
 
 func NewNumeric(cl client.Client, p BodyParser, path string) Scrapper {
-	return Numeric{client: cl, parser: p, jsonPath: path}
+	return Numeric{BaseScrapper: BaseScrapper{client: cl, parser: p, jsonPath: path}}
 }
 
 func (n Numeric) GetMetric() (val interface{}, err error) {
@@ -29,6 +27,5 @@ func (n Numeric) GetMetric() (val interface{}, err error) {
 		errCause := fmt.Sprintln("can not get node: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-
 	return val, err
 }
