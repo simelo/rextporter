@@ -1,7 +1,10 @@
 package scrapper
 
 import (
+	"errors"
+
 	"github.com/simelo/rextporter/src/client"
+	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
 )
 
@@ -21,6 +24,29 @@ type baseScrapper struct {
 type BodyParser interface {
 	decodeBody(body []byte) (val interface{}, err error)
 	pathLookup(path string, val interface{}) (node interface{}, err error)
+}
+
+// NewClient will put all the required info to scrap metrics from the body returned by the client.
+func NewScrapper(client client.Client, parser BodyParser, metric config.Metric) (Scrapper, error) {
+	const generalScopeErr = "error creating scrapper"
+	if len(metric.LabelNames()) > 0 {
+		return createVecScrapper(client, parser, metric)
+	}
+	return createAtomicScrapper(client, parser, metric)
+}
+
+func createVecScrapper(client client.Client, parser BodyParser, metric config.Metric) (Scrapper, error) {
+	if metric.Options.Type == config.KeyTypeCounter || metric.Options.Type == config.KeyTypeGauge {
+		return newNumericVec(client, parser, metric), nil
+	}
+	return NumericVec{}, errors.New("histogram vec and summary vec are not supported yet")
+}
+
+func createAtomicScrapper(client client.Client, parser BodyParser, metric config.Metric) (Scrapper, error) {
+	// if metric.Options.Type == config.KeyTypeHistogram {
+	// 	return createHistogram(metric, service)
+	// }
+	return newNumeric(client, parser, metric.Path), nil
 }
 
 func getData(cl client.Client, p BodyParser) (data interface{}, err error) {
