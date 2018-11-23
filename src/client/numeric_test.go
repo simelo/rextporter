@@ -120,8 +120,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadSeq() {
 			description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -166,8 +166,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadBlockHash() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -212,8 +212,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -258,8 +258,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTimestamp() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -304,8 +304,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadFee() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -350,8 +350,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadVersion() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -396,8 +396,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -442,8 +442,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadUxHash() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -488,8 +488,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnspens() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -534,8 +534,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnconfirmed() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -580,8 +580,8 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -626,8 +626,8 @@ func (suite *SkycoinStatsSuit) TestMetricVersionVersion() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -672,8 +672,8 @@ func (suite *SkycoinStatsSuit) TestMetricVersionCommit() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -718,8 +718,8 @@ func (suite *SkycoinStatsSuit) TestMetricVersionBranch() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -764,8 +764,8 @@ func (suite *SkycoinStatsSuit) TestMetricOpenConnections() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -810,8 +810,8 @@ func (suite *SkycoinStatsSuit) TestMetricUptime() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -856,8 +856,8 @@ func (suite *SkycoinStatsSuit) TestMetricCsrfEnabled() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -902,8 +902,8 @@ func (suite *SkycoinStatsSuit) TestMetricCspEnabled() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -948,8 +948,8 @@ func (suite *SkycoinStatsSuit) TestMetricWalletApiEnabled() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -994,8 +994,8 @@ func (suite *SkycoinStatsSuit) TestMetricGuiEnabled() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -1040,8 +1040,8 @@ func (suite *SkycoinStatsSuit) TestMetricUnversionedApiEnabled() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
@@ -1086,8 +1086,8 @@ func (suite *SkycoinStatsSuit) TestMetricJsonRpcEnabled() {
 				description = "I am running since"
 `
 	require := require.New(suite.T())
-	require.Nil(config.NewConfigFromRawString(tomlConfig))
-	conf := config.Config()
+	conf, err := config.NewConfigFromRawString(tomlConfig)
+	require.Nil(err)
 	require.Len(conf.Services, 1)
 	require.Len(conf.Services[0].Metrics, 1)
 	mc, err := NewClient(conf.Services[0].Metrics[0], conf.Services[0])
