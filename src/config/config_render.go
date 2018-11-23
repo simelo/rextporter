@@ -426,6 +426,5 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 		errCause := "error creating metrics for services config file: " + err.Error()
 		return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-
 	return mainConf, err
 }

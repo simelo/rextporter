@@ -17,8 +17,8 @@ type RootConfig struct {
 	Services []Service `json:"services"`
 }
 
-// NewConfigFromRawString allow you to define a `.toml` config in the fly, a raw string with the "config content"
-func NewConfigFromRawString(strConf string) (conf RootConfig, err error) {
+// MustConfigFromRawString allow you to define a `.toml` config in the fly, a raw string with the "config content"
+func MustConfigFromRawString(strConf string) (conf RootConfig, err error) {
 	const generalScopeErr = "error creating a config instance"
 	viper.SetConfigType("toml")
 	buff := bytes.NewBuffer([]byte(strConf))
@@ -30,7 +30,9 @@ func NewConfigFromRawString(strConf string) (conf RootConfig, err error) {
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
 		return conf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	conf.validate()
+	if !conf.isValid() {
+		log.Panic("config is not valid")
+	}
 	return conf, err
 }
 
@@ -70,29 +72,31 @@ func newServicesConfigFromFile(path string, conf mainConfigData) (servicesConf [
 		if util.StrSliceContains(service.Modes, ServiceTypeAPIRest) {
 			if servicesConf[idxService].Metrics, err = newMetricsConfig(conf.MetricsConfigPath(service.Name)); err != nil {
 				errCause := "error reading metrics config: " + err.Error()
-				panic(util.ErrorFromThisScope(errCause, generalScopeErr))
+				return servicesConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
 		}
 	}
 	return servicesConf, err
 }
 
-// NewConfigFromFileSystem will read the config from the file system, you should send the
+// MustConfigFromFileSystem will read the config from the file system, you should send the
 // metric config file path and service config file path into metricsPath, servicePath respectively.
 // This function can cause a panic.
-func NewConfigFromFileSystem(mainConfigPath string) (rootConf RootConfig) {
+func MustConfigFromFileSystem(mainConfigPath string) (rootConf RootConfig) {
 	const generalScopeErr = "error getting config values from file system"
 	var conf mainConfigData
 	var err error
 	if conf, err = newMainConfigData(mainConfigPath); err != nil {
-		errCause := "error reading metrics config: " + err.Error()
-		panic(errCause)
+		errCause := "root cause: " + err.Error()
+		log.WithError(util.ErrorFromThisScope(errCause, generalScopeErr)).Panicln("can not read main config")
 	}
 	if rootConf.Services, err = newServicesConfigFromFile(conf.ServicesConfigPath(), conf); err != nil {
 		errCause := "root cause: " + err.Error()
-		panic(util.ErrorFromThisScope(errCause, generalScopeErr))
+		log.WithError(util.ErrorFromThisScope(errCause, generalScopeErr)).Errorln("can not read services config file")
 	}
-	rootConf.validate()
+	if !rootConf.isValid() {
+		log.Panic("config is not valid")
+	}
 	return rootConf
 }
 
@@ -135,7 +139,7 @@ func filterServicesByType(t string, services []Service) (filteredService []Servi
 	return filteredService
 }
 
-func (conf RootConfig) validate() {
+func (conf RootConfig) isValid() bool {
 	var errs []error
 	for _, service := range conf.Services {
 		errs = append(errs, service.validate()...)
@@ -144,8 +148,8 @@ func (conf RootConfig) validate() {
 		for _, err := range errs {
 			log.WithError(err).Errorln("Error")
 		}
-		log.Panicln("some errors found")
 	}
+	return len(errs) == 0
 }
 
 // isValidUrl tests a string to determine if it is a valid URL or not.
