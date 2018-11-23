@@ -9,11 +9,11 @@ import (
 
 // Numeric scrapper can get numeric(gauges or counters) metrics
 type Numeric struct {
-	BaseScrapper
+	baseScrapper
 }
 
 func NewNumeric(cl client.Client, p BodyParser, path string) Scrapper {
-	return Numeric{BaseScrapper: BaseScrapper{client: cl, parser: p, jsonPath: path}}
+	return Numeric{baseScrapper: baseScrapper{client: cl, parser: p, jsonPath: path}}
 }
 
 func (n Numeric) GetMetric() (val interface{}, err error) {

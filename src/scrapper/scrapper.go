@@ -11,7 +11,7 @@ type Scrapper interface {
 	GetMetric() (val interface{}, err error)
 }
 
-type BaseScrapper struct {
+type baseScrapper struct {
 	client   client.Client
 	parser   BodyParser
 	jsonPath string
