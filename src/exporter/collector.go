@@ -4,10 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/denisacostaq/rextporter/src/client"
-	"github.com/denisacostaq/rextporter/src/scrapper"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/scrapper"
 	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 )
@@ -116,16 +115,16 @@ func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) 
 		}
 		counter.lastSuccessValue = val
 	}
-	onCollectVecSuccess := func(counter *CounterMetric, fch chan<- prometheus.Metric, vals client.NumericVecVals) {
+	onCollectVecSuccess := func(counter *CounterMetric, fch chan<- prometheus.Metric, vals scrapper.NumericVecVals) {
 		defer recoverNegativeCounter(*counter, fch)
+		if metric, err := prometheus.NewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 0); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectCounters -> onCollectVecSuccess can not set down flag")
+			onCollectFail(*counter, fch)
+			return
+		}
 		for _, val := range vals {
-			if metric, err := prometheus.NewConstMetric(counter.StatusDesc, prometheus.GaugeValue, 0, val.Labels...); err == nil {
-				fch <- metric
-			} else {
-				log.WithError(err).Errorln("collectCounters -> onCollectVecSuccess can not set down flag")
-				onCollectFail(*counter, fch)
-				return
-			}
 			if metric, err := prometheus.NewConstMetric(counter.MetricDesc, prometheus.CounterValue, val.Val, val.Labels...); err == nil {
 				fch <- metric
 			} else {
@@ -150,8 +149,8 @@ func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) 
 					log.WithField("val", val).Errorln(fmt.Sprintf("unable to get value %+v as float64", val))
 					onCollectFail(collector.Counters[idxCounter], ch)
 				}
-			case client.NumericVecVals:
-				counterVecVal, okCounterVecVal := val.(client.NumericVecVals)
+			case scrapper.NumericVecVals:
+				counterVecVal, okCounterVecVal := val.(scrapper.NumericVecVals)
 				if okCounterVecVal {
 					onCollectVecSuccess(&(collector.Counters[idxCounter]), ch, counterVecVal)
 				} else {
@@ -181,8 +180,8 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 			} else {
 				log.WithError(err).Errorln("collectGauges -> onCollectFail can not set the last success value")
 			}
-		case client.NumericVecVals:
-			vals := gauge.lastSuccessValue.(client.NumericVecVals)
+		case scrapper.NumericVecVals:
+			vals := gauge.lastSuccessValue.(scrapper.NumericVecVals)
 			for _, val := range vals {
 				if metric, err := prometheus.NewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, val.Val, val.Labels...); err == nil {
 					fch <- metric
@@ -210,14 +209,14 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 		gauge.lastSuccessValue = val
 	}
 	onCollectVecSuccess := func(gauge *GaugeMetric, fch chan<- prometheus.Metric, vals scrapper.NumericVecVals) {
+		if metric, err := prometheus.NewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 0); err == nil {
+			fch <- metric
+		} else {
+			log.WithError(err).Errorln("collectGauges -> onCollectVecSuccess can not set down flag")
+			onCollectFail(*gauge, fch)
+			return
+		}
 		for _, val := range vals {
-			if metric, err := prometheus.NewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 0, val.Labels...); err == nil {
-				fch <- metric
-			} else {
-				log.WithError(err).Errorln("collectGauges -> onCollectVecSuccess can not set down flag")
-				onCollectFail(*gauge, fch)
-				return
-			}
 			if metric, err := prometheus.NewConstMetric(gauge.MetricDesc, prometheus.GaugeValue, val.Val, val.Labels...); err == nil {
 				fch <- metric
 			} else {

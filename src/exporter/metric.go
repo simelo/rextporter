@@ -3,10 +3,10 @@ package exporter
 import (
 	"fmt"
 
-	"github.com/denisacostaq/rextporter/src/scrapper"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/scrapper"
 	"github.com/simelo/rextporter/src/util"
 )
 
@@ -50,7 +50,7 @@ func createCounter(metricConf config.Metric, srvConf config.Service) (metric Cou
 		// FIXME(denisacostaq@gmail.com): if you use a duplicated name can panic?
 		scrapper:   numScrapper,
 		MetricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
-		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", labels, nil),
+		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
 	}
 	return metric, err
 }
@@ -99,7 +99,7 @@ func createGauge(metricConf config.Metric, srvConf config.Service) (metric Gauge
 	metric = GaugeMetric{
 		scrapper:   numScrapper,
 		MetricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
-		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", labels, nil),
+		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
 	}
 	return metric, err
 }
@@ -148,7 +148,7 @@ func createHistogram(metricConf config.Metric, service config.Service) (metric H
 	metric = HistogramMetric{
 		scrapper:   histogramScrapper,
 		MetricDesc: prometheus.NewDesc(service.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
-		StatusDesc: prometheus.NewDesc(service.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+service.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", labels, nil),
+		StatusDesc: prometheus.NewDesc(service.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+service.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
 	}
 	return metric, err
 }
