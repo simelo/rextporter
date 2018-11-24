@@ -128,10 +128,10 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadSeq() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -180,10 +180,10 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadBlockHash() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -232,10 +232,10 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -284,10 +284,10 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTimestamp() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -336,10 +336,10 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadFee() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -388,10 +388,10 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadVersion() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -440,10 +440,10 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -492,10 +492,10 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadUxHash() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -544,10 +544,10 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnspens() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -596,10 +596,10 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnconfirmed() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -648,10 +648,10 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -700,10 +700,10 @@ func (suite *SkycoinStatsSuit) TestMetricVersionVersion() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -752,10 +752,10 @@ func (suite *SkycoinStatsSuit) TestMetricVersionCommit() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -804,10 +804,10 @@ func (suite *SkycoinStatsSuit) TestMetricVersionBranch() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -856,10 +856,10 @@ func (suite *SkycoinStatsSuit) TestMetricOpenConnections() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -908,10 +908,10 @@ func (suite *SkycoinStatsSuit) TestMetricUptime() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -960,10 +960,10 @@ func (suite *SkycoinStatsSuit) TestMetricCsrfEnabled() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1012,10 +1012,10 @@ func (suite *SkycoinStatsSuit) TestMetricCspEnabled() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1064,10 +1064,10 @@ func (suite *SkycoinStatsSuit) TestMetricWalletApiEnabled() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1116,10 +1116,10 @@ func (suite *SkycoinStatsSuit) TestMetricGuiEnabled() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1168,10 +1168,10 @@ func (suite *SkycoinStatsSuit) TestMetricUnversionedApiEnabled() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1220,10 +1220,10 @@ func (suite *SkycoinStatsSuit) TestMetricJsonRpcEnabled() {
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
 	var cl client.Client
-	cl, err = client.CreateApiRest(metricConf, serviceConf)
+	cl, err = client.CreateAPIRest(metricConf, serviceConf)
 	require.Nil(err)
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JsonParser{}, metricConf)
+	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When

@@ -12,8 +12,8 @@ import (
 	"github.com/simelo/rextporter/src/util"
 )
 
-// ApiRest have common data to be shared through embedded struct in those type who implement the client.Client interface
-type ApiRest struct {
+// APIRest have common data to be shared through embedded struct in those type who implement the client.Client interface
+type APIRest struct {
 	req                  *http.Request
 	tokenClient          TokenClient
 	tokenHeaderKey       string
@@ -21,7 +21,8 @@ type ApiRest struct {
 	token                string
 }
 
-func CreateApiRest(metric config.Metric, service config.Service) (client ApiRest, err error) {
+// CreateAPIRest create client to make request to a rest API
+func CreateAPIRest(metric config.Metric, service config.Service) (client APIRest, err error) {
 	const generalScopeErr = "error creating api rest client"
 	if client.req, err = http.NewRequest(metric.HTTPMethod, service.URIToGetMetric(metric), nil); err != nil {
 		errCause := fmt.Sprintln("can not create the request client: ", err.Error())
@@ -36,7 +37,8 @@ func CreateApiRest(metric config.Metric, service config.Service) (client ApiRest
 	return client, nil
 }
 
-func (cl ApiRest) GetData() (data []byte, err error) {
+// GetData can retrieve data from a rest API with a retry pollicy for token expiration.
+func (cl APIRest) GetData() (data []byte, err error) {
 	const generalScopeErr = "error making a server request to get metric from remote endpoint"
 	cl.req.Header.Set(cl.tokenHeaderKey, cl.token)
 	getData := func() (data []byte, err error) {
@@ -71,7 +73,7 @@ func (cl ApiRest) GetData() (data []byte, err error) {
 	return data, nil
 }
 
-func (cl ApiRest) resetToken() (err error) {
+func (cl APIRest) resetToken() (err error) {
 	const generalScopeErr = "error making resetting the token"
 	cl.token = ""
 	var data []byte

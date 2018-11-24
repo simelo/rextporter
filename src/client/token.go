@@ -27,6 +27,7 @@ func newTokenClient(uriToGenToken string) (client TokenClient, err error) {
 	return client, nil
 }
 
+// GetData can get a token value from a remote server
 func (client TokenClient) GetData() (data []byte, err error) {
 	const generalScopeErr = "error making a server request to get token from remote endpoint"
 	httpClient := &http.Client{}

@@ -26,6 +26,7 @@ func newHistogram(client client.Client, parser BodyParser, metric config.Metric)
 	}
 }
 
+// GetMetric return a histogram metrics val
 func (h Histogram) GetMetric() (val interface{}, err error) {
 	const generalScopeErr = "error scrapping histogram metric"
 	var iBody interface{}

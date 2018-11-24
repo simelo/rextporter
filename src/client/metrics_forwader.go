@@ -34,6 +34,7 @@ func NewProxyMetricClient(service config.Service) (client ProxyMetricClient, err
 	return client, nil
 }
 
+// GetData can get raw metrics from a endpoint
 func (client ProxyMetricClient) GetData() (data []byte, err error) {
 	const generalScopeErr = "error making a server request to get the metrics from remote endpoint"
 	httpClient := &http.Client{}

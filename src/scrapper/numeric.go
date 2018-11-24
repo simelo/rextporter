@@ -16,6 +16,7 @@ func newNumeric(cl client.Client, p BodyParser, path string) Scrapper {
 	return Numeric{baseScrapper: baseScrapper{client: cl, parser: p, jsonPath: path}}
 }
 
+// GetMetric returns a single number with the metric value, is a counter or a gauge
 func (n Numeric) GetMetric() (val interface{}, err error) {
 	const generalScopeErr = "error scrapping numeric(gauge|counter) metric"
 	var iBody interface{}

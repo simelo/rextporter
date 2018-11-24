@@ -28,7 +28,6 @@ type BodyParser interface {
 
 // NewScrapper will put all the required info to scrap metrics from the body returned by the client.
 func NewScrapper(client client.Client, parser BodyParser, metric config.Metric) (Scrapper, error) {
-	const generalScopeErr = "error creating scrapper"
 	if len(metric.LabelNames()) > 0 {
 		return createVecScrapper(client, parser, metric)
 	}

@@ -17,6 +17,7 @@ type metricsForwader struct {
 	serviceName string
 }
 
+// MetricsForwaders have a slice of metricsForwader, that are capable of forward a metrics endpoint with service name as prefix
 type MetricsForwaders struct {
 	servicesMetricsForwader []metricsForwader
 }
@@ -25,6 +26,7 @@ func newMetricsForwader(cl client.ProxyMetricClient) metricsForwader {
 	return metricsForwader{client: cl, serviceName: cl.ServiceName}
 }
 
+// NewMetricsForwaders create a scrapper that handle all the forwaded services
 func NewMetricsForwaders(cls []client.ProxyMetricClient) Scrapper {
 	scrapper := MetricsForwaders{servicesMetricsForwader: make([]metricsForwader, len(cls))}
 	for idxScrapper := range scrapper.servicesMetricsForwader {
@@ -62,6 +64,7 @@ func appendPrefixForMetrics(prefix string, metricsData string) ([]byte, error) {
 	return []byte(metricsData), nil
 }
 
+// GetMetric return the original metrics but with a service name as prefix in his names
 func (mfs MetricsForwaders) GetMetric() (val interface{}, err error) {
 	getCustomData := func() (data []byte, err error) {
 		recorder := httptest.NewRecorder()

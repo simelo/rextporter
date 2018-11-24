@@ -10,11 +10,6 @@ import (
 	"github.com/simelo/rextporter/src/util"
 )
 
-// MetricMiddleware has the necessary http client to get exposed metric from a service
-type MetricMiddleware struct {
-	client client.ProxyMetricClient
-}
-
 func createMetricsForwaders(conf config.RootConfig) (scrapper.Scrapper, error) {
 	generalScopeErr := "can not create metrics Middleware"
 	services := conf.FilterServicesByType(config.ServiceTypeProxy)
@@ -40,11 +35,15 @@ type CounterMetric struct {
 func createCounter(metricConf config.Metric, srvConf config.Service) (metric CounterMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
 	var metricClient client.Client
-	if metricClient, err = client.CreateApiRest(metricConf, srvConf); err != nil {
+	if metricClient, err = client.CreateAPIRest(metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	numScrapper, _ := scrapper.NewScrapper(metricClient, scrapper.JsonParser{}, metricConf)
+	var numScrapper scrapper.Scrapper
+	if numScrapper, err = scrapper.NewScrapper(metricClient, scrapper.JSONParser{}, metricConf); err != nil {
+		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
+		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
 	labels := metricConf.LabelNames()
 	metric = CounterMetric{
 		// FIXME(denisacostaq@gmail.com): if you use a duplicated name can panic?
@@ -90,11 +89,15 @@ type GaugeMetric struct {
 func createGauge(metricConf config.Metric, srvConf config.Service) (metric GaugeMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
 	var metricClient client.Client
-	if metricClient, err = client.CreateApiRest(metricConf, srvConf); err != nil {
+	if metricClient, err = client.CreateAPIRest(metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	numScrapper, _ := scrapper.NewScrapper(metricClient, scrapper.JsonParser{}, metricConf)
+	var numScrapper scrapper.Scrapper
+	if numScrapper, err = scrapper.NewScrapper(metricClient, scrapper.JSONParser{}, metricConf); err != nil {
+		errCause := fmt.Sprintln("can not create num scrapper: ", err.Error())
+		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
 	labels := metricConf.LabelNames()
 	metric = GaugeMetric{
 		scrapper:   numScrapper,
@@ -139,11 +142,15 @@ type HistogramMetric struct {
 func createHistogram(metricConf config.Metric, service config.Service) (metric HistogramMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
 	var metricClient client.Client
-	if metricClient, err = client.CreateApiRest(metricConf, service); err != nil {
+	if metricClient, err = client.CreateAPIRest(metricConf, service); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	histogramScrapper, _ := scrapper.NewScrapper(metricClient, scrapper.JsonParser{}, metricConf)
+	var histogramScrapper scrapper.Scrapper
+	if histogramScrapper, err = scrapper.NewScrapper(metricClient, scrapper.JSONParser{}, metricConf); err != nil {
+		errCause := fmt.Sprintln("error creating histogram scrapper: ", err.Error())
+		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
 	labels := metricConf.LabelNames()
 	metric = HistogramMetric{
 		scrapper:   histogramScrapper,
