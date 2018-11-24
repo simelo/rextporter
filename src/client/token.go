@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
 )
 
@@ -14,22 +13,21 @@ import (
 // to get a token from the server.
 // sa newTokenClient method.
 type TokenClient struct {
-	BaseClient
+	req *http.Request
 }
 
-func newTokenClient(service config.Service) (client *TokenClient, err error) {
+func newTokenClient(uriToGenToken string) (client TokenClient, err error) {
 	const generalScopeErr = "error creating a client to get a toke from remote endpoint for making future requests"
-	client = new(TokenClient)
-	client.service = service
+	// client = TokenClient{baseClient: baseClient{service: service}}
 	// FIXME(denisacostaq@gmail.com): make the "GET" configurable.
-	if client.req, err = http.NewRequest("GET", client.service.URIToGetToken(), nil); err != nil {
+	if client.req, err = http.NewRequest("GET", uriToGenToken, nil); err != nil {
 		errCause := fmt.Sprintln("can not create the request: ", err.Error())
-		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
+		return client, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return client, nil
 }
 
-func (client *TokenClient) getRemoteInfo() (data []byte, err error) {
+func (client TokenClient) GetData() (data []byte, err error) {
 	const generalScopeErr = "error making a server request to get token from remote endpoint"
 	httpClient := &http.Client{}
 	var resp *http.Response
