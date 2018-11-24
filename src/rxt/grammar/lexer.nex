@@ -10,9 +10,9 @@
 /[a-z_][a-z0-9_]*/    { emit_str("VAR", token()) }
 >                     { /* nothing to do at end of file */ }
 //
-package main
+package rxt
 import "os"
-func main() {
+func LexTheRxt() {
   lex := NewLexer(os.Stdin)
   indent_level := 0
   indent_stack := make([]int, 5)

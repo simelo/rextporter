@@ -1,4 +1,4 @@
-package main
+package rxt
 
 import "os"
 import (
@@ -6465,7 +6465,7 @@ func (yylex *Lexer) next(lvl int) int {
 func (yylex *Lexer) pop() {
 	yylex.stack = yylex.stack[:len(yylex.stack)-1]
 }
-func main() {
+func LexTheRxt() {
 	lex := NewLexer(os.Stdin)
 	indent_level := 0
 	indent_stack := make([]int, 5)
