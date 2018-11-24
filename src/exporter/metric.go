@@ -15,18 +15,18 @@ type MetricMiddleware struct {
 	client client.ProxyMetricClient
 }
 
-func createMetricsMiddleware(conf config.RootConfig) (metricsMiddleware []MetricMiddleware, err error) {
+func createMetricsForwaders(conf config.RootConfig) (scrapper.Scrapper, error) {
 	generalScopeErr := "can not create metrics Middleware"
 	services := conf.FilterServicesByType(config.ServiceTypeProxy)
-	for _, service := range services {
-		var cl client.ProxyMetricClient
-		if cl, err = client.NewProxyMetricClient(service); err != nil {
+	metricClients := make([]client.ProxyMetricClient, len(services))
+	for idxService := range services {
+		var err error
+		if metricClients[idxService], err = client.NewProxyMetricClient(services[idxService]); err != nil {
 			errCause := fmt.Sprintln("error creating metric client: ", err.Error())
-			return metricsMiddleware, util.ErrorFromThisScope(errCause, generalScopeErr)
+			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		metricsMiddleware = append(metricsMiddleware, MetricMiddleware{client: cl})
 	}
-	return metricsMiddleware, err
+	return scrapper.NewMetricsForwaders(metricClients), nil
 }
 
 // CounterMetric has the necessary http client to get and updated value for the counter metric

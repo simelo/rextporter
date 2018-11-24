@@ -85,7 +85,7 @@ func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf config.Ro
 	} else {
 		prometheus.MustRegister(collector)
 	}
-	metricsMiddleware, err := createMetricsMiddleware(conf)
+	metricsForwaders, err := createMetricsForwaders(conf)
 	if err != nil {
 		log.WithError(err).Panicln("Can not create forward_metrics metrics")
 	}
@@ -93,7 +93,7 @@ func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf config.Ro
 	srv = &http.Server{Addr: port}
 	http.Handle(
 		handlerEndpoint,
-		gziphandler.GzipHandler(exposedMetricsMiddleware(metricsMiddleware, promhttp.Handler())))
+		gziphandler.GzipHandler(exposedMetricsMiddleware(metricsForwaders, promhttp.Handler())))
 	go func() {
 		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpoint))
 		log.WithError(srv.ListenAndServe()).Errorln("unable to start the server")
