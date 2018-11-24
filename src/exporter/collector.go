@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/denisacostaq/rextporter/src/client"
+	"github.com/denisacostaq/rextporter/src/scrapper"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
@@ -70,8 +71,8 @@ func (collector *SkycoinCollector) collectCounters(ch chan<- prometheus.Metric) 
 			} else {
 				log.WithError(err).Errorln("collectCounters -> onCollectFail can not set the last success value")
 			}
-		case client.NumericVecVals:
-			vals, okVals := counter.lastSuccessValue.(client.NumericVecVals)
+		case scrapper.NumericVecVals:
+			vals, okVals := counter.lastSuccessValue.(scrapper.NumericVecVals)
 			if !okVals {
 				log.WithField("vals", vals).Errorln("can not get las success vals")
 			}
@@ -208,7 +209,7 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 		}
 		gauge.lastSuccessValue = val
 	}
-	onCollectVecSuccess := func(gauge *GaugeMetric, fch chan<- prometheus.Metric, vals client.NumericVecVals) {
+	onCollectVecSuccess := func(gauge *GaugeMetric, fch chan<- prometheus.Metric, vals scrapper.NumericVecVals) {
 		for _, val := range vals {
 			if metric, err := prometheus.NewConstMetric(gauge.StatusDesc, prometheus.GaugeValue, 0, val.Labels...); err == nil {
 				fch <- metric
@@ -241,8 +242,8 @@ func (collector *SkycoinCollector) collectGauges(ch chan<- prometheus.Metric) {
 					log.WithField("val", val).Errorln(fmt.Sprintf("unable to get value %+v as float64", val))
 					onCollectFail(collector.Gauges[idxGauge], ch)
 				}
-			case client.NumericVecVals:
-				gaugeVecVal, okGaugeVecVal := val.(client.NumericVecVals)
+			case scrapper.NumericVecVals:
+				gaugeVecVal, okGaugeVecVal := val.(scrapper.NumericVecVals)
 				if okGaugeVecVal {
 					onCollectVecSuccess(&(collector.Gauges[idxGauge]), ch, gaugeVecVal)
 				} else {
@@ -275,7 +276,7 @@ func (collector *SkycoinCollector) collectHistograms(ch chan<- prometheus.Metric
 			log.WithError(err).Errorln("collectHistograms -> onCollectFail can not set the last success value")
 		}
 	}
-	onCollectSuccess := func(histogram *HistogramMetric, fch chan<- prometheus.Metric, val client.HistogramValue) {
+	onCollectSuccess := func(histogram *HistogramMetric, fch chan<- prometheus.Metric, val scrapper.HistogramValue) {
 		if metric, err := prometheus.NewConstMetric(histogram.StatusDesc, prometheus.GaugeValue, 0); err == nil {
 			fch <- metric
 		} else {
@@ -294,11 +295,11 @@ func (collector *SkycoinCollector) collectHistograms(ch chan<- prometheus.Metric
 		histogram.lastSuccessValue = val
 	}
 	for idxHistogram := range collector.Histograms {
-		if val, err := collector.Histograms[idxHistogram].Client.GetMetric(); err != nil {
+		if val, err := collector.Histograms[idxHistogram].scrapper.GetMetric(); err != nil {
 			log.WithError(err).Errorln("can not get the data")
 			onCollectFail(collector.Histograms[idxHistogram], ch)
 		} else {
-			metricVal, okMetricVal := val.(client.HistogramValue)
+			metricVal, okMetricVal := val.(scrapper.HistogramValue)
 			if okMetricVal {
 				onCollectSuccess(&(collector.Histograms[idxHistogram]), ch, metricVal)
 			} else {

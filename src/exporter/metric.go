@@ -44,7 +44,7 @@ func createCounter(metricConf config.Metric, srvConf config.Service) (metric Cou
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	numScrapper := scrapper.NewNumeric(metricClient, scrapper.JsonParser{}, metricConf.Path)
+	numScrapper, _ := scrapper.NewScrapper(metricClient, scrapper.JsonParser{}, metricConf)
 	labels := metricConf.LabelNames()
 	metric = CounterMetric{
 		// FIXME(denisacostaq@gmail.com): if you use a duplicated name can panic?
@@ -94,7 +94,7 @@ func createGauge(metricConf config.Metric, srvConf config.Service) (metric Gauge
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	numScrapper := scrapper.NewNumeric(metricClient, scrapper.JsonParser{}, metricConf.Path)
+	numScrapper, _ := scrapper.NewScrapper(metricClient, scrapper.JsonParser{}, metricConf)
 	labels := metricConf.LabelNames()
 	metric = GaugeMetric{
 		scrapper:   numScrapper,
@@ -130,8 +130,8 @@ func createGauges(conf config.RootConfig) ([]GaugeMetric, error) {
 
 // HistogramMetric has the necessary http client to get and updated value for the histogram metric
 type HistogramMetric struct {
-	Client           client.Client
-	lastSuccessValue client.HistogramValue
+	scrapper         scrapper.Scrapper
+	lastSuccessValue scrapper.HistogramValue
 	MetricDesc       *prometheus.Desc
 	StatusDesc       *prometheus.Desc
 }
@@ -143,9 +143,10 @@ func createHistogram(metricConf config.Metric, service config.Service) (metric H
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	histogramScrapper, _ := scrapper.NewScrapper(metricClient, scrapper.JsonParser{}, metricConf)
 	labels := metricConf.LabelNames()
 	metric = HistogramMetric{
-		Client:     metricClient,
+		scrapper:   histogramScrapper,
 		MetricDesc: prometheus.NewDesc(service.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
 		StatusDesc: prometheus.NewDesc(service.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+service.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", labels, nil),
 	}
