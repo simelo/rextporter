@@ -12,14 +12,14 @@ import (
 
 // MetricMiddleware has the necessary http client to get exposed metric from a service
 type MetricMiddleware struct {
-	client *client.ProxyMetricClient
+	client client.ProxyMetricClient
 }
 
 func createMetricsMiddleware(conf config.RootConfig) (metricsMiddleware []MetricMiddleware, err error) {
 	generalScopeErr := "can not create metrics Middleware"
 	services := conf.FilterServicesByType(config.ServiceTypeProxy)
 	for _, service := range services {
-		var cl *client.ProxyMetricClient
+		var cl client.ProxyMetricClient
 		if cl, err = client.NewProxyMetricClient(service); err != nil {
 			errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 			return metricsMiddleware, util.ErrorFromThisScope(errCause, generalScopeErr)
@@ -40,7 +40,7 @@ type CounterMetric struct {
 func createCounter(metricConf config.Metric, srvConf config.Service) (metric CounterMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
 	var metricClient client.Client
-	if metricClient, err = client.NewClient(metricConf, srvConf); err != nil {
+	if metricClient, err = client.CreateApiRest(metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -90,7 +90,7 @@ type GaugeMetric struct {
 func createGauge(metricConf config.Metric, srvConf config.Service) (metric GaugeMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
 	var metricClient client.Client
-	if metricClient, err = client.NewClient(metricConf, srvConf); err != nil {
+	if metricClient, err = client.CreateApiRest(metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -139,7 +139,7 @@ type HistogramMetric struct {
 func createHistogram(metricConf config.Metric, service config.Service) (metric HistogramMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
 	var metricClient client.Client
-	if metricClient, err = client.NewClient(metricConf, service); err != nil {
+	if metricClient, err = client.CreateApiRest(metricConf, service); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

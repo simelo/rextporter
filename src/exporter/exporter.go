@@ -52,11 +52,11 @@ func exposedMetricsMiddleware(metricsMiddleware []MetricMiddleware, promHandler 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		getCustomData := func() (data []byte, err error) {
 			recorder := httptest.NewRecorder()
-			for _, cl := range metricsMiddleware {
-				if exposedMetricsData, err := cl.client.GetExposedMetrics(); err != nil {
-					log.WithError(err).Error("error getting metrics from service " + cl.client.Name)
+			for _, mm := range metricsMiddleware {
+				if exposedMetricsData, err := mm.client.GetData(); err != nil {
+					log.WithError(err).Error("error getting metrics from service " + mm.client.ServiceName)
 				} else {
-					if prefixed, err := appendPrefixForMetrics(cl.client.Name, string(exposedMetricsData)); err == nil {
+					if prefixed, err := appendPrefixForMetrics(mm.client.ServiceName, string(exposedMetricsData)); err == nil {
 						if count, err := recorder.Write(prefixed); err != nil || count != len(prefixed) {
 							if err != nil {
 								log.WithError(err).Errorln("error writing prefixed content")
