@@ -11,8 +11,8 @@ type MemCache struct {
 	mu   *sync.RWMutex
 }
 
-func newMemCache() MemCache {
-	return MemCache{
+func newMemCache() *MemCache {
+	return &MemCache{
 		vals: make(map[string][]byte),
 		mu:   &sync.RWMutex{},
 	}
@@ -29,6 +29,7 @@ func (c MemCache) Get(key string) (val []byte, err error) {
 
 func (c MemCache) Set(key string, data []byte) {
 	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.vals[key] = data
 }
 
