@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/simelo/rextporter/src/cache"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/scrapper"
@@ -13,15 +14,15 @@ import (
 func createMetricsForwaders(conf config.RootConfig) (scrapper.Scrapper, error) {
 	generalScopeErr := "can not create metrics Middleware"
 	services := conf.FilterServicesByType(config.ServiceTypeProxy)
-	metricClients := make([]client.ProxyMetricClient, len(services))
+	proxyMetricClients := make([]client.ProxyMetricClient, len(services))
 	for idxService := range services {
 		var err error
-		if metricClients[idxService], err = client.NewProxyMetricClient(services[idxService]); err != nil {
+		if proxyMetricClients[idxService], err = client.NewProxyMetricClient(services[idxService]); err != nil {
 			errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	}
-	return scrapper.NewMetricsForwaders(metricClients), nil
+	return scrapper.NewMetricsForwaders(proxyMetricClients), nil
 }
 
 // CounterMetric has the necessary http client to get and updated value for the counter metric
@@ -32,15 +33,16 @@ type CounterMetric struct {
 	StatusDesc       *prometheus.Desc
 }
 
-func createCounter(metricConf config.Metric, srvConf config.Service) (metric CounterMetric, err error) {
+func createCounter(cache cache.Cache, metricConf config.Metric, srvConf config.Service) (metric CounterMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
-	var metricClient client.Client
+	var metricClient client.CacheableClient
 	if metricClient, err = client.CreateAPIRest(metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	clCache := client.NewClientCatcher(metricClient, cache)
 	var numScrapper scrapper.Scrapper
-	if numScrapper, err = scrapper.NewScrapper(metricClient, scrapper.JSONParser{}, metricConf); err != nil {
+	if numScrapper, err = scrapper.NewScrapper(clCache, scrapper.JSONParser{}, metricConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -54,7 +56,7 @@ func createCounter(metricConf config.Metric, srvConf config.Service) (metric Cou
 	return metric, err
 }
 
-func createCounters(conf config.RootConfig) ([]CounterMetric, error) {
+func createCounters(cache cache.Cache, conf config.RootConfig) ([]CounterMetric, error) {
 	generalScopeErr := "can not create counters"
 	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
 	var counterMetricsAmount = 0
@@ -66,7 +68,7 @@ func createCounters(conf config.RootConfig) ([]CounterMetric, error) {
 	for _, service := range services {
 		metricsForService := service.FilterMetricsByType(config.KeyTypeCounter)
 		for _, metric := range metricsForService {
-			if counter, err := createCounter(metric, service); err == nil {
+			if counter, err := createCounter(cache, metric, service); err == nil {
 				counters[idxMetric] = counter
 				idxMetric++
 			} else {
@@ -86,15 +88,16 @@ type GaugeMetric struct {
 	StatusDesc       *prometheus.Desc
 }
 
-func createGauge(metricConf config.Metric, srvConf config.Service) (metric GaugeMetric, err error) {
+func createGauge(cache cache.Cache, metricConf config.Metric, srvConf config.Service) (metric GaugeMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
-	var metricClient client.Client
+	var metricClient client.CacheableClient
 	if metricClient, err = client.CreateAPIRest(metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	clCache := client.NewClientCatcher(metricClient, cache)
 	var numScrapper scrapper.Scrapper
-	if numScrapper, err = scrapper.NewScrapper(metricClient, scrapper.JSONParser{}, metricConf); err != nil {
+	if numScrapper, err = scrapper.NewScrapper(clCache, scrapper.JSONParser{}, metricConf); err != nil {
 		errCause := fmt.Sprintln("can not create num scrapper: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -107,7 +110,7 @@ func createGauge(metricConf config.Metric, srvConf config.Service) (metric Gauge
 	return metric, err
 }
 
-func createGauges(conf config.RootConfig) ([]GaugeMetric, error) {
+func createGauges(cache cache.Cache, conf config.RootConfig) ([]GaugeMetric, error) {
 	generalScopeErr := "can not create gauges"
 	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
 	var gaugeMetricsAmount = 0
@@ -119,7 +122,7 @@ func createGauges(conf config.RootConfig) ([]GaugeMetric, error) {
 	for _, service := range services {
 		metricsForService := service.FilterMetricsByType(config.KeyTypeGauge)
 		for _, metric := range metricsForService {
-			if gauge, err := createGauge(metric, service); err == nil {
+			if gauge, err := createGauge(cache, metric, service); err == nil {
 				gauges[idxMetric] = gauge
 				idxMetric++
 			} else {
@@ -139,15 +142,16 @@ type HistogramMetric struct {
 	StatusDesc       *prometheus.Desc
 }
 
-func createHistogram(metricConf config.Metric, service config.Service) (metric HistogramMetric, err error) {
+func createHistogram(cache cache.Cache, metricConf config.Metric, service config.Service) (metric HistogramMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
-	var metricClient client.Client
+	var metricClient client.CacheableClient
 	if metricClient, err = client.CreateAPIRest(metricConf, service); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
+	clCache := client.NewClientCatcher(metricClient, cache)
 	var histogramScrapper scrapper.Scrapper
-	if histogramScrapper, err = scrapper.NewScrapper(metricClient, scrapper.JSONParser{}, metricConf); err != nil {
+	if histogramScrapper, err = scrapper.NewScrapper(clCache, scrapper.JSONParser{}, metricConf); err != nil {
 		errCause := fmt.Sprintln("error creating histogram scrapper: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -160,7 +164,7 @@ func createHistogram(metricConf config.Metric, service config.Service) (metric H
 	return metric, err
 }
 
-func createHistograms(conf config.RootConfig) ([]HistogramMetric, error) {
+func createHistograms(cache cache.Cache, conf config.RootConfig) ([]HistogramMetric, error) {
 	generalScopeErr := "can not create histograms"
 	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
 	var histogramMetricsAmount = 0
@@ -172,7 +176,7 @@ func createHistograms(conf config.RootConfig) ([]HistogramMetric, error) {
 	for _, service := range services {
 		metricsForService := service.FilterMetricsByType(config.KeyTypeHistogram)
 		for _, metric := range metricsForService {
-			if histogram, err := createHistogram(metric, service); err == nil {
+			if histogram, err := createHistogram(cache, metric, service); err == nil {
 				histograms[idxMetric] = histogram
 				idxMetric++
 			} else {

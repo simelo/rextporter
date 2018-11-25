@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/NYTimes/gziphandler"
+	"github.com/simelo/rextporter/src/cache"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/simelo/rextporter/src/config"
@@ -18,8 +19,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func exposedMetricsMiddleware(fs scrapper.Scrapper, promHandler http.Handler) http.Handler {
+func exposedMetricsMiddleware(c cache.Cache, fs scrapper.Scrapper, promHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c.Reset()
 		getDefaultData := func() (data []byte, err error) {
 			generalScopeErr := "error reding default data"
 			recorder := httptest.NewRecorder()
@@ -61,9 +63,6 @@ func exposedMetricsMiddleware(fs scrapper.Scrapper, promHandler http.Handler) ht
 			}
 		}
 		w.Header().Set("Content-Type", "text/plain")
-		if allData == nil {
-			allData = []byte("a")
-		}
 		if count, err := w.Write(allData); err != nil || count != len(allData) {
 			if err != nil {
 				log.WithError(err).Errorln("error writing data")
@@ -80,7 +79,8 @@ func exposedMetricsMiddleware(fs scrapper.Scrapper, promHandler http.Handler) ht
 
 // MustExportMetrics will read the config from mainConfigFile if any or use a default one.
 func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf config.RootConfig) (srv *http.Server) {
-	if collector, err := newSkycoinCollector(conf); err != nil {
+	c := cache.NewCache()
+	if collector, err := newSkycoinCollector(c, conf); err != nil {
 		log.WithError(err).Panicln("Can not create metrics")
 	} else {
 		prometheus.MustRegister(collector)
@@ -93,7 +93,7 @@ func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf config.Ro
 	srv = &http.Server{Addr: port}
 	http.Handle(
 		handlerEndpoint,
-		gziphandler.GzipHandler(exposedMetricsMiddleware(metricsForwaders, promhttp.Handler())))
+		gziphandler.GzipHandler(exposedMetricsMiddleware(c, metricsForwaders, promhttp.Handler())))
 	go func() {
 		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpoint))
 		log.WithError(srv.ListenAndServe()).Errorln("unable to start the server")
