@@ -14,6 +14,7 @@ import (
 
 // APIRest have common data to be shared through embedded struct in those type who implement the client.Client interface
 type APIRest struct {
+	baseCacheableClient
 	req                  *http.Request
 	tokenClient          TokenClient
 	tokenHeaderKey       string
@@ -22,19 +23,27 @@ type APIRest struct {
 }
 
 // CreateAPIRest create client to make request to a rest API
-func CreateAPIRest(metric config.Metric, service config.Service) (client APIRest, err error) {
+func CreateAPIRest(metric config.Metric, service config.Service) (CacheableClient, error) {
 	const generalScopeErr = "error creating api rest client"
-	if client.req, err = http.NewRequest(metric.HTTPMethod, service.URIToGetMetric(metric), nil); err != nil {
+	dataPath := service.URIToGetMetric(metric)
+	var req *http.Request
+	var err error
+	if req, err = http.NewRequest(metric.HTTPMethod, dataPath, nil); err != nil {
 		errCause := fmt.Sprintln("can not create the request client: ", err.Error())
-		return client, util.ErrorFromThisScope(errCause, generalScopeErr)
+		return APIRest{}, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if client.tokenClient, err = newTokenClient(service.URIToGetToken()); err != nil {
+	var tokenClient TokenClient
+	if tokenClient, err = newTokenClient(service.URIToGetToken()); err != nil {
 		errCause := fmt.Sprintln("create token client: ", err.Error())
-		return client, util.ErrorFromThisScope(errCause, generalScopeErr)
+		return APIRest{}, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	client.tokenHeaderKey = service.TokenHeaderKey
-	client.tokenKeyFromEndpoint = service.TokenKeyFromEndpoint
-	return client, nil
+	return APIRest{
+		req:                  req,
+		baseCacheableClient:  baseCacheableClient{dataPath: dataPath},
+		tokenClient:          tokenClient,
+		tokenHeaderKey:       service.TokenHeaderKey,
+		tokenKeyFromEndpoint: service.TokenKeyFromEndpoint,
+	}, nil
 }
 
 // GetData can retrieve data from a rest API with a retry pollicy for token expiration.

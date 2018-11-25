@@ -15,6 +15,7 @@ import (
 // ProxyMetricClient implements the getRemoteInfo method from `client.Client` interface by using some `.toml` config parameters
 // like for example: where is the host. It get the exposed metrics from a service as is.
 type ProxyMetricClient struct {
+	baseCacheableClient
 	req         *http.Request
 	ServiceName string
 }
@@ -23,15 +24,20 @@ type ProxyMetricClient struct {
 func NewProxyMetricClient(service config.Service) (client ProxyMetricClient, err error) {
 	const generalScopeErr = "error creating a forward_metrics client to get the metrics from remote endpoint"
 	if !util.StrSliceContains(service.Modes, config.ServiceTypeProxy) {
-		return client, errors.New("can not create a forward_metrics metric client from a service whitout type " + config.ServiceTypeProxy)
+		return ProxyMetricClient{}, errors.New("can not create a forward_metrics metric client from a service whitout type " + config.ServiceTypeProxy)
 	}
-	client.req, err = http.NewRequest("GET", service.URIToGetExposedMetric(), nil)
-	if err != nil {
+	dataPath := service.URIToGetExposedMetric()
+	var req *http.Request
+	if req, err = http.NewRequest("GET", dataPath, nil); err != nil {
 		errCause := fmt.Sprintln("can not create the request: ", err.Error())
 		return client, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	client.ServiceName = service.Name
-	return client, nil
+	client = ProxyMetricClient{
+		req:                 req,
+		baseCacheableClient: baseCacheableClient{dataPath: dataPath},
+		ServiceName:         service.Name,
+	}
+	return client, err
 }
 
 // GetData can get raw metrics from a endpoint

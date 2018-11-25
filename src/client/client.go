@@ -6,4 +6,17 @@ type Client interface {
 	GetData() (body []byte, err error)
 }
 
+type CacheableClient interface {
+	Client
+	DataPath() string
+}
+
+type baseCacheableClient struct {
+	dataPath string
+}
+
+func (cl baseCacheableClient) DataPath() string {
+	return cl.dataPath
+}
+
 // TODO(denisacostaq@gmail.com): check out http://localhost:6060/pkg/github.com/prometheus/client_golang/api/#NewClient
