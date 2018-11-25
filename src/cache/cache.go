@@ -7,10 +7,6 @@ type Cache interface {
 	Reset()
 }
 
-type CacheCleaner interface {
-	ClearCache()
-}
-
 func NewCache() Cache {
 	return newMemCache()
 }
