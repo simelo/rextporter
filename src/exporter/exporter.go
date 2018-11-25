@@ -10,9 +10,9 @@ import (
 	"net/http/httptest"
 
 	"github.com/NYTimes/gziphandler"
-	"github.com/simelo/rextporter/src/cache"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/simelo/rextporter/src/cache"
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/scrapper"
 	"github.com/simelo/rextporter/src/util"

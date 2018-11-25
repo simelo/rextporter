@@ -4,16 +4,19 @@ import (
 	"github.com/simelo/rextporter/src/cache"
 )
 
-type ClientCatcher struct {
+// Catcher have a client and a cache to save time loading data
+type Catcher struct {
 	cache cache.Cache
 	cl    CacheableClient
 }
 
-func NewClientCatcher(cl CacheableClient, cache cache.Cache) Client {
-	return ClientCatcher{cache: cache, cl: cl}
+// NewCatcher create a Client compatible  catcher
+func NewCatcher(cl CacheableClient, cache cache.Cache) Client {
+	return Catcher{cache: cache, cl: cl}
 }
 
-func (cl ClientCatcher) GetData() (body []byte, err error) {
+// GetData return the data, can be from local cache or making the original request
+func (cl Catcher) GetData() (body []byte, err error) {
 	dataKey := cl.cl.DataPath()
 	if body, err = cl.cache.Get(dataKey); err == nil {
 		return body, err

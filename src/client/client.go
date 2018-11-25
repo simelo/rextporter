@@ -6,6 +6,7 @@ type Client interface {
 	GetData() (body []byte, err error)
 }
 
+// CacheableClient should return a key(DataPath) for catching resource values
 type CacheableClient interface {
 	Client
 	DataPath() string
@@ -15,6 +16,7 @@ type baseCacheableClient struct {
 	dataPath string
 }
 
+// DataPath is the endpoint in the case of http clients
 func (cl baseCacheableClient) DataPath() string {
 	return cl.dataPath
 }

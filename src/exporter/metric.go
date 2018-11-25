@@ -40,7 +40,7 @@ func createCounter(cache cache.Cache, metricConf config.Metric, srvConf config.S
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	clCache := client.NewClientCatcher(metricClient, cache)
+	clCache := client.NewCatcher(metricClient, cache)
 	var numScrapper scrapper.Scrapper
 	if numScrapper, err = scrapper.NewScrapper(clCache, scrapper.JSONParser{}, metricConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
@@ -95,7 +95,7 @@ func createGauge(cache cache.Cache, metricConf config.Metric, srvConf config.Ser
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	clCache := client.NewClientCatcher(metricClient, cache)
+	clCache := client.NewCatcher(metricClient, cache)
 	var numScrapper scrapper.Scrapper
 	if numScrapper, err = scrapper.NewScrapper(clCache, scrapper.JSONParser{}, metricConf); err != nil {
 		errCause := fmt.Sprintln("can not create num scrapper: ", err.Error())
@@ -149,7 +149,7 @@ func createHistogram(cache cache.Cache, metricConf config.Metric, service config
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	clCache := client.NewClientCatcher(metricClient, cache)
+	clCache := client.NewCatcher(metricClient, cache)
 	var histogramScrapper scrapper.Scrapper
 	if histogramScrapper, err = scrapper.NewScrapper(clCache, scrapper.JSONParser{}, metricConf); err != nil {
 		errCause := fmt.Sprintln("error creating histogram scrapper: ", err.Error())
