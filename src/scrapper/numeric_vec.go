@@ -35,10 +35,10 @@ type NumericVecVals []NumericVecItemVal
 
 // GetMetric returns a numeric(Gauge or Counter) vector metric by using remote data.
 func (nv NumericVec) GetMetric() (val interface{}, err error) {
-	const generalScopeErr = "error scrapping numeric(gauge|counter) metric vec"
+	const generalScopeErr = "error scrapping numeric vec(gauge|counter) metric vec"
 	var iBody interface{}
 	if iBody, err = getData(nv.client, nv.parser); err != nil {
-		errCause := "client can not decode the body"
+		errCause := "numeric vec client can not decode the body"
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var iValColl interface{}

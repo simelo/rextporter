@@ -21,7 +21,7 @@ func (n Numeric) GetMetric() (val interface{}, err error) {
 	const generalScopeErr = "error scrapping numeric(gauge|counter) metric"
 	var iBody interface{}
 	if iBody, err = getData(n.client, n.parser); err != nil {
-		errCause := "client can not decode the body"
+		errCause := "numeric client can not decode the body"
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if val, err = n.parser.pathLookup(n.jsonPath, iBody); err != nil {

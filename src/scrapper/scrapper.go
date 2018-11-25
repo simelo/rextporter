@@ -59,7 +59,7 @@ func getData(cl client.Client, p BodyParser) (data interface{}, err error) {
 		return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	if data, err = p.decodeBody(body); err != nil {
-		errCause := "client can not decode the body"
+		errCause := "scrapper can not decode the body"
 		return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	return data, err

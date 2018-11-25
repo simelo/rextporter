@@ -31,7 +31,7 @@ func (h Histogram) GetMetric() (val interface{}, err error) {
 	const generalScopeErr = "error scrapping histogram metric"
 	var iBody interface{}
 	if iBody, err = getData(h.client, h.parser); err != nil {
-		errCause := "client can not decode the body"
+		errCause := "histogram client can not decode the body"
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var iVal interface{}
