@@ -1,9 +1,13 @@
 package core
 
+// RextDataSource for retrieving raw data
 type RextDataSource interface {
-	SetBaseURL(url string) string
+	SetBaseURL(url string)
+	GetMethod() string
+	SetMethod(string)
 	GetResourceLocation() string
-	SetResourceLocation(url string) error
-	ActivateScraper(scraper RextMetricScraper)
-	RetrieveData() (interface{}, error)
+	SetResourceLocation(string) error
+	// FIXME: Scraping orthogonal to data source?
+	ActivateScraper(RextMetricsExtractor)
+	GetOptions() RextKeyValueStore
 }
