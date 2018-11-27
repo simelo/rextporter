@@ -8,6 +8,6 @@ type RextDataSource interface {
 	GetResourceLocation() string
 	SetResourceLocation(string) error
 	// FIXME: Scraping orthogonal to data source?
-	ActivateScraper(RextMetricsExtractor)
+	ActivateScraper(RextMetricsExtractor) error
 	GetOptions() RextKeyValueStore
 }

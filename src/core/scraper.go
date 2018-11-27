@@ -10,9 +10,9 @@ type RextServiceScraper interface {
 
 // RextMetricScraper extract metrics from raw data based on scraping rules
 type RextMetricsExtractor interface {
-	Apply(rule RextMetricDef) RextMetricDef
-	ApplyMany(rules []RextMetricDef) []RextMetricDef
-	ExtractMetrics(target interface{}) []RextMetric
+	Apply(rule RextMetricDef) (RextMetricDef, error)
+	ApplyMany(rules []RextMetricDef) ([]RextMetricDef, error)
+	ExtractMetrics(target interface{}) ([]RextMetric, error)
 	GetOptions() RextKeyValueStore
 }
 
