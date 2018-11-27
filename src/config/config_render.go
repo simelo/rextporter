@@ -58,10 +58,9 @@ const serviceConfigFileContentTemplate = `
 # Services configuration.
 [[services]]
   name = "skycoin"
-  mode = "rest_api"
+  modes = ["rest_api"]
   scheme = "http"
   port = 8080
-  basePath = ""
   authType = "CSRF"
   tokenHeaderKey = "X-CSRF-Token"
   genTokenEndpoint = "/api/v1/csrf"

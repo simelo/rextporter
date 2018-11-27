@@ -45,7 +45,7 @@ Example services configuration file:
 # Services configuration.
 [[services]]
   name = "skycoin"
-  mode = "rest_api"
+  modes = ["rest_api"]
   scheme = "http"
   port = 8000
   basePath = ""

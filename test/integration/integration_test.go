@@ -33,7 +33,8 @@ const servicesConfigFileContenTemplate = `
 	# Service configuration.{{range .Services}}
 	[[services]]
 		name = "{{.Name}}"
-		mode="{{.Mode}}"
+		metricsToForwardPath = "{{.ForwardPath}}"
+		modes=[{{range .Modes}}"{{.}}" {{end}}]
 		scheme = "http"
 		port = {{.Port}}
 		basePath = "{{.BasePath}}"
@@ -81,10 +82,11 @@ const metricsForServicesConfFileContenTemplate = `
 `
 
 type Service struct {
-	Name     string
-	Port     uint16
-	Mode     string
-	BasePath string
+	Name        string
+	Port        uint16
+	ForwardPath string
+	Modes       []string
+	BasePath    string
 }
 
 type ServicesConfData struct {
@@ -280,7 +282,7 @@ func (suite *HealthSuit) callSetUpTest() {
 			"myMonitoredServer":        suite.metricsConfFilePath,
 			"myMonitoredAsProxyServer": suite.metricsConfFilePath}
 	suite.servicesConfData = ServicesConfData{
-		Services: []Service{Service{Name: "myMonitoredServer", Port: fakeNodePort, Mode: "rest_api", BasePath: ""}},
+		Services: []Service{Service{Name: "myMonitoredServer", Port: fakeNodePort, Modes: []string{"rest_api"}, BasePath: ""}},
 	}
 }
 
@@ -322,7 +324,6 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 	metricsForServicesDir := testrand.RFolderPath()
 	port := testrand.RandomPort()
 	suite.createDirectoriesWithFullDepth([]string{mainConfigDir, servicesDir, myMonitoredServerMetricsDir, metricsForServicesDir})
-	// suite.createDirectoriesWithFullDepth([]string{servicesDir})
 	suite.mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName())
 	suite.servicesConfFilePath = filepath.Join(servicesDir, testrand.RName())
 	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, testrand.RName())
@@ -422,7 +423,12 @@ func (suite *HealthSuit) TestMetricMonitorAsProxy() {
 			"myMonitoredServer":        suite.metricsConfFilePath,
 			"myMonitoredAsProxyServer": suite.metricsConfFilePath}
 	suite.servicesConfData = ServicesConfData{
-		Services: []Service{Service{Name: "myMonitoredAsProxyServer", Port: fakeNodePort, Mode: "forward_metrics", BasePath: "/metrics"}},
+		Services: []Service{Service{
+			Name:        "myMonitoredAsProxyServer",
+			Port:        fakeNodePort,
+			Modes:       []string{"forward_metrics"},
+			ForwardPath: "/metrics"},
+		},
 	}
 	suite.createMainConfig()
 	srv := exporter.ExportMetrics(suite.mainConfFilePath, "/metrics4", port)
@@ -471,7 +477,13 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithNonMetricsEndpoint() {
 		map[string]string{
 			"myMonitoredAsProxyServer": suite.metricsConfFilePath}
 	suite.servicesConfData = ServicesConfData{
-		Services: []Service{Service{Name: "myMonitoredAsProxyServer", Port: fakeNodePort, Mode: "forward_metrics", BasePath: "/api/v1/health"}},
+		Services: []Service{Service{
+			Name:        "myMonitoredAsProxyServer",
+			Port:        fakeNodePort,
+			Modes:       []string{"forward_metrics"},
+			BasePath:    "/api/v1/health",
+			ForwardPath: "/metrics"},
+		},
 	}
 	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
@@ -520,7 +532,11 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithMetricsNamesOverlap() {
 		map[string]string{
 			"myMonitoredAsProxyServer2": suite.metricsConfFilePath}
 	suite.servicesConfData = ServicesConfData{
-		Services: []Service{Service{Name: "myMonitoredAsProxyServer2", Port: fakeNodePort, Mode: "forward_metrics", BasePath: "/a_few_metrics"}},
+		Services: []Service{Service{
+			Name:        "myMonitoredAsProxyServer2",
+			Port:        fakeNodePort,
+			Modes:       []string{"forward_metrics"},
+			ForwardPath: "/a_few_metrics"}},
 	}
 	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate

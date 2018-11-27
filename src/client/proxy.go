@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strings"
 
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
@@ -23,8 +22,8 @@ type ProxyMetricClient struct {
 // NewProxyMetricClient will put all the required info to be able to do http requests to get the remote data.
 func NewProxyMetricClient(service config.Service) (client *ProxyMetricClient, err error) {
 	const generalScopeErr = "error creating a forward_metrics client to get the metrics from remote endpoint"
-	if strings.Compare(service.Mode, config.ServiceTypeProxy) != 0 {
-		return client, errors.New("can not create a forward_metrics metric client from a service of type " + service.Mode)
+	if !util.StrSliceContains(service.Modes, config.ServiceTypeProxy) {
+		return client, errors.New("can not create a forward_metrics metric client from a service whitout type " + config.ServiceTypeProxy)
 	}
 	client = new(ProxyMetricClient)
 	client.BaseClient.service = service
