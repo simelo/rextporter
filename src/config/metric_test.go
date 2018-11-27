@@ -12,7 +12,8 @@ type metricConfSuit struct {
 }
 
 func (suite *metricConfSuit) SetupTest() {
-	rootConfig.Services = []Service{
+	var conf RootConfig
+	conf.Services = []Service{
 		Service{
 			Name:                 "MySupperServer",
 			Modes:                []string{"rest_api"},
@@ -35,7 +36,7 @@ func (suite *metricConfSuit) SetupTest() {
 				}},
 		},
 	}
-	suite.MetricConf = &(rootConfig.Services[0].Metrics[0])
+	suite.MetricConf = &(conf.Services[0].Metrics[0])
 }
 
 func TestMetricConfSuit(t *testing.T) {
