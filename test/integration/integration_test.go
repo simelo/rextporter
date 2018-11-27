@@ -290,7 +290,7 @@ func (suite *HealthSuit) callSetUpTest() {
 // 	// NOTE(denisacostaq@gmail.com): Giving
 // 	suite.require = require.New(suite.T())
 // 	port := testrand.RandomPort()
-// 	srv := exporter.ExportMetrics("", "/metrics1", port)
+// 	srv := exporter.MustExportMetrics("", "/metrics1", port)
 // 	suite.require.NotNil(srv)
 // 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 // 	time.Sleep(time.Second * 2)
@@ -333,8 +333,8 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
 	suite.callSetUpTest()
 	suite.createMainConfig()
-	conf := config.NewConfigFromFileSystem(suite.mainConfFilePath)
-	srv := exporter.ExportMetrics("/metrics2", port, conf)
+	conf := config.MustConfigFromFileSystem(suite.mainConfFilePath)
+	srv := exporter.MustExportMetrics("/metrics2", port, conf)
 	suite.require.NotNil(srv)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)
@@ -377,8 +377,8 @@ func (suite *HealthSuit) TestMetricMonitorHealthCanSetUpFlag() {
 	// TODO(denisacostaq@gmail.com): Do not call this directly, use a setup scheme
 	suite.callSetUpTest()
 	suite.createMainConfig()
-	conf := config.NewConfigFromFileSystem(suite.mainConfFilePath)
-	srv := exporter.ExportMetrics("/metrics3", port, conf)
+	conf := config.MustConfigFromFileSystem(suite.mainConfFilePath)
+	srv := exporter.MustExportMetrics("/metrics3", port, conf)
 	suite.require.NotNil(srv)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)
@@ -431,8 +431,8 @@ func (suite *HealthSuit) TestMetricMonitorAsProxy() {
 		},
 	}
 	suite.createMainConfig()
-	conf := config.NewConfigFromFileSystem(suite.mainConfFilePath)
-	srv := exporter.ExportMetrics("/metrics4", port, conf)
+	conf := config.MustConfigFromFileSystem(suite.mainConfFilePath)
+	srv := exporter.MustExportMetrics("/metrics4", port, conf)
 	suite.require.NotNil(srv)
 
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
@@ -489,8 +489,8 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithNonMetricsEndpoint() {
 	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
 	suite.createMainConfig()
-	conf := config.NewConfigFromFileSystem(suite.mainConfFilePath)
-	srv := exporter.ExportMetrics("/metrics5", port, conf)
+	conf := config.MustConfigFromFileSystem(suite.mainConfFilePath)
+	srv := exporter.MustExportMetrics("/metrics5", port, conf)
 	suite.require.NotNil(srv)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)
@@ -542,8 +542,8 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithMetricsNamesOverlap() {
 	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
 	suite.createMainConfig()
-	conf := config.NewConfigFromFileSystem(suite.mainConfFilePath)
-	srv := exporter.ExportMetrics("/metrics6", port, conf)
+	conf := config.MustConfigFromFileSystem(suite.mainConfFilePath)
+	srv := exporter.MustExportMetrics("/metrics6", port, conf)
 	suite.require.NotNil(srv)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)

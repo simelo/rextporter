@@ -14,8 +14,8 @@ func main() {
 	defaultHandlerEndpoint := "/metrics"
 	handlerEndpoint := flag.String("handler", defaultHandlerEndpoint, "Handler endpoint.")
 	flag.Parse()
-	conf := config.NewConfigFromFileSystem(*mainConfigFile)
-	exporter.ExportMetrics(*handlerEndpoint, uint16(*listenPort), conf)
+	conf := config.MustConfigFromFileSystem(*mainConfigFile)
+	exporter.MustExportMetrics(*handlerEndpoint, uint16(*listenPort), conf)
 	waitForEver := make(chan bool)
 	<-waitForEver
 }

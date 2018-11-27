@@ -128,8 +128,8 @@ func exposedMetricsMiddleware(metricsMiddleware []MetricMiddleware, promHandler 
 	})
 }
 
-// ExportMetrics will read the config from mainConfigFile if any or use a default one.
-func ExportMetrics(handlerEndpoint string, listenPort uint16, conf config.RootConfig) (srv *http.Server) {
+// MustExportMetrics will read the config from mainConfigFile if any or use a default one.
+func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf config.RootConfig) (srv *http.Server) {
 	if collector, err := newSkycoinCollector(conf); err != nil {
 		log.WithError(err).Panicln("Can not create metrics")
 	} else {
