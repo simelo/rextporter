@@ -19,9 +19,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func exposedMetricsMiddleware(c cache.Cache, fs scrapper.Scrapper, promHandler http.Handler) http.Handler {
+func exposedMetricsMiddleware(fs scrapper.Scrapper, promHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		c.Reset()
 		getDefaultData := func() (data []byte, err error) {
 			generalScopeErr := "error reding default data"
 			recorder := httptest.NewRecorder()
@@ -93,7 +92,7 @@ func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf config.Ro
 	srv = &http.Server{Addr: port}
 	http.Handle(
 		handlerEndpoint,
-		gziphandler.GzipHandler(exposedMetricsMiddleware(c, metricsForwaders, promhttp.Handler())))
+		gziphandler.GzipHandler(exposedMetricsMiddleware(metricsForwaders, promhttp.Handler())))
 	go func() {
 		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpoint))
 		log.WithError(srv.ListenAndServe()).Errorln("unable to start the server")
