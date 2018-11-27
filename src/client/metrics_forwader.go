@@ -15,7 +15,6 @@ import (
 // ProxyMetricClient implements the getRemoteInfo method from `client.Client` interface by using some `.toml` config parameters
 // like for example: where is the host. It get the exposed metrics from a service as is.
 type ProxyMetricClient struct {
-	baseCacheableClient
 	req         *http.Request
 	ServiceName string
 }
@@ -26,16 +25,14 @@ func NewProxyMetricClient(service config.Service) (client ProxyMetricClient, err
 	if !util.StrSliceContains(service.Modes, config.ServiceTypeProxy) {
 		return ProxyMetricClient{}, errors.New("can not create a forward_metrics metric client from a service whitout type " + config.ServiceTypeProxy)
 	}
-	dataPath := service.URIToGetExposedMetric()
 	var req *http.Request
-	if req, err = http.NewRequest("GET", dataPath, nil); err != nil {
+	if req, err = http.NewRequest("GET", service.URIToGetExposedMetric(), nil); err != nil {
 		errCause := fmt.Sprintln("can not create the request: ", err.Error())
 		return client, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	client = ProxyMetricClient{
-		req:                 req,
-		baseCacheableClient: baseCacheableClient{dataPath: dataPath},
-		ServiceName:         service.Name,
+		req:         req,
+		ServiceName: service.Name,
 	}
 	return client, err
 }
