@@ -12,25 +12,25 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// SkycoinCollector has the metrics to be exposed
-type SkycoinCollector struct {
+// MetricsCollector has the metrics to be exposed
+type MetricsCollector struct {
 	metrics endpointData2MetricsConsumer
 	cache   cache.Cache
 }
 
-func newSkycoinCollector(c cache.Cache, conf config.RootConfig) (collector *SkycoinCollector, err error) {
+func newMetricsCollector(c cache.Cache, conf config.RootConfig) (collector *MetricsCollector, err error) {
 	const generalScopeErr = "error creating collector"
 	var metrics endpointData2MetricsConsumer
 	if metrics, err = createMetrics(c, conf.Services); err != nil {
 		errCause := fmt.Sprintln("error creating metrics: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	collector = &SkycoinCollector{metrics: metrics, cache: c}
+	collector = &MetricsCollector{metrics: metrics, cache: c}
 	return collector, err
 }
 
 // Describe writes all the descriptors to the prometheus desc channel.
-func (collector *SkycoinCollector) Describe(ch chan<- *prometheus.Desc) {
+func (collector *MetricsCollector) Describe(ch chan<- *prometheus.Desc) {
 	for k := range collector.metrics {
 		for idxMColl := range collector.metrics[k] {
 			ch <- collector.metrics[k][idxMColl].metricDesc
@@ -296,7 +296,7 @@ func collectHistogram(mColl *constMetric, ch chan<- prometheus.Metric) {
 
 //Collect update all the descriptors is values
 // TODO(denisacostaq@gmail.com): Make a research about race conditions here, "lastSuccessValue"
-func (collector *SkycoinCollector) Collect(ch chan<- prometheus.Metric) {
+func (collector *MetricsCollector) Collect(ch chan<- prometheus.Metric) {
 	for k := range collector.metrics {
 		for idxMetric := range collector.metrics[k] {
 			switch collector.metrics[k][idxMetric].kind {

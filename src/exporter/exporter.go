@@ -79,7 +79,7 @@ func exposedMetricsMiddleware(fs scrapper.Scrapper, promHandler http.Handler) ht
 // MustExportMetrics will read the config from mainConfigFile if any or use a default one.
 func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf config.RootConfig) (srv *http.Server) {
 	c := cache.NewCache()
-	if collector, err := newSkycoinCollector(c, conf); err != nil {
+	if collector, err := newMetricsCollector(c, conf); err != nil {
 		log.WithError(err).Panicln("Can not create metrics")
 	} else {
 		prometheus.MustRegister(collector)
