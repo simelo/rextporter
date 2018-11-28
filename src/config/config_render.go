@@ -146,7 +146,8 @@ serviceNameToMetricsConfPath = [{{range $key, $value := .}}
 `
 
 const (
-	systemVendorName                 = "simelo"
+	systemVendorName = "simelo"
+	// SystemProgramName is the program's name
 	SystemProgramName                = "rextporter"
 	mainConfigFileName               = "main.toml"
 	servicesConfigFileName           = "services.toml"
