@@ -4,171 +4,75 @@ import (
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/simelo/rextporter/src/cache"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/scrapper"
 	"github.com/simelo/rextporter/src/util"
 )
 
-// MetricMiddleware has the necessary http client to get exposed metric from a service
-type MetricMiddleware struct {
-	client *client.ProxyMetricClient
-}
-
-func createMetricsMiddleware(conf config.RootConfig) (metricsMiddleware []MetricMiddleware, err error) {
+func createMetricsForwaders(conf config.RootConfig) (scrapper.Scrapper, error) {
 	generalScopeErr := "can not create metrics Middleware"
 	services := conf.FilterServicesByType(config.ServiceTypeProxy)
-	for _, service := range services {
-		var cl *client.ProxyMetricClient
-		if cl, err = client.NewProxyMetricClient(service); err != nil {
+	proxyMetricClients := make([]client.ProxyMetricClient, len(services))
+	for idxService := range services {
+		var err error
+		if proxyMetricClients[idxService], err = client.NewProxyMetricClient(services[idxService]); err != nil {
 			errCause := fmt.Sprintln("error creating metric client: ", err.Error())
-			return metricsMiddleware, util.ErrorFromThisScope(errCause, generalScopeErr)
+			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		metricsMiddleware = append(metricsMiddleware, MetricMiddleware{client: cl})
 	}
-	return metricsMiddleware, err
+	return scrapper.NewMetricsForwaders(proxyMetricClients), nil
 }
 
-// CounterMetric has the necessary http client to get and updated value for the counter metric
-type CounterMetric struct {
-	Client           client.Client
+// constMetric has a scrapper to get remote data, can be a previously cached content
+type constMetric struct {
+	kind             string
+	scrapper         scrapper.Scrapper
 	lastSuccessValue interface{}
-	MetricDesc       *prometheus.Desc
-	StatusDesc       *prometheus.Desc
+	metricDesc       *prometheus.Desc
+	statusDesc       *prometheus.Desc
 }
 
-func createCounter(metricConf config.Metric, srvConf config.Service) (metric CounterMetric, err error) {
+type endpointData2MetricsConsumer map[string][]constMetric
+
+func createMetrics(cache cache.Cache, srvsConf []config.Service) (metrics endpointData2MetricsConsumer, err error) {
+	generalScopeErr := "can not create metrics"
+	metrics = make(endpointData2MetricsConsumer)
+	for _, srvConf := range srvsConf {
+		for _, mConf := range srvConf.Metrics {
+			k := srvConf.URIToGetMetric(mConf)
+			var m constMetric
+			if m, err = createConstMetric(cache, mConf, srvConf); err != nil {
+				errCause := fmt.Sprintln(fmt.Sprintf("error creating metric client for %s metric of kind %s. ", mConf.Name, mConf.Options.Type), err.Error())
+				return metrics, util.ErrorFromThisScope(errCause, generalScopeErr)
+			}
+			metrics[k] = append(metrics[k], m)
+		}
+	}
+	return metrics, err
+}
+
+func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf config.Service) (metric constMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
-	var metricClient client.Client
-	if metricClient, err = client.NewClient(metricConf, srvConf); err != nil {
+	var metricClient client.CacheableClient
+	if metricClient, err = client.CreateAPIRest(metricConf, srvConf); err != nil {
+		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
+		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	clCache := client.NewCatcher(metricClient, cache)
+	var numScrapper scrapper.Scrapper
+	if numScrapper, err = scrapper.NewScrapper(clCache, scrapper.JSONParser{}, metricConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	labels := metricConf.LabelNames()
-	metric = CounterMetric{
+	metric = constMetric{
+		kind:     metricConf.Options.Type,
+		scrapper: numScrapper,
 		// FIXME(denisacostaq@gmail.com): if you use a duplicated name can panic?
-		Client:     metricClient,
-		MetricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
-		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", labels, nil),
+		metricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
+		statusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
 	}
 	return metric, err
-}
-
-func createCounters(conf config.RootConfig) ([]CounterMetric, error) {
-	generalScopeErr := "can not create counters"
-	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
-	var counterMetricsAmount = 0
-	for _, service := range services {
-		counterMetricsAmount += service.CountMetricsByType(config.KeyTypeCounter)
-	}
-	counters := make([]CounterMetric, counterMetricsAmount)
-	var idxMetric = 0
-	for _, service := range services {
-		metricsForService := service.FilterMetricsByType(config.KeyTypeCounter)
-		for _, metric := range metricsForService {
-			if counter, err := createCounter(metric, service); err == nil {
-				counters[idxMetric] = counter
-				idxMetric++
-			} else {
-				errCause := "error creating counter: " + err.Error()
-				return []CounterMetric{}, util.ErrorFromThisScope(errCause, generalScopeErr)
-			}
-		}
-	}
-	return counters, nil
-}
-
-// GaugeMetric has the necessary http client to get and updated value for the counter metric
-type GaugeMetric struct {
-	Client           client.Client
-	lastSuccessValue interface{}
-	MetricDesc       *prometheus.Desc
-	StatusDesc       *prometheus.Desc
-}
-
-func createGauge(metricConf config.Metric, srvConf config.Service) (metric GaugeMetric, err error) {
-	generalScopeErr := "can not create metric " + metricConf.Name
-	var metricClient client.Client
-	if metricClient, err = client.NewClient(metricConf, srvConf); err != nil {
-		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
-		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	labels := metricConf.LabelNames()
-	metric = GaugeMetric{
-		Client:     metricClient,
-		MetricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
-		StatusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", labels, nil),
-	}
-	return metric, err
-}
-
-func createGauges(conf config.RootConfig) ([]GaugeMetric, error) {
-	generalScopeErr := "can not create gauges"
-	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
-	var gaugeMetricsAmount = 0
-	for _, service := range services {
-		gaugeMetricsAmount += service.CountMetricsByType(config.KeyTypeGauge)
-	}
-	gauges := make([]GaugeMetric, gaugeMetricsAmount)
-	var idxMetric = 0
-	for _, service := range services {
-		metricsForService := service.FilterMetricsByType(config.KeyTypeGauge)
-		for _, metric := range metricsForService {
-			if gauge, err := createGauge(metric, service); err == nil {
-				gauges[idxMetric] = gauge
-				idxMetric++
-			} else {
-				errCause := "error creating gauge: " + err.Error()
-				return gauges, util.ErrorFromThisScope(errCause, generalScopeErr)
-			}
-		}
-	}
-	return gauges, nil
-}
-
-// HistogramMetric has the necessary http client to get and updated value for the histogram metric
-type HistogramMetric struct {
-	Client           client.Client
-	lastSuccessValue client.HistogramValue
-	MetricDesc       *prometheus.Desc
-	StatusDesc       *prometheus.Desc
-}
-
-func createHistogram(metricConf config.Metric, service config.Service) (metric HistogramMetric, err error) {
-	generalScopeErr := "can not create metric " + metricConf.Name
-	var metricClient client.Client
-	if metricClient, err = client.NewClient(metricConf, service); err != nil {
-		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
-		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	labels := metricConf.LabelNames()
-	metric = HistogramMetric{
-		Client:     metricClient,
-		MetricDesc: prometheus.NewDesc(service.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
-		StatusDesc: prometheus.NewDesc(service.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+service.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", labels, nil),
-	}
-	return metric, err
-}
-
-func createHistograms(conf config.RootConfig) ([]HistogramMetric, error) {
-	generalScopeErr := "can not create histograms"
-	services := conf.FilterServicesByType(config.ServiceTypeAPIRest)
-	var histogramMetricsAmount = 0
-	for _, service := range services {
-		histogramMetricsAmount += service.CountMetricsByType(config.KeyTypeHistogram)
-	}
-	histograms := make([]HistogramMetric, histogramMetricsAmount)
-	var idxMetric = 0
-	for _, service := range services {
-		metricsForService := service.FilterMetricsByType(config.KeyTypeHistogram)
-		for _, metric := range metricsForService {
-			if histogram, err := createHistogram(metric, service); err == nil {
-				histograms[idxMetric] = histogram
-				idxMetric++
-			} else {
-				errCause := "error creating histogram: " + err.Error()
-				return []HistogramMetric{}, util.ErrorFromThisScope(errCause, generalScopeErr)
-			}
-		}
-	}
-	return histograms, nil
 }

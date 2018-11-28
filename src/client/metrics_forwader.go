@@ -15,28 +15,30 @@ import (
 // ProxyMetricClient implements the getRemoteInfo method from `client.Client` interface by using some `.toml` config parameters
 // like for example: where is the host. It get the exposed metrics from a service as is.
 type ProxyMetricClient struct {
-	BaseClient
-	Name string
+	req         *http.Request
+	ServiceName string
 }
 
 // NewProxyMetricClient will put all the required info to be able to do http requests to get the remote data.
-func NewProxyMetricClient(service config.Service) (client *ProxyMetricClient, err error) {
+func NewProxyMetricClient(service config.Service) (client ProxyMetricClient, err error) {
 	const generalScopeErr = "error creating a forward_metrics client to get the metrics from remote endpoint"
 	if !util.StrSliceContains(service.Modes, config.ServiceTypeProxy) {
-		return client, errors.New("can not create a forward_metrics metric client from a service whitout type " + config.ServiceTypeProxy)
+		return ProxyMetricClient{}, errors.New("can not create a forward_metrics metric client from a service whitout type " + config.ServiceTypeProxy)
 	}
-	client = new(ProxyMetricClient)
-	client.BaseClient.service = service
-	client.Name = service.Name
-	client.BaseClient.req, err = http.NewRequest("GET", service.URIToGetExposedMetric(), nil)
-	if err != nil {
+	var req *http.Request
+	if req, err = http.NewRequest("GET", service.URIToGetExposedMetric(), nil); err != nil {
 		errCause := fmt.Sprintln("can not create the request: ", err.Error())
-		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
+		return client, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	return client, nil
+	client = ProxyMetricClient{
+		req:         req,
+		ServiceName: service.Name,
+	}
+	return client, err
 }
 
-func (client *ProxyMetricClient) getRemoteInfo() (data []byte, err error) {
+// GetData can get raw metrics from a endpoint
+func (client ProxyMetricClient) GetData() (data []byte, err error) {
 	const generalScopeErr = "error making a server request to get the metrics from remote endpoint"
 	httpClient := &http.Client{}
 	var resp *http.Response
@@ -72,15 +74,6 @@ func (client *ProxyMetricClient) getRemoteInfo() (data []byte, err error) {
 	if data, err = ioutil.ReadAll(reader); err != nil {
 		errCause := fmt.Sprintln("can not read the body: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	return data, nil
-}
-
-// GetExposedMetrics returns the metrics in the defined service.
-func (client *ProxyMetricClient) GetExposedMetrics() (data []byte, err error) {
-	const generalScopeErr = "error getting metrics data"
-	if data, err = client.getRemoteInfo(); err != nil {
-		return data, util.ErrorFromThisScope(err.Error(), generalScopeErr)
 	}
 	return data, nil
 }

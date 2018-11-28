@@ -145,9 +145,10 @@ serviceNameToMetricsConfPath = [{{range $key, $value := .}}
 ]
 `
 
-var (
-	systemVendorName                 = "simelo"
-	systemProgramName                = "rextporter"
+const (
+	systemVendorName = "simelo"
+	// SystemProgramName is the program's name
+	SystemProgramName                = "rextporter"
 	mainConfigFileName               = "main.toml"
 	servicesConfigFileName           = "services.toml"
 	metricsForServicesConfigFileName = "metricsForServices.toml"
@@ -376,7 +377,7 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 	if len(path) == 0 || !file.ExistFile(path) {
 		// TODO(denisacostaq@gmail.com): move homeConf to fn defaultTmplData
 		var homeConf *configdir.Config
-		if homeConf, err = file.HomeConfigFolder(systemVendorName, systemProgramName); err != nil {
+		if homeConf, err = file.HomeConfigFolder(systemVendorName, SystemProgramName); err != nil {
 			errCause := "error looking for config folder under home: " + err.Error()
 			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
@@ -396,7 +397,7 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 	}
 	if len(tmplData.ServicesConfigPath) == 0 || len(tmplData.MetricsForServicesPath) == 0 {
 		var homeConf *configdir.Config
-		if homeConf, err = file.HomeConfigFolder(systemVendorName, systemProgramName); err != nil {
+		if homeConf, err = file.HomeConfigFolder(systemVendorName, SystemProgramName); err != nil {
 			errCause := "error looking for config folder under home: " + err.Error()
 			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
