@@ -37,7 +37,7 @@ type Service struct {
 
 // MetricName returns a promehteus style name for the giving metric name.
 func (srv Service) MetricName(metricName string) string {
-	return prometheus.BuildFQName("skycoin", srv.Name, metricName)
+	return prometheus.BuildFQName(SystemProgramName, srv.Name, metricName)
 }
 
 // URIToGetMetric build the URI from where you will to get metric information

@@ -13,7 +13,8 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-var jsonResponse = `
+func httpHandler(w http.ResponseWriter, r *http.Request) {
+	const jsonResponse = `
 {
     "blockchain": {
         "head": {
@@ -45,39 +46,28 @@ var jsonResponse = `
     "json_rpc_enabled": false
 }
 `
-
-func httpHandler(w http.ResponseWriter, r *http.Request) {
-	//switch r.RequestURI {
-	//case "/latest/meta-data/instance-id":
-	//	resp = "i-12345"
-	//case "/latest/meta-data/placement/availability-zone":
-	//	resp = "us-west-2a"
-	//default:
-	//	http.Error(w, "not found", http.StatusNotFound)
-	//	return
-	//}
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte(jsonResponse)); err != nil {
 		log.WithError(err).Panicln("unable to write response")
 	}
 }
 
-type SkycoinStatsSuit struct {
+type numericStatsSuit struct {
 	suite.Suite
 	testServer *httptest.Server
 }
 
-func (suite *SkycoinStatsSuit) SetupSuite() {
+func (suite *numericStatsSuit) SetupSuite() {
 	suite.testServer = stubSkycoin()
 	suite.testServer.Start()
 }
 
-func (suite *SkycoinStatsSuit) TearDownSuite() {
+func (suite *numericStatsSuit) TearDownSuite() {
 	suite.testServer.Close()
 }
 
-func TestSkycoinStatsSuit(t *testing.T) {
-	suite.Run(t, new(SkycoinStatsSuit))
+func TestNumericStatsSuit(t *testing.T) {
+	suite.Run(t, new(numericStatsSuit))
 }
 
 func stubSkycoin() *httptest.Server {
@@ -91,7 +81,7 @@ func stubSkycoin() *httptest.Server {
 	return testServer
 }
 
-func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadSeq() {
+func (suite *numericStatsSuit) TestMetricBlockChainHeadSeq() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -143,7 +133,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadSeq() {
 	suite.Equal(float64(58894), val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadBlockHash() {
+func (suite *numericStatsSuit) TestMetricBlockChainHeadBlockHash() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -195,7 +185,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadBlockHash() {
 	suite.Equal("3961bea8c4ab45d658ae42effd4caf36b81709dc52a5708fdd4c8eb1b199a1f6", val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
+func (suite *numericStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -247,7 +237,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
 	suite.Equal("8eca94e7597b87c8587286b66a6b409f6b4bf288a381a56d7fde3594e319c38a", val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTimestamp() {
+func (suite *numericStatsSuit) TestMetricBlockChainHeadTimestamp() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -299,7 +289,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTimestamp() {
 	suite.Equal(float64(1537581604), val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadFee() {
+func (suite *numericStatsSuit) TestMetricBlockChainHeadFee() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -351,7 +341,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadFee() {
 	suite.Equal(float64(485194), val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadVersion() {
+func (suite *numericStatsSuit) TestMetricBlockChainHeadVersion() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -403,7 +393,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadVersion() {
 	suite.Equal(float64(0), val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
+func (suite *numericStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -455,7 +445,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
 	suite.Equal("c03c0dd28841d5aa87ce4e692ec8adde923799146ec5504e17ac0c95036362dd", val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadUxHash() {
+func (suite *numericStatsSuit) TestMetricBlockChainHeadUxHash() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -507,7 +497,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockChainHeadUxHash() {
 	suite.Equal("f7d30ecb49f132283862ad58f691e8747894c9fc241cb3a864fc15bd3e2c83d3", val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricBlockchainUnspens() {
+func (suite *numericStatsSuit) TestMetricBlockchainUnspens() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -559,7 +549,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnspens() {
 	suite.Equal(float64(38171), val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricBlockchainUnconfirmed() {
+func (suite *numericStatsSuit) TestMetricBlockchainUnconfirmed() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -611,7 +601,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainUnconfirmed() {
 	suite.Equal(float64(1), val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
+func (suite *numericStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -663,7 +653,7 @@ func (suite *SkycoinStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
 	suite.Equal("4m46s", val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricVersionVersion() {
+func (suite *numericStatsSuit) TestMetricVersionVersion() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -715,7 +705,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionVersion() {
 	suite.Equal("0.24.1", val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricVersionCommit() {
+func (suite *numericStatsSuit) TestMetricVersionCommit() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -767,7 +757,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionCommit() {
 	suite.Equal("8798b5ee43c7ce43b9b75d57a1a6cd2c1295cd1e", val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricVersionBranch() {
+func (suite *numericStatsSuit) TestMetricVersionBranch() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -819,7 +809,7 @@ func (suite *SkycoinStatsSuit) TestMetricVersionBranch() {
 	suite.Equal("develop", val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricOpenConnections() {
+func (suite *numericStatsSuit) TestMetricOpenConnections() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -871,7 +861,7 @@ func (suite *SkycoinStatsSuit) TestMetricOpenConnections() {
 	suite.Equal(float64(8), val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricUptime() {
+func (suite *numericStatsSuit) TestMetricUptime() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -923,7 +913,7 @@ func (suite *SkycoinStatsSuit) TestMetricUptime() {
 	suite.Equal("6m30.629057248s", val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricCsrfEnabled() {
+func (suite *numericStatsSuit) TestMetricCsrfEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -975,7 +965,7 @@ func (suite *SkycoinStatsSuit) TestMetricCsrfEnabled() {
 	suite.Equal(true, val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricCspEnabled() {
+func (suite *numericStatsSuit) TestMetricCspEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -1027,7 +1017,7 @@ func (suite *SkycoinStatsSuit) TestMetricCspEnabled() {
 	suite.Equal(true, val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricWalletApiEnabled() {
+func (suite *numericStatsSuit) TestMetricWalletApiEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -1079,7 +1069,7 @@ func (suite *SkycoinStatsSuit) TestMetricWalletApiEnabled() {
 	suite.Equal(true, val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricGuiEnabled() {
+func (suite *numericStatsSuit) TestMetricGuiEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -1131,7 +1121,7 @@ func (suite *SkycoinStatsSuit) TestMetricGuiEnabled() {
 	suite.Equal(true, val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricUnversionedApiEnabled() {
+func (suite *numericStatsSuit) TestMetricUnversionedApiEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.
@@ -1183,7 +1173,7 @@ func (suite *SkycoinStatsSuit) TestMetricUnversionedApiEnabled() {
 	suite.Equal(false, val)
 }
 
-func (suite *SkycoinStatsSuit) TestMetricJsonRpcEnabled() {
+func (suite *numericStatsSuit) TestMetricJsonRpcEnabled() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	var tomlConfig = `
 	# Service configuration.

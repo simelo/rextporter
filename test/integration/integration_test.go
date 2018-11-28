@@ -308,7 +308,7 @@ func (suite *HealthSuit) callSetUpTest() {
 // 	suite.Nil(err)
 // 	suite.require.Len(conf.Services, 1)
 // 	suite.require.Len(conf.Services[0].Metrics, 1)
-// 	metricName := "skycoin_" + conf.Services[0].Name + "_" + conf.Services[0].Metrics[0].Name
+// 	metricName :=config.SystemProgramName + "_" + conf.Services[0].Name + "_" + conf.Services[0].Metrics[0].Name
 // 	suite.Equal(metricName, "skycoin_skycoin_seq")
 // 	suite.require.True(metricHealthIsOk(metricName, string(data)))
 // 	var usingAVariableToMakeLinterHappy = context.Context(nil)
@@ -351,8 +351,8 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 	suite.Nil(err)
 	suite.Len(conf.Services, 1)
 	suite.Len(conf.Services[0].Metrics, 1)
-	metricName := "skycoin_" + conf.Services[0].Name + "_" + conf.Services[0].Metrics[0].Name
-	suite.Equal(metricName, "skycoin_myMonitoredServer_open_connections_is_a_fake_name_for_test_purpose")
+	metricName := config.SystemProgramName + "_" + conf.Services[0].Name + "_" + conf.Services[0].Metrics[0].Name
+	suite.Equal(metricName, config.SystemProgramName+"_myMonitoredServer_open_connections_is_a_fake_name_for_test_purpose")
 	suite.True(metricHealthIsOk(metricName, string(data)))
 	var usingAVariableToMakeLinterHappy = context.Context(nil)
 	suite.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
@@ -395,8 +395,8 @@ func (suite *HealthSuit) TestMetricMonitorHealthCanSetUpFlag() {
 	suite.Nil(err)
 	suite.require.Len(conf.Services, 1)
 	suite.require.Len(conf.Services[0].Metrics, 1)
-	metricName := "skycoin_" + conf.Services[0].Name + "_" + conf.Services[0].Metrics[0].Name
-	suite.Equal(metricName, "skycoin_myMonitoredServer_can_not_be_updated")
+	metricName := config.SystemProgramName + "_" + conf.Services[0].Name + "_" + conf.Services[0].Metrics[0].Name
+	suite.Equal(metricName, config.SystemProgramName+"_myMonitoredServer_can_not_be_updated")
 	suite.False(metricHealthIsOk(metricName, string(data)))
 	suite.Nil(srv.Shutdown(context.Context(nil)))
 }
