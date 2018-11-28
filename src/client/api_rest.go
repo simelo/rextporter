@@ -39,7 +39,7 @@ func CreateAPIRest(metric config.Metric, service config.Service) (CacheableClien
 	}
 	return APIRest{
 		req:                  req,
-		baseCacheableClient:  baseCacheableClient{dataPath: dataPath},
+		baseCacheableClient:  baseCacheableClient(dataPath),
 		tokenClient:          tokenClient,
 		tokenHeaderKey:       service.TokenHeaderKey,
 		tokenKeyFromEndpoint: service.TokenKeyFromEndpoint,

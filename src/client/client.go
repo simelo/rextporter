@@ -12,13 +12,11 @@ type CacheableClient interface {
 	DataPath() string
 }
 
-type baseCacheableClient struct {
-	dataPath string
-}
+type baseCacheableClient string
 
 // DataPath is the endpoint in the case of http clients
 func (cl baseCacheableClient) DataPath() string {
-	return cl.dataPath
+	return string(cl)
 }
 
 // TODO(denisacostaq@gmail.com): check out http://localhost:6060/pkg/github.com/prometheus/client_golang/api/#NewClient

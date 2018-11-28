@@ -8,21 +8,19 @@ import (
 	"github.com/simelo/rextporter/src/util"
 )
 
-// HistogramClientOptions hold the necessary reference bucket to create an histogram
-type HistogramClientOptions struct {
-	Buckets []float64
-}
+// histogramClientOptions is a type alias to hold the buckets inside a histogram
+type histogramClientOptions []float64
 
 // Histogram implements the Client interface(is able to get histogram metrics through `GetMetric`)
 type Histogram struct {
 	baseScrapper
-	histogramClientOptions HistogramClientOptions
+	buckets histogramClientOptions
 }
 
 func newHistogram(client client.Client, parser BodyParser, metric config.Metric) Scrapper {
 	return Histogram{
-		baseScrapper:           baseScrapper{client: client, parser: parser, jsonPath: metric.Path},
-		histogramClientOptions: HistogramClientOptions{Buckets: metric.HistogramOptions.Buckets},
+		baseScrapper: baseScrapper{client: client, parser: parser, jsonPath: metric.Path},
+		buckets:      histogramClientOptions(metric.HistogramOptions.Buckets),
 	}
 }
 
@@ -39,7 +37,7 @@ func (h Histogram) GetMetric() (val interface{}, err error) {
 		errCause := fmt.Sprintln("can not get node: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	histogram, err := createHistogramValueWithFromData(h.histogramClientOptions.Buckets, iVal)
+	histogram, err := createHistogramValueWithFromData(h.buckets, iVal)
 	if err != nil {
 		errCause := fmt.Sprintf("can not create histogram value from data %+v.\n%s\n", iVal, err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
