@@ -1,5 +1,12 @@
 .DEFAULT_GOAL := help
 .PHONY: test install-linters test-386 test-amd64 lint
+ 
+build-grammar: ## Generate source code for REXT grammar
+	nex -s src/rxt/grammar/lexer.nex
+
+test-grammar: build-grammar ## Test cases for REXT lexer and parser
+	go run cmd/rxtc/lexer.go < src/rxt/testdata/skyexample.rxt 2> src/rxt/testdata/skyexample.golden.orig
+	diff -u src/rxt/testdata/skyexample.golden src/rxt/testdata/skyexample.golden.orig
 
 test: ## Run test with GOARCH=Default
 	go test -count=1 github.com/simelo/rextporter/src/config
