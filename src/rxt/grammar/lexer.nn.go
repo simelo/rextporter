@@ -1,4 +1,4 @@
-package rxt
+package grammar
 
 import "os"
 import (
@@ -233,8 +233,8 @@ var dfas = []dfa{
 		},
 	}, []int{ /* Start-of-input transitions */ -1, -1, -1, -1}, []int{ /* End-of-input transitions */ -1, -1, -1, -1}, nil},
 
-	// ,[ \n\t]+
-	{[]bool{false, false, true}, []func(rune) int{ // Transitions
+	// ,[ \n\t]*
+	{[]bool{false, true, true}, []func(rune) int{ // Transitions
 		func(r rune) int {
 			switch r {
 			case 9:
@@ -276,8 +276,8 @@ var dfas = []dfa{
 		},
 	}, []int{ /* Start-of-input transitions */ -1, -1, -1}, []int{ /* End-of-input transitions */ -1, -1, -1}, nil},
 
-	// \n[ \t\n]+
-	{[]bool{false, false, true}, []func(rune) int{ // Transitions
+	// [\n][ \t\n]*
+	{[]bool{false, true, true}, []func(rune) int{ // Transitions
 		func(r rune) int {
 			switch r {
 			case 9:
@@ -6412,6 +6412,16 @@ var dfas = []dfa{
 			return -1
 		},
 	}, []int{ /* Start-of-input transitions */ -1, -1, -1}, []int{ /* End-of-input transitions */ -1, -1, -1}, nil},
+
+	// .
+	{[]bool{false, true}, []func(rune) int{ // Transitions
+		func(r rune) int {
+			return 1
+		},
+		func(r rune) int {
+			return -1
+		},
+	}, []int{ /* Start-of-input transitions */ -1, -1}, []int{ /* End-of-input transitions */ -1, -1}, nil},
 }
 
 func NewLexer(in io.Reader) *Lexer {
@@ -6465,17 +6475,14 @@ func (yylex *Lexer) next(lvl int) int {
 func (yylex *Lexer) pop() {
 	yylex.stack = yylex.stack[:len(yylex.stack)-1]
 }
-func LexTheRxt() {
+func LexTheRxt(handler TokenHandler, rootEnv interface{}) {
 	lex := NewLexer(os.Stdin)
 	indent_level := 0
 	indent_stack := make([]int, 5)
 	token := func() string { return lex.Text() }
-	emit_str := func(tokenid, value string) {
-		println(tokenid, value)
-	}
-	emit_int := func(tokenid string, value int) {
-		println(tokenid, value)
-	}
+	emit_str := handler.EmitStr
+	emit_int := handler.EmitInt
+	emit_obj := handler.EmitObj
 	indent := func(whitespace string) {
 		level := len(whitespace) - 1
 		idx_last_eol := strings.LastIndexByte(whitespace, 10)
@@ -6514,7 +6521,8 @@ func LexTheRxt() {
 	}
 	func(yylex *Lexer) {
 		if !yylex.stale {
-			{ /* nothing to do at start of file  */
+			{
+				emit_obj("CTX", rootEnv)
 			}
 		}
 	OUTER0:
@@ -6536,7 +6544,7 @@ func LexTheRxt() {
 				}
 			case 4:
 				{
-					println("KEY", token())
+					emit_str("KEY", token())
 				}
 			case 5:
 				{
@@ -6549,6 +6557,10 @@ func LexTheRxt() {
 			case 7:
 				{
 					emit_str("VAR", token())
+				}
+			case 8:
+				{
+					emit_str("UNK", token())
 				}
 			default:
 				break OUTER0

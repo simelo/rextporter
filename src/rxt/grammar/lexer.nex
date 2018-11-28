@@ -1,28 +1,26 @@
 
-<                     { /* nothing to do at start of file  */ }
+<                     { emit_obj("CTX", rootEnv) }
 /[#].*\n/             { /* eat up comments */ }
-/,[ \n\t]+/           { emit_str("PNC", token()[:1]) }
-/\n[ \t\n]+/          { indent( token() ) }
+/,[ \n\t]*/           { emit_str("PNC", token()[:1]) }
+/[\n][ \t\n]*/        { indent( token() ) }
 /[ \t]+/              { /* eat up whitespace */ }
-/DATASET|FOR SERVICE|FOR STACK|DEFINE AUTH|AS|SET|TO|GET|POST|FROM|EXTRACT USING|METRIC|NAME|TYPE|GAUGE|COUNTER|HISTOGRAM|SUMMARY|DESCRIPTION|LABELS/ { println("KEY", token()) }
+/DATASET|FOR SERVICE|FOR STACK|DEFINE AUTH|AS|SET|TO|GET|POST|FROM|EXTRACT USING|METRIC|NAME|TYPE|GAUGE|COUNTER|HISTOGRAM|SUMMARY|DESCRIPTION|LABELS/ { emit_str("KEY", token()) }
 /"[^"]*"/             { emit_str("STR", token()) }
 /'[^']*'/             { emit_str("STR", token()) }
 /[a-z_][a-z0-9_]*/    { emit_str("VAR", token()) }
+/./                   { emit_str("UNK", token()) }
 >                     { /* nothing to do at end of file */ }
 //
-package rxt
+package grammar
 import "os"
-func LexTheRxt() {
+func LexTheRxt(handler TokenHandler, rootEnv interface{}) {
   lex := NewLexer(os.Stdin)
   indent_level := 0
   indent_stack := make([]int, 5)
   token := func() string { return lex.Text() }
-  emit_str := func(tokenid, value string) {
-    println( tokenid, value )
-  }
-  emit_int := func(tokenid string, value int) {
-    println( tokenid, value )
-  }
+  emit_str := handler.EmitStr
+  emit_int := handler.EmitInt
+  emit_obj := handler.EmitObj
   indent := func(whitespace string) {
     level := len(whitespace) - 1
     idx_last_eol := strings.LastIndexByte(whitespace, 10)

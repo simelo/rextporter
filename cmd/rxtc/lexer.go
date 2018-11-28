@@ -1,7 +1,10 @@
 package main
 
-import rxt "github.com/simelo/rextporter/src/rxt/grammar"
+import (
+	"github.com/simelo/rextporter/src/rxt"
+	"github.com/simelo/rextporter/src/rxt/grammar"
+)
 
 func main() {
-	rxt.LexTheRxt()
+	grammar.LexTheRxt(&rxt.TokenWriter{}, "LEX")
 }
