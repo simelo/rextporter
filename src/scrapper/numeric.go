@@ -12,15 +12,15 @@ type Numeric struct {
 	baseScrapper
 }
 
-func newNumeric(cl client.Client, p BodyParser, path string) Scrapper {
-	return Numeric{baseScrapper: baseScrapper{client: cl, parser: p, jsonPath: path}}
+func newNumeric(cf client.ClientFactory, p BodyParser, path string) Scrapper {
+	return Numeric{baseScrapper: baseScrapper{clientFactory: cf, parser: p, jsonPath: path}}
 }
 
 // GetMetric returns a single number with the metric value, is a counter or a gauge
 func (n Numeric) GetMetric() (val interface{}, err error) {
 	const generalScopeErr = "error scrapping numeric(gauge|counter) metric"
 	var iBody interface{}
-	if iBody, err = getData(n.client, n.parser); err != nil {
+	if iBody, err = getData(n.clientFactory, n.parser); err != nil {
 		errCause := "numeric client can not decode the body"
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

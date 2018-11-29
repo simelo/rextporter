@@ -16,9 +16,9 @@ type NumericVec struct {
 	itemPath   string
 }
 
-func newNumericVec(cl client.Client, p BodyParser, metric config.Metric) Scrapper {
+func newNumericVec(cf client.ClientFactory, p BodyParser, metric config.Metric) Scrapper {
 	return NumericVec{
-		baseScrapper: baseScrapper{client: cl, parser: p, jsonPath: metric.Path},
+		baseScrapper: baseScrapper{clientFactory: cf, parser: p, jsonPath: metric.Path},
 		labels:       metric.Options.Labels,
 		labelsName:   metric.LabelNames(),
 		itemPath:     metric.Options.ItemPath}
@@ -37,7 +37,7 @@ type NumericVecVals []NumericVecItemVal
 func (nv NumericVec) GetMetric() (val interface{}, err error) {
 	const generalScopeErr = "error scrapping numeric vec(gauge|counter) metric vec"
 	var iBody interface{}
-	if iBody, err = getData(nv.client, nv.parser); err != nil {
+	if iBody, err = getData(nv.clientFactory, nv.parser); err != nil {
 		errCause := "numeric vec client can not decode the body"
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
