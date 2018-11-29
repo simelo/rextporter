@@ -12,6 +12,46 @@ import (
 	"github.com/simelo/rextporter/src/util"
 )
 
+type APIRestCreator struct {
+	httpMethod           string
+	dataPath             string
+	tokenPath            string
+	tokenHeaderKey       string
+	tokenKeyFromEndpoint string
+}
+
+func CreateAPIRestCreator(metric config.Metric, service config.Service) (cf CacheableClientFactory, err error) {
+	cf = APIRestCreator{
+		httpMethod:           metric.HTTPMethod,
+		dataPath:             service.URIToGetMetric(metric),
+		tokenPath:            service.URIToGetToken(),
+		tokenHeaderKey:       service.TokenHeaderKey,
+		tokenKeyFromEndpoint: service.TokenKeyFromEndpoint,
+	}
+	return cf, err
+}
+
+func (ac APIRestCreator) CreateClient() (cl CacheableClient, err error) {
+	const generalScopeErr = "error creating api rest client"
+	var req *http.Request
+	if req, err = http.NewRequest(ac.httpMethod, ac.dataPath, nil); err != nil {
+		errCause := fmt.Sprintln("can not create the request client: ", err.Error())
+		return APIRest{}, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	var tokenClient TokenClient
+	if tokenClient, err = newTokenClient(ac.tokenPath); err != nil {
+		errCause := fmt.Sprintln("create token client: ", err.Error())
+		return APIRest{}, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	return APIRest{
+		baseCacheableClient:  baseCacheableClient(ac.dataPath),
+		req:                  req,
+		tokenClient:          tokenClient,
+		tokenHeaderKey:       ac.tokenHeaderKey,
+		tokenKeyFromEndpoint: ac.tokenKeyFromEndpoint,
+	}, nil
+}
+
 // APIRest have common data to be shared through embedded struct in those type who implement the client.Client interface
 type APIRest struct {
 	baseCacheableClient
@@ -20,30 +60,6 @@ type APIRest struct {
 	tokenHeaderKey       string
 	tokenKeyFromEndpoint string
 	token                string
-}
-
-// CreateAPIRest create client to make request to a rest API
-func CreateAPIRest(metric config.Metric, service config.Service) (CacheableClient, error) {
-	const generalScopeErr = "error creating api rest client"
-	dataPath := service.URIToGetMetric(metric)
-	var req *http.Request
-	var err error
-	if req, err = http.NewRequest(metric.HTTPMethod, dataPath, nil); err != nil {
-		errCause := fmt.Sprintln("can not create the request client: ", err.Error())
-		return APIRest{}, util.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	var tokenClient TokenClient
-	if tokenClient, err = newTokenClient(service.URIToGetToken()); err != nil {
-		errCause := fmt.Sprintln("create token client: ", err.Error())
-		return APIRest{}, util.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	return APIRest{
-		req:                  req,
-		baseCacheableClient:  baseCacheableClient(dataPath),
-		tokenClient:          tokenClient,
-		tokenHeaderKey:       service.TokenHeaderKey,
-		tokenKeyFromEndpoint: service.TokenKeyFromEndpoint,
-	}, nil
 }
 
 // GetData can retrieve data from a rest API with a retry pollicy for token expiration.
