@@ -38,8 +38,9 @@ func (ac APIRestCreator) CreateClient() (cl CacheableClient, err error) {
 		errCause := fmt.Sprintln("can not create the request client: ", err.Error())
 		return APIRest{}, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	var tokenClient TokenClient
-	if tokenClient, err = newTokenClient(ac.tokenPath); err != nil {
+	var tokenClient Client
+	tc := TokenCreator{UriToGenToken: ac.tokenPath}
+	if tokenClient, err = tc.CreateClient(); err != nil {
 		errCause := fmt.Sprintln("create token client: ", err.Error())
 		return APIRest{}, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -56,7 +57,7 @@ func (ac APIRestCreator) CreateClient() (cl CacheableClient, err error) {
 type APIRest struct {
 	baseCacheableClient
 	req                  *http.Request
-	tokenClient          TokenClient
+	tokenClient          Client
 	tokenHeaderKey       string
 	tokenKeyFromEndpoint string
 	token                string
