@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/simelo/rextporter/src/cache"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/config"
 	log "github.com/sirupsen/logrus"
@@ -55,11 +56,17 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 type numericStatsSuit struct {
 	suite.Suite
 	testServer *httptest.Server
+	cache      cache.Cache
 }
 
 func (suite *numericStatsSuit) SetupSuite() {
+	suite.cache = cache.NewCache()
 	suite.testServer = stubSkycoin()
 	suite.testServer.Start()
+}
+
+func (suite *numericStatsSuit) SetupTest() {
+	suite.cache.Reset()
 }
 
 func (suite *numericStatsSuit) TearDownSuite() {
@@ -117,11 +124,12 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadSeq() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -169,11 +177,12 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadBlockHash() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -221,11 +230,12 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -273,11 +283,12 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadTimestamp() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -325,11 +336,12 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadFee() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -377,11 +389,12 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadVersion() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -429,11 +442,12 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -481,11 +495,12 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadUxHash() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -533,11 +548,12 @@ func (suite *numericStatsSuit) TestMetricBlockchainUnspens() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -585,11 +601,12 @@ func (suite *numericStatsSuit) TestMetricBlockchainUnconfirmed() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -637,11 +654,12 @@ func (suite *numericStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -689,11 +707,12 @@ func (suite *numericStatsSuit) TestMetricVersionVersion() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -741,11 +760,12 @@ func (suite *numericStatsSuit) TestMetricVersionCommit() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -793,11 +813,12 @@ func (suite *numericStatsSuit) TestMetricVersionBranch() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -845,11 +866,12 @@ func (suite *numericStatsSuit) TestMetricOpenConnections() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -897,11 +919,12 @@ func (suite *numericStatsSuit) TestMetricUptime() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -949,11 +972,12 @@ func (suite *numericStatsSuit) TestMetricCsrfEnabled() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1001,11 +1025,12 @@ func (suite *numericStatsSuit) TestMetricCspEnabled() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1053,11 +1078,12 @@ func (suite *numericStatsSuit) TestMetricWalletApiEnabled() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1105,11 +1131,12 @@ func (suite *numericStatsSuit) TestMetricGuiEnabled() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1157,11 +1184,12 @@ func (suite *numericStatsSuit) TestMetricUnversionedApiEnabled() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1209,11 +1237,12 @@ func (suite *numericStatsSuit) TestMetricJsonRpcEnabled() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var cl client.Client
-	cl, err = client.CreateAPIRest(metricConf, serviceConf)
+	var ccf client.CacheableClientFactory
+	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
+	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cl, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
