@@ -13,8 +13,8 @@ import (
 )
 
 type metricsForwader struct {
-	client      client.Client
-	serviceName string
+	clientFactory client.ClientFactory
+	serviceName   string
 }
 
 // MetricsForwaders have a slice of metricsForwader, that are capable of forward a metrics endpoint with service name as prefix
@@ -22,15 +22,15 @@ type MetricsForwaders struct {
 	servicesMetricsForwader []metricsForwader
 }
 
-func newMetricsForwader(cl client.ProxyMetricClient) metricsForwader {
-	return metricsForwader{client: cl, serviceName: cl.ServiceName}
+func newMetricsForwader(clc client.ProxyMetricClientCreator) metricsForwader {
+	return metricsForwader{clientFactory: clc, serviceName: clc.ServiceName}
 }
 
 // NewMetricsForwaders create a scrapper that handle all the forwaded services
-func NewMetricsForwaders(cls []client.ProxyMetricClient) Scrapper {
-	scrapper := MetricsForwaders{servicesMetricsForwader: make([]metricsForwader, len(cls))}
+func NewMetricsForwaders(pmclsc []client.ProxyMetricClientCreator) Scrapper {
+	scrapper := MetricsForwaders{servicesMetricsForwader: make([]metricsForwader, len(pmclsc))}
 	for idxScrapper := range scrapper.servicesMetricsForwader {
-		scrapper.servicesMetricsForwader[idxScrapper] = newMetricsForwader(cls[idxScrapper])
+		scrapper.servicesMetricsForwader[idxScrapper] = newMetricsForwader(pmclsc[idxScrapper])
 	}
 	return scrapper
 }
@@ -69,11 +69,19 @@ func (mfs MetricsForwaders) GetMetric() (val interface{}, err error) {
 	getCustomData := func() (data []byte, err error) {
 		recorder := httptest.NewRecorder()
 		for _, mf := range mfs.servicesMetricsForwader {
-			if exposedMetricsData, err := mf.client.GetData(); err != nil {
-				log.WithError(err).Error("error getting metrics from service " + mf.serviceName)
-			} else {
+			var mfcl client.Client
+			if mfcl, err = mf.clientFactory.CreateClient(); err != nil {
+				return data, err
+			}
+			respC := make(chan []byte)
+			defer close(respC)
+			errC := make(chan error)
+			defer close(errC)
+			workPool.Apply(client.RequestInfo{Client: mfcl, Res: respC, Err: errC})
+			select {
+			case data := <-respC:
 				var prefixed []byte
-				if prefixed, err = appendPrefixForMetrics(mf.serviceName, string(exposedMetricsData)); err != nil {
+				if prefixed, err = appendPrefixForMetrics(mf.serviceName, string(data)); err != nil {
 					return nil, err
 				}
 				if count, err := recorder.Write(prefixed); err != nil || count != len(prefixed) {
@@ -88,6 +96,8 @@ func (mfs MetricsForwaders) GetMetric() (val interface{}, err error) {
 						return nil, errors.New("no enough content wrote")
 					}
 				}
+			case err = <-errC:
+				log.WithError(err).Error("error getting metrics from service " + mf.serviceName)
 			}
 		}
 		if data, err = ioutil.ReadAll(recorder.Body); err != nil {
