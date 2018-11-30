@@ -14,15 +14,15 @@ import (
 func createMetricsForwaders(conf config.RootConfig) (scrapper.Scrapper, error) {
 	generalScopeErr := "can not create metrics Middleware"
 	services := conf.FilterServicesByType(config.ServiceTypeProxy)
-	proxyMetricClients := make([]client.ProxyMetricClient, len(services))
+	proxyMetricClientCreators := make([]client.ProxyMetricClientCreator, len(services))
 	for idxService := range services {
 		var err error
-		if proxyMetricClients[idxService], err = client.NewProxyMetricClient(services[idxService]); err != nil {
+		if proxyMetricClientCreators[idxService], err = client.CreateProxyMetricClientCreator(services[idxService]); err != nil {
 			errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	}
-	return scrapper.NewMetricsForwaders(proxyMetricClients), nil
+	return scrapper.NewMetricsForwaders(proxyMetricClientCreators), nil
 }
 
 // constMetric has a scrapper to get remote data, can be a previously cached content
