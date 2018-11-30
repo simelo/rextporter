@@ -1,12 +1,8 @@
 package scrapper
 
-import (
-	"github.com/simelo/rextporter/src/client"
-)
-
-var workPool *client.Pool
+var WorkPool *Pool
 
 func init() {
-	workPool = client.NewPool(6)
-	workPool.StartDispatcher()
+	WorkPool = NewPool(6)
+	WorkPool.StartDispatcher()
 }
