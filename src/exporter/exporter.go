@@ -52,13 +52,15 @@ func exposedMetricsMiddleware(fs scrapper.Scrapper, promHandler http.Handler) ht
 		var iMetrics interface{}
 		var err error
 		if iMetrics, err = fs.GetMetric(); err != nil {
-			log.WithError(err).Errorln("error getting custom data")
+			log.WithError(err).Errorln("error scrapping fordwader metrics")
 		} else {
-			customData, okCustomData := iMetrics.([]byte)
-			if okCustomData {
-				allData = append(allData, customData...)
-			} else {
-				log.WithError(err).Errorln("error getting custom data")
+			if iMetrics != nil {
+				customData, okCustomData := iMetrics.([]byte)
+				if okCustomData {
+					allData = append(allData, customData...)
+				} else {
+					log.WithError(err).Errorln("error asserting fordwader metrics data as []byte")
+				}
 			}
 		}
 		w.Header().Set("Content-Type", "text/plain")
