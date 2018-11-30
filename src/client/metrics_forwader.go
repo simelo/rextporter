@@ -12,29 +12,39 @@ import (
 	"github.com/simelo/rextporter/src/util"
 )
 
-// ProxyMetricClient implements the getRemoteInfo method from `client.Client` interface by using some `.toml` config parameters
-// like for example: where is the host. It get the exposed metrics from a service as is.
-type ProxyMetricClient struct {
-	req         *http.Request
+type ProxyMetricClientCreator struct {
+	dataPath    string
 	ServiceName string
 }
 
-// NewProxyMetricClient will put all the required info to be able to do http requests to get the remote data.
-func NewProxyMetricClient(service config.Service) (client ProxyMetricClient, err error) {
-	const generalScopeErr = "error creating a forward_metrics client to get the metrics from remote endpoint"
+func CreateProxyMetricClientCreator(service config.Service) (cf ProxyMetricClientCreator, err error) {
 	if !util.StrSliceContains(service.Modes, config.ServiceTypeProxy) {
-		return ProxyMetricClient{}, errors.New("can not create a forward_metrics metric client from a service whitout type " + config.ServiceTypeProxy)
+		return ProxyMetricClientCreator{}, errors.New("can not create a forward_metrics metric client from a service whitout type " + config.ServiceTypeProxy)
 	}
-	var req *http.Request
-	if req, err = http.NewRequest("GET", service.URIToGetExposedMetric(), nil); err != nil {
-		errCause := fmt.Sprintln("can not create the request: ", err.Error())
-		return client, util.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	client = ProxyMetricClient{
-		req:         req,
+	cf = ProxyMetricClientCreator{
+		dataPath:    service.URIToGetExposedMetric(),
 		ServiceName: service.Name,
 	}
-	return client, err
+	return cf, err
+}
+
+func (pmc ProxyMetricClientCreator) CreateClient() (cl Client, err error) {
+	const generalScopeErr = "error creating a forward_metrics client to get the metrics from remote endpoint"
+	var req *http.Request
+	if req, err = http.NewRequest("GET", pmc.dataPath, nil); err != nil {
+		errCause := fmt.Sprintln("can not create the request: ", err.Error())
+		return cl, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	cl = ProxyMetricClient{
+		req: req,
+	}
+	return cl, err
+}
+
+// ProxyMetricClient implements the getRemoteInfo method from `client.Client` interface by using some `.toml` config parameters
+// like for example: where is the host. It get the exposed metrics from a service as is.
+type ProxyMetricClient struct {
+	req *http.Request
 }
 
 // GetData can get raw metrics from a endpoint
