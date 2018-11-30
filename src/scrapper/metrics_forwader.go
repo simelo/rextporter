@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/simelo/rextporter/src/client"
+	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -67,21 +68,21 @@ func appendPrefixForMetrics(prefix string, metricsData string) ([]byte, error) {
 // GetMetric return the original metrics but with a service name as prefix in his names
 func (mfs MetricsForwaders) GetMetric() (val interface{}, err error) {
 	getCustomData := func() (data []byte, err error) {
+		generalScopeErr := "Error getting custom data"
 		recorder := httptest.NewRecorder()
 		for _, mf := range mfs.servicesMetricsForwader {
-			var mfcl client.Client
-			if mfcl, err = mf.clientFactory.CreateClient(); err != nil {
-				return data, err
+			var cl client.Client
+			if cl, err = mf.clientFactory.CreateClient(); err != nil {
+				errCause := "can not create client"
+				return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
-			respC := make(chan []byte)
-			defer close(respC)
-			errC := make(chan error)
-			defer close(errC)
-			workPool.Apply(client.RequestInfo{Client: mfcl, Res: respC, Err: errC})
-			select {
-			case data := <-respC:
+			if exposedMetricsData, err := cl.GetData(); err != nil {
+				log.WithError(err).Error("error getting metrics from service " + mf.serviceName)
+				errCause := "can not get the data"
+				return data, util.ErrorFromThisScope(errCause, generalScopeErr)
+			} else {
 				var prefixed []byte
-				if prefixed, err = appendPrefixForMetrics(mf.serviceName, string(data)); err != nil {
+				if prefixed, err = appendPrefixForMetrics(mf.serviceName, string(exposedMetricsData)); err != nil {
 					return nil, err
 				}
 				if count, err := recorder.Write(prefixed); err != nil || count != len(prefixed) {
@@ -96,8 +97,6 @@ func (mfs MetricsForwaders) GetMetric() (val interface{}, err error) {
 						return nil, errors.New("no enough content wrote")
 					}
 				}
-			case err = <-errC:
-				log.WithError(err).Error("error getting metrics from service " + mf.serviceName)
 			}
 		}
 		if data, err = ioutil.ReadAll(recorder.Body); err != nil {
@@ -105,6 +104,9 @@ func (mfs MetricsForwaders) GetMetric() (val interface{}, err error) {
 			return nil, err
 		}
 		return data, nil
+	}
+	if len(mfs.servicesMetricsForwader) == 0 {
+		return nil, nil
 	}
 	if customData, err := getCustomData(); err == nil {
 		val = customData
