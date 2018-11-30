@@ -68,7 +68,7 @@ func appendPrefixForMetrics(prefix string, metricsData string) ([]byte, error) {
 // GetMetric return the original metrics but with a service name as prefix in his names
 func (mfs MetricsForwaders) GetMetric() (val interface{}, err error) {
 	getCustomData := func() (data []byte, err error) {
-		generalScopeErr := "Error getting custom data"
+		generalScopeErr := "Error getting custom data for metrics fordwader"
 		recorder := httptest.NewRecorder()
 		for _, mf := range mfs.servicesMetricsForwader {
 			var cl client.Client
