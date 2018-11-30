@@ -1,9 +1,7 @@
 package scrapper
 
 import (
-	"log"
 	"sync"
-	"time"
 )
 
 type ScrapResult struct {
@@ -71,7 +69,6 @@ type workerT struct {
 }
 
 func (p *Pool) newWorker() workerT {
-	log.Println("creating worker")
 	return workerT{
 		works:    make(chan scrapWork),
 		workers:  p.workers,
@@ -81,7 +78,6 @@ func (p *Pool) newWorker() workerT {
 }
 
 func (w *workerT) start() {
-	log.Println("starting worker")
 	w.wg.Add(1)
 	go func() {
 		for {
@@ -90,16 +86,12 @@ func (w *workerT) start() {
 			select {
 			// Wait for a work request.
 			case work := <-w.works:
-				log.Println("start processing work")
-				time.Sleep(time.Second * 1)
-				log.Println("work.client", work.scrapper)
 				val, err := work.scrapper.GetMetric()
 				if err == nil {
 					work.res <- ScrapResult{Val: val, ConstMetricIdxOut: work.constMetricIdxIn}
 				} else {
 					work.err <- ScrapErrResult{Err: err, ConstMetricIdxOut: work.constMetricIdxIn}
 				}
-				log.Println("finish processing work")
 				// wait for a quit msg
 			case <-w.quitChan:
 				// Receive a close worker request.
@@ -134,10 +126,8 @@ func (p *Pool) StartDispatcher() {
 			select {
 			// wait for an incoming work
 			case work := <-p.works:
-				log.Println("work recived")
 				// wait for an available worker
 				worker := <-p.workers
-				log.Println("worker available")
 				// dispatch work into worker
 				worker <- work
 			}
