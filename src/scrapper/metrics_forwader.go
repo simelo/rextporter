@@ -14,7 +14,7 @@ import (
 )
 
 type metricsForwader struct {
-	clientFactory client.ClientFactory
+	clientFactory client.Factory
 	serviceName   string
 }
 
@@ -76,26 +76,26 @@ func (mfs MetricsForwaders) GetMetric() (val interface{}, err error) {
 				errCause := "can not create client"
 				return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
-			if exposedMetricsData, err := cl.GetData(); err != nil {
+			var exposedMetricsData []byte
+			if exposedMetricsData, err = cl.GetData(); err != nil {
 				log.WithError(err).Error("error getting metrics from service " + mf.serviceName)
 				errCause := "can not get the data"
 				return data, util.ErrorFromThisScope(errCause, generalScopeErr)
-			} else {
-				var prefixed []byte
-				if prefixed, err = appendPrefixForMetrics(mf.serviceName, string(exposedMetricsData)); err != nil {
-					return nil, err
+			}
+			var prefixed []byte
+			if prefixed, err = appendPrefixForMetrics(mf.serviceName, string(exposedMetricsData)); err != nil {
+				return nil, err
+			}
+			if count, err := recorder.Write(prefixed); err != nil || count != len(prefixed) {
+				if err != nil {
+					log.WithError(err).Errorln("error writing prefixed content")
 				}
-				if count, err := recorder.Write(prefixed); err != nil || count != len(prefixed) {
-					if err != nil {
-						log.WithError(err).Errorln("error writing prefixed content")
-					}
-					if count != len(prefixed) {
-						log.WithFields(log.Fields{
-							"wrote":    count,
-							"required": len(prefixed),
-						}).Errorln("no enough content wrote")
-						return nil, errors.New("no enough content wrote")
-					}
+				if count != len(prefixed) {
+					log.WithFields(log.Fields{
+						"wrote":    count,
+						"required": len(prefixed),
+					}).Errorln("no enough content wrote")
+					return nil, errors.New("no enough content wrote")
 				}
 			}
 		}

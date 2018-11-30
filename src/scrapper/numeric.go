@@ -12,7 +12,7 @@ type Numeric struct {
 	baseScrapper
 }
 
-func newNumeric(cf client.ClientFactory, p BodyParser, path string) Scrapper {
+func newNumeric(cf client.Factory, p BodyParser, path string) Scrapper {
 	return Numeric{baseScrapper: baseScrapper{clientFactory: cf, parser: p, jsonPath: path}}
 }
 

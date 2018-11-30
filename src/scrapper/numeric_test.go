@@ -124,7 +124,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadSeq() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -177,7 +177,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadBlockHash() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -230,7 +230,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -283,7 +283,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadTimestamp() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -336,7 +336,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadFee() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -389,7 +389,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadVersion() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -442,7 +442,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -495,7 +495,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadUxHash() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -548,7 +548,7 @@ func (suite *numericStatsSuit) TestMetricBlockchainUnspens() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -601,7 +601,7 @@ func (suite *numericStatsSuit) TestMetricBlockchainUnconfirmed() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -654,7 +654,7 @@ func (suite *numericStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -707,7 +707,7 @@ func (suite *numericStatsSuit) TestMetricVersionVersion() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -760,7 +760,7 @@ func (suite *numericStatsSuit) TestMetricVersionCommit() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -813,7 +813,7 @@ func (suite *numericStatsSuit) TestMetricVersionBranch() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -866,7 +866,7 @@ func (suite *numericStatsSuit) TestMetricOpenConnections() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -919,7 +919,7 @@ func (suite *numericStatsSuit) TestMetricUptime() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -972,7 +972,7 @@ func (suite *numericStatsSuit) TestMetricCsrfEnabled() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -1025,7 +1025,7 @@ func (suite *numericStatsSuit) TestMetricCspEnabled() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -1078,7 +1078,7 @@ func (suite *numericStatsSuit) TestMetricWalletApiEnabled() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -1131,7 +1131,7 @@ func (suite *numericStatsSuit) TestMetricGuiEnabled() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -1184,7 +1184,7 @@ func (suite *numericStatsSuit) TestMetricUnversionedApiEnabled() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
@@ -1237,7 +1237,7 @@ func (suite *numericStatsSuit) TestMetricJsonRpcEnabled() {
 	require.Len(conf.Services[0].Metrics, 1)
 	serviceConf := conf.Services[0]
 	metricConf := conf.Services[0].Metrics[0]
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	ccf, err = client.CreateAPIRestCreator(metricConf, serviceConf)
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}

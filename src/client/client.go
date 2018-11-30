@@ -12,13 +12,13 @@ type CacheableClient interface {
 	DataPath() string
 }
 
-// ClientFactory can create diffrent kind of clients
-type ClientFactory interface {
+// Factory can create different kind of clients
+type Factory interface {
 	CreateClient() (cl Client, err error)
 }
 
-// CacheableClientFactory can create diffrent kind of cacheable clients
-type CacheableClientFactory interface {
+// CacheableFactory can create different kind of cacheable clients
+type CacheableFactory interface {
 	CreateClient() (cl CacheableClient, err error)
 }
 

@@ -12,6 +12,7 @@ import (
 	"github.com/simelo/rextporter/src/util"
 )
 
+// APIRestCreator have info to create api rest an client
 type APIRestCreator struct {
 	httpMethod           string
 	dataPath             string
@@ -20,7 +21,8 @@ type APIRestCreator struct {
 	tokenKeyFromEndpoint string
 }
 
-func CreateAPIRestCreator(metric config.Metric, service config.Service) (cf CacheableClientFactory, err error) {
+// CreateAPIRestCreator create an APIRestCreator
+func CreateAPIRestCreator(metric config.Metric, service config.Service) (cf CacheableFactory, err error) {
 	cf = APIRestCreator{
 		httpMethod:           metric.HTTPMethod,
 		dataPath:             service.URIToGetMetric(metric),
@@ -31,6 +33,7 @@ func CreateAPIRestCreator(metric config.Metric, service config.Service) (cf Cach
 	return cf, err
 }
 
+// CreateClient create an api rest client
 func (ac APIRestCreator) CreateClient() (cl CacheableClient, err error) {
 	const generalScopeErr = "error creating api rest client"
 	var req *http.Request
@@ -39,7 +42,7 @@ func (ac APIRestCreator) CreateClient() (cl CacheableClient, err error) {
 		return APIRest{}, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var tokenClient Client
-	tc := TokenCreator{UriToGenToken: ac.tokenPath}
+	tc := TokenCreator{URIToGenToken: ac.tokenPath}
 	if tokenClient, err = tc.CreateClient(); err != nil {
 		errCause := fmt.Sprintln("create token client: ", err.Error())
 		return APIRest{}, util.ErrorFromThisScope(errCause, generalScopeErr)

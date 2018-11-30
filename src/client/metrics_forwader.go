@@ -12,11 +12,13 @@ import (
 	"github.com/simelo/rextporter/src/util"
 )
 
+// ProxyMetricClientCreator create a metrics fordwader client
 type ProxyMetricClientCreator struct {
 	dataPath    string
 	ServiceName string
 }
 
+// CreateProxyMetricClientCreator create a ProxyMetricClientCreator with required info to create a metrics fordwader client
 func CreateProxyMetricClientCreator(service config.Service) (cf ProxyMetricClientCreator, err error) {
 	if !util.StrSliceContains(service.Modes, config.ServiceTypeProxy) {
 		return ProxyMetricClientCreator{}, errors.New("can not create a forward_metrics metric client from a service whitout type " + config.ServiceTypeProxy)
@@ -28,6 +30,7 @@ func CreateProxyMetricClientCreator(service config.Service) (cf ProxyMetricClien
 	return cf, err
 }
 
+// CreateClient create a metrics forwader client
 func (pmc ProxyMetricClientCreator) CreateClient() (cl Client, err error) {
 	const generalScopeErr = "error creating a forward_metrics client to get the metrics from remote endpoint"
 	var req *http.Request

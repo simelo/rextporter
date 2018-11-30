@@ -4,11 +4,13 @@ import (
 	"github.com/simelo/rextporter/src/cache"
 )
 
+// CatcherCreator have info to create catcher client
 type CatcherCreator struct {
 	Cache         cache.Cache
-	ClientFactory CacheableClientFactory
+	ClientFactory CacheableFactory
 }
 
+// CreateClient create a catcher client
 func (cc CatcherCreator) CreateClient() (cl Client, err error) {
 	var ccl CacheableClient
 	if ccl, err = cc.ClientFactory.CreateClient(); err != nil {
@@ -21,7 +23,7 @@ func (cc CatcherCreator) CreateClient() (cl Client, err error) {
 type Catcher struct {
 	cache         cache.Cache
 	dataKey       string
-	clientFactory CacheableClientFactory
+	clientFactory CacheableFactory
 }
 
 // GetData return the data, can be from local cache or making the original request

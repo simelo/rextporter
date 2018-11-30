@@ -4,16 +4,19 @@ import (
 	"sync"
 )
 
+// ScrapResult is the success case with the metric value
 type ScrapResult struct {
 	Val               interface{}
 	ConstMetricIdxOut int
 }
 
+// ScrapErrResult is the fail case with the error happened
 type ScrapErrResult struct {
 	Err               error
 	ConstMetricIdxOut int
 }
 
+// ScrapRequest have the scrapper to do an scrap, the channels to put the result, and the metric index to return
 type ScrapRequest struct {
 	Scrap            Scrapper
 	Res              chan ScrapResult
@@ -31,6 +34,7 @@ type scrapWork struct {
 type workQueue chan scrapWork
 type workerQueue chan workQueue
 
+// Pool of workers to run scrap works
 type Pool struct {
 	workers  workerQueue
 	works    workQueue
@@ -38,6 +42,7 @@ type Pool struct {
 	wg       sync.WaitGroup
 }
 
+// NewPool create a pool of workers to run scrap tasks
 func NewPool(workersNum uint) *Pool {
 	return &Pool{
 		workers:  make(chan workQueue, workersNum),
@@ -47,10 +52,12 @@ func NewPool(workersNum uint) *Pool {
 	}
 }
 
+// Wait for all goroutines running inside the wait group
 func (p *Pool) Wait() {
 	p.wg.Wait()
 }
 
+// Apply push a scrapper task to the workers pool to be executed
 func (p *Pool) Apply(ri ScrapRequest) {
 	work := scrapWork{
 		scrapper:         ri.Scrap,
@@ -102,35 +109,19 @@ func (w *workerT) start() {
 	}()
 }
 
-func (w *workerT) stop() {
-	go func() {
-		w.quitChan <- true
-		// close(w.quitChan)
-	}()
-}
-
-func (p *Pool) Stop() {
-	// for {
-	// 	worker := <-p.workers
-	// 	worker.stop()
-	// }
-}
-
+// StartDispatcher make the workers pool ready to run scraps
 func (p *Pool) StartDispatcher() {
 	for i := uint(0); i < p.nWorkers; i++ {
 		worker := p.newWorker()
 		worker.start()
 	}
 	go func() {
-		for {
-			select {
-			// wait for an incoming work
-			case work := <-p.works:
-				// wait for an available worker
-				worker := <-p.workers
-				// dispatch work into worker
-				worker <- work
-			}
+		// wait for an incoming work
+		for work := range p.works {
+			// wait for an available worker
+			worker := <-p.workers
+			// dispatch work into worker
+			worker <- work
 		}
 	}()
 }

@@ -8,12 +8,14 @@ import (
 	"github.com/simelo/rextporter/src/util"
 )
 
+// TokenCreator create token clients
 type TokenCreator struct {
-	UriToGenToken string
+	URIToGenToken string
 }
 
+// CreateClient create a token client
 func (tc TokenCreator) CreateClient() (cl Client, err error) {
-	return newTokenClient(tc.UriToGenToken)
+	return newTokenClient(tc.URIToGenToken)
 }
 
 // TokenClient implements the getRemoteInfo method from `client.Client` interface by using some .toml config parameters

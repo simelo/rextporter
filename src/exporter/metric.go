@@ -55,7 +55,7 @@ func createMetrics(cache cache.Cache, srvsConf []config.Service) (metrics endpoi
 
 func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf config.Service) (metric constMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
-	var ccf client.CacheableClientFactory
+	var ccf client.CacheableFactory
 	if ccf, err = client.CreateAPIRestCreator(metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
