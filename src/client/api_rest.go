@@ -44,13 +44,14 @@ func (ac APIRestCreator) CreateClient() (cl CacheableClient, err error) {
 		errCause := fmt.Sprintln("create token client: ", err.Error())
 		return APIRest{}, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	return APIRest{
+	cl = APIRest{
 		baseCacheableClient:  baseCacheableClient(ac.dataPath),
 		req:                  req,
 		tokenClient:          tokenClient,
 		tokenHeaderKey:       ac.tokenHeaderKey,
 		tokenKeyFromEndpoint: ac.tokenKeyFromEndpoint,
-	}, nil
+	}
+	return cl, nil
 }
 
 // APIRest have common data to be shared through embedded struct in those type who implement the client.Client interface

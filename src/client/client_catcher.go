@@ -10,13 +10,11 @@ type CatcherCreator struct {
 }
 
 func (cc CatcherCreator) CreateClient() (cl Client, err error) {
-	var dataKey string
-	if ccl, err := cc.ClientFactory.CreateClient(); err == nil {
-		return cl, err
-	} else {
-		dataKey = ccl.DataPath()
+	var ccl CacheableClient
+	if ccl, err = cc.ClientFactory.CreateClient(); err != nil {
+		return ccl, err
 	}
-	return Catcher{cache: cc.Cache, dataKey: dataKey, clientFactory: cc.ClientFactory}, nil
+	return Catcher{cache: cc.Cache, dataKey: ccl.DataPath(), clientFactory: cc.ClientFactory}, nil
 }
 
 // Catcher have a client and a cache to save time loading data

@@ -58,14 +58,20 @@ func getData(cf client.ClientFactory, p BodyParser) (data interface{}, err error
 		errCause := "can ot create client"
 		return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	var body []byte
-	if body, err = cl.GetData(); err != nil {
+	respC := make(chan []byte)
+	defer close(respC)
+	errC := make(chan error)
+	defer close(errC)
+	workPool.Apply(client.RequestInfo{Client: cl, Res: respC, Err: errC})
+	select {
+	case body := <-respC:
+		if data, err = p.decodeBody(body); err != nil {
+			errCause := "scrapper can not decode the body"
+			return data, util.ErrorFromThisScope(errCause, generalScopeErr)
+		}
+		return data, err
+	case err = <-errC:
 		errCause := "client can not get data"
 		return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	if data, err = p.decodeBody(body); err != nil {
-		errCause := "scrapper can not decode the body"
-		return data, util.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	return data, err
 }
