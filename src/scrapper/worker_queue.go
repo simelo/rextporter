@@ -6,19 +6,31 @@ import (
 	"time"
 )
 
-type RequestInfo struct {
-	Client Client
-	Res    chan []byte
-	Err    chan error
+type ScrapResult struct {
+	Val               interface{}
+	ConstMetricIdxOut int
 }
 
-type workRequest struct {
-	client Client
-	res    chan []byte
-	err    chan error
+type ScrapErrResult struct {
+	Err               error
+	ConstMetricIdxOut int
 }
 
-type workQueue chan workRequest
+type ScrapRequest struct {
+	Scrap            Scrapper
+	Res              chan ScrapResult
+	ConstMetricIdxIn int
+	Err              chan ScrapErrResult
+}
+
+type scrapWork struct {
+	scrapper         Scrapper
+	res              chan ScrapResult
+	constMetricIdxIn int
+	err              chan ScrapErrResult
+}
+
+type workQueue chan scrapWork
 type workerQueue chan workQueue
 
 type Pool struct {
@@ -31,7 +43,7 @@ type Pool struct {
 func NewPool(workersNum uint) *Pool {
 	return &Pool{
 		workers:  make(chan workQueue, workersNum),
-		works:    make(chan workRequest, workersNum*2),
+		works:    make(chan scrapWork, workersNum*2),
 		nWorkers: workersNum,
 		wg:       sync.WaitGroup{},
 	}
@@ -41,13 +53,18 @@ func (p *Pool) Wait() {
 	p.wg.Wait()
 }
 
-func (p *Pool) Apply(ri RequestInfo) {
-	work := workRequest{client: ri.Client, res: ri.Res, err: ri.Err}
+func (p *Pool) Apply(ri ScrapRequest) {
+	work := scrapWork{
+		scrapper:         ri.Scrap,
+		res:              ri.Res,
+		constMetricIdxIn: ri.ConstMetricIdxIn,
+		err:              ri.Err,
+	}
 	p.works <- work
 }
 
 type workerT struct {
-	works    chan workRequest
+	works    chan scrapWork
 	workers  chan workQueue
 	quitChan chan bool
 	wg       *sync.WaitGroup
@@ -56,7 +73,7 @@ type workerT struct {
 func (p *Pool) newWorker() workerT {
 	log.Println("creating worker")
 	return workerT{
-		works:    make(chan workRequest),
+		works:    make(chan scrapWork),
 		workers:  p.workers,
 		quitChan: make(chan bool),
 		wg:       &p.wg,
@@ -75,12 +92,12 @@ func (w *workerT) start() {
 			case work := <-w.works:
 				log.Println("start processing work")
 				time.Sleep(time.Second * 1)
-				log.Println("work.client", work.client)
-				data, err := work.client.GetData()
+				log.Println("work.client", work.scrapper)
+				val, err := work.scrapper.GetMetric()
 				if err == nil {
-					work.res <- data
+					work.res <- ScrapResult{Val: val, ConstMetricIdxOut: work.constMetricIdxIn}
 				} else {
-					work.err <- err
+					work.err <- ScrapErrResult{Err: err, ConstMetricIdxOut: work.constMetricIdxIn}
 				}
 				log.Println("finish processing work")
 				// wait for a quit msg
