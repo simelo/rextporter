@@ -14,15 +14,15 @@ import (
 func createMetricsForwaders(conf config.RootConfig) (scrapper.Scrapper, error) {
 	generalScopeErr := "can not create metrics Middleware"
 	services := conf.FilterServicesByType(config.ServiceTypeProxy)
-	proxyMetricClients := make([]client.ProxyMetricClient, len(services))
+	proxyMetricClientCreators := make([]client.ProxyMetricClientCreator, len(services))
 	for idxService := range services {
 		var err error
-		if proxyMetricClients[idxService], err = client.NewProxyMetricClient(services[idxService]); err != nil {
+		if proxyMetricClientCreators[idxService], err = client.CreateProxyMetricClientCreator(services[idxService]); err != nil {
 			errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 	}
-	return scrapper.NewMetricsForwaders(proxyMetricClients), nil
+	return scrapper.NewMetricsForwaders(proxyMetricClientCreators), nil
 }
 
 // constMetric has a scrapper to get remote data, can be a previously cached content
@@ -55,14 +55,14 @@ func createMetrics(cache cache.Cache, srvsConf []config.Service) (metrics endpoi
 
 func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf config.Service) (metric constMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
-	var metricClient client.CacheableClient
-	if metricClient, err = client.CreateAPIRest(metricConf, srvConf); err != nil {
+	var ccf client.CacheableFactory
+	if ccf, err = client.CreateAPIRestCreator(metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	clCache := client.NewCatcher(metricClient, cache)
+	cc := client.CatcherCreator{Cache: cache, ClientFactory: ccf}
 	var numScrapper scrapper.Scrapper
-	if numScrapper, err = scrapper.NewScrapper(clCache, scrapper.JSONParser{}, metricConf); err != nil {
+	if numScrapper, err = scrapper.NewScrapper(cc, scrapper.JSONParser{}, metricConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

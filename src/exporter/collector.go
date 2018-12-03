@@ -39,7 +39,7 @@ func (collector *MetricsCollector) Describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
-func collectCounter(mColl *constMetric, ch chan<- prometheus.Metric) {
+func collectCounters(metricsColl []constMetric, ch chan<- prometheus.Metric) {
 	onCollectFail := func(counter constMetric, fch chan<- prometheus.Metric) {
 		if metric, err := prometheus.NewConstMetric(counter.statusDesc, prometheus.GaugeValue, 1); err == nil {
 			fch <- metric
@@ -122,35 +122,48 @@ func collectCounter(mColl *constMetric, ch chan<- prometheus.Metric) {
 		}
 		counter.lastSuccessValue = vals
 	}
-	if val, err := mColl.scrapper.GetMetric(); err != nil {
-		log.WithError(err).Errorln("can not get the data")
-		onCollectFail(*mColl, ch)
-	} else {
-		switch val.(type) {
-		case float64:
-			counterVal, okCounterVal := val.(float64)
-			if okCounterVal {
-				onCollectSuccess(mColl, ch, counterVal)
-			} else {
-				log.WithField("val", val).Errorln(fmt.Sprintf("unable to get value %+v as float64", val))
-				onCollectFail(*mColl, ch)
+	resC := make(chan scrapper.ScrapResult)
+	defer close(resC)
+	errC := make(chan scrapper.ScrapErrResult)
+	defer close(errC)
+	var metrcisNum = 0
+	for idxM, mColl := range metricsColl {
+		scrapper.WorkPool.Apply(
+			scrapper.ScrapRequest{Scrap: mColl.scrapper, Res: resC, ConstMetricIdxIn: idxM, Err: errC})
+		metrcisNum++
+	}
+	for i := 0; i < metrcisNum; i++ {
+		select {
+		case res := <-resC:
+			switch res.Val.(type) {
+			case float64:
+				counterVal, okCounterVal := res.Val.(float64)
+				if okCounterVal {
+					onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), ch, counterVal)
+				} else {
+					log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to get value %+v as float64", res.Val))
+					onCollectFail(metricsColl[res.ConstMetricIdxOut], ch)
+				}
+			case scrapper.NumericVecVals:
+				counterVecVal, okCounterVecVal := res.Val.(scrapper.NumericVecVals)
+				if okCounterVecVal {
+					onCollectVecSuccess(&(metricsColl[res.ConstMetricIdxOut]), ch, counterVecVal)
+				} else {
+					log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to get value %+v as float64", res.Val))
+					onCollectFail(metricsColl[res.ConstMetricIdxOut], ch)
+				}
+			default:
+				log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to determine value %+v type", res.Val))
+				onCollectFail(metricsColl[res.ConstMetricIdxOut], ch)
 			}
-		case scrapper.NumericVecVals:
-			counterVecVal, okCounterVecVal := val.(scrapper.NumericVecVals)
-			if okCounterVecVal {
-				onCollectVecSuccess(mColl, ch, counterVecVal)
-			} else {
-				log.WithField("val", val).Errorln(fmt.Sprintf("unable to get value %+v as float64", val))
-				onCollectFail(*mColl, ch)
-			}
-		default:
-			log.WithField("val", val).Errorln(fmt.Sprintf("unable to determine value %+v type", val))
-			onCollectFail(*mColl, ch)
+		case err := <-errC:
+			log.WithError(err.Err).Errorln("can not get the data")
+			onCollectFail(metricsColl[err.ConstMetricIdxOut], ch)
 		}
 	}
 }
 
-func collectGauge(mColl *constMetric, ch chan<- prometheus.Metric) {
+func collectGauges(metricsColl []constMetric, ch chan<- prometheus.Metric) {
 	onCollectFail := func(gauge constMetric, fch chan<- prometheus.Metric) {
 		if metric, err := prometheus.NewConstMetric(gauge.statusDesc, prometheus.GaugeValue, 1); err == nil {
 			fch <- metric
@@ -212,35 +225,48 @@ func collectGauge(mColl *constMetric, ch chan<- prometheus.Metric) {
 		}
 		gauge.lastSuccessValue = vals
 	}
-	if val, err := mColl.scrapper.GetMetric(); err != nil {
-		log.WithError(err).Errorln("can not get the data")
-		onCollectFail(*mColl, ch)
-	} else {
-		switch val.(type) {
-		case float64:
-			gaugeVal, okGaugeVal := val.(float64)
-			if okGaugeVal {
-				onCollectSuccess(mColl, ch, gaugeVal)
-			} else {
-				log.WithField("val", val).Errorln(fmt.Sprintf("unable to get value %+v as float64", val))
-				onCollectFail(*mColl, ch)
+	resC := make(chan scrapper.ScrapResult)
+	defer close(resC)
+	errC := make(chan scrapper.ScrapErrResult)
+	defer close(errC)
+	var metrcisNum = 0
+	for idxM, mColl := range metricsColl {
+		scrapper.WorkPool.Apply(
+			scrapper.ScrapRequest{Scrap: mColl.scrapper, Res: resC, ConstMetricIdxIn: idxM, Err: errC})
+		metrcisNum++
+	}
+	for i := 0; i < metrcisNum; i++ {
+		select {
+		case res := <-resC:
+			switch res.Val.(type) {
+			case float64:
+				gaugeVal, okGaugeVal := res.Val.(float64)
+				if okGaugeVal {
+					onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), ch, gaugeVal)
+				} else {
+					log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to get value %+v as float64", res.Val))
+					onCollectFail(metricsColl[res.ConstMetricIdxOut], ch)
+				}
+			case scrapper.NumericVecVals:
+				gaugeVecVal, okGaugeVecVal := res.Val.(scrapper.NumericVecVals)
+				if okGaugeVecVal {
+					onCollectVecSuccess(&(metricsColl[res.ConstMetricIdxOut]), ch, gaugeVecVal)
+				} else {
+					log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to get value %+v as float64", res.Val))
+					onCollectFail(metricsColl[res.ConstMetricIdxOut], ch)
+				}
+			default:
+				log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to determine value %+v type", res.Val))
+				onCollectFail(metricsColl[res.ConstMetricIdxOut], ch)
 			}
-		case scrapper.NumericVecVals:
-			gaugeVecVal, okGaugeVecVal := val.(scrapper.NumericVecVals)
-			if okGaugeVecVal {
-				onCollectVecSuccess(mColl, ch, gaugeVecVal)
-			} else {
-				log.WithField("val", val).Errorln(fmt.Sprintf("unable to get value %+v as float64", val))
-				onCollectFail(*mColl, ch)
-			}
-		default:
-			log.WithField("val", val).Errorln(fmt.Sprintf("unable to determine value %+v type", val))
-			onCollectFail(*mColl, ch)
+		case err := <-errC:
+			log.WithError(err.Err).Errorln("can not get the data")
+			onCollectFail(metricsColl[err.ConstMetricIdxOut], ch)
 		}
 	}
 }
 
-func collectHistogram(mColl *constMetric, ch chan<- prometheus.Metric) {
+func collectHistograms(metricsColl []constMetric, ch chan<- prometheus.Metric) {
 	onCollectFail := func(histogram constMetric, fch chan<- prometheus.Metric) {
 		if metric, err := prometheus.NewConstMetric(histogram.statusDesc, prometheus.GaugeValue, 1); err == nil {
 			fch <- metric
@@ -281,15 +307,28 @@ func collectHistogram(mColl *constMetric, ch chan<- prometheus.Metric) {
 		}
 		histogram.lastSuccessValue = val
 	}
-	if val, err := mColl.scrapper.GetMetric(); err != nil {
-		log.WithError(err).Errorln("can not get the data")
-		onCollectFail(*mColl, ch)
-	} else {
-		metricVal, okMetricVal := val.(scrapper.HistogramValue)
-		if okMetricVal {
-			onCollectSuccess(mColl, ch, metricVal)
-		} else {
-			log.WithError(err).Errorln("can not assert the metric value to type histogram")
+	resC := make(chan scrapper.ScrapResult)
+	defer close(resC)
+	errC := make(chan scrapper.ScrapErrResult)
+	defer close(errC)
+	var metrcisNum = 0
+	for idxM, mColl := range metricsColl {
+		scrapper.WorkPool.Apply(
+			scrapper.ScrapRequest{Scrap: mColl.scrapper, Res: resC, ConstMetricIdxIn: idxM, Err: errC})
+		metrcisNum++
+	}
+	for i := 0; i < metrcisNum; i++ {
+		select {
+		case res := <-resC:
+			metricVal, okMetricVal := res.Val.(scrapper.HistogramValue)
+			if okMetricVal {
+				onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), ch, metricVal)
+			} else {
+				log.WithField("val", res.Val).Errorln("can not assert the metric value to type histogram")
+			}
+		case err := <-errC:
+			log.WithError(err.Err).Errorln("can not get the data")
+			onCollectFail(metricsColl[err.ConstMetricIdxOut], ch)
 		}
 	}
 }
@@ -297,19 +336,21 @@ func collectHistogram(mColl *constMetric, ch chan<- prometheus.Metric) {
 //Collect update all the descriptors is values
 // TODO(denisacostaq@gmail.com): Make a research about race conditions here, "lastSuccessValue"
 func (collector *MetricsCollector) Collect(ch chan<- prometheus.Metric) {
-	for k := range collector.metrics {
-		for idxMetric := range collector.metrics[k] {
-			switch collector.metrics[k][idxMetric].kind {
-			case config.KeyTypeCounter:
-				collectCounter(&(collector.metrics[k][idxMetric]), ch)
-			case config.KeyTypeGauge:
-				collectGauge(&(collector.metrics[k][idxMetric]), ch)
-			case config.KeyTypeHistogram:
-				collectHistogram(&(collector.metrics[k][idxMetric]), ch)
-			default:
-				log.Println("error")
+	filterMetricsByKind := func(kind string, orgMetrics []constMetric) (filteredMetrics []constMetric) {
+		for _, metric := range orgMetrics {
+			if metric.kind == kind {
+				filteredMetrics = append(filteredMetrics, metric)
 			}
 		}
+		return filteredMetrics
+	}
+	for k := range collector.metrics {
+		counters := filterMetricsByKind(config.KeyTypeCounter, collector.metrics[k])
+		gauges := filterMetricsByKind(config.KeyTypeGauge, collector.metrics[k])
+		histograms := filterMetricsByKind(config.KeyTypeHistogram, collector.metrics[k])
+		collectCounters(counters, ch)
+		collectGauges(gauges, ch)
+		collectHistograms(histograms, ch)
 		collector.cache.Reset()
 	}
 }

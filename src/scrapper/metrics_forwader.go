@@ -9,12 +9,13 @@ import (
 	"strings"
 
 	"github.com/simelo/rextporter/src/client"
+	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 )
 
 type metricsForwader struct {
-	client      client.Client
-	serviceName string
+	clientFactory client.Factory
+	serviceName   string
 }
 
 // MetricsForwaders have a slice of metricsForwader, that are capable of forward a metrics endpoint with service name as prefix
@@ -22,15 +23,15 @@ type MetricsForwaders struct {
 	servicesMetricsForwader []metricsForwader
 }
 
-func newMetricsForwader(cl client.ProxyMetricClient) metricsForwader {
-	return metricsForwader{client: cl, serviceName: cl.ServiceName}
+func newMetricsForwader(clc client.ProxyMetricClientCreator) metricsForwader {
+	return metricsForwader{clientFactory: clc, serviceName: clc.ServiceName}
 }
 
 // NewMetricsForwaders create a scrapper that handle all the forwaded services
-func NewMetricsForwaders(cls []client.ProxyMetricClient) Scrapper {
-	scrapper := MetricsForwaders{servicesMetricsForwader: make([]metricsForwader, len(cls))}
+func NewMetricsForwaders(pmclsc []client.ProxyMetricClientCreator) Scrapper {
+	scrapper := MetricsForwaders{servicesMetricsForwader: make([]metricsForwader, len(pmclsc))}
 	for idxScrapper := range scrapper.servicesMetricsForwader {
-		scrapper.servicesMetricsForwader[idxScrapper] = newMetricsForwader(cls[idxScrapper])
+		scrapper.servicesMetricsForwader[idxScrapper] = newMetricsForwader(pmclsc[idxScrapper])
 	}
 	return scrapper
 }
@@ -67,26 +68,34 @@ func appendPrefixForMetrics(prefix string, metricsData string) ([]byte, error) {
 // GetMetric return the original metrics but with a service name as prefix in his names
 func (mfs MetricsForwaders) GetMetric() (val interface{}, err error) {
 	getCustomData := func() (data []byte, err error) {
+		generalScopeErr := "Error getting custom data for metrics fordwader"
 		recorder := httptest.NewRecorder()
 		for _, mf := range mfs.servicesMetricsForwader {
-			if exposedMetricsData, err := mf.client.GetData(); err != nil {
+			var cl client.Client
+			if cl, err = mf.clientFactory.CreateClient(); err != nil {
+				errCause := "can not create client"
+				return data, util.ErrorFromThisScope(errCause, generalScopeErr)
+			}
+			var exposedMetricsData []byte
+			if exposedMetricsData, err = cl.GetData(); err != nil {
 				log.WithError(err).Error("error getting metrics from service " + mf.serviceName)
-			} else {
-				var prefixed []byte
-				if prefixed, err = appendPrefixForMetrics(mf.serviceName, string(exposedMetricsData)); err != nil {
-					return nil, err
+				errCause := "can not get the data"
+				return data, util.ErrorFromThisScope(errCause, generalScopeErr)
+			}
+			var prefixed []byte
+			if prefixed, err = appendPrefixForMetrics(mf.serviceName, string(exposedMetricsData)); err != nil {
+				return nil, err
+			}
+			if count, err := recorder.Write(prefixed); err != nil || count != len(prefixed) {
+				if err != nil {
+					log.WithError(err).Errorln("error writing prefixed content")
 				}
-				if count, err := recorder.Write(prefixed); err != nil || count != len(prefixed) {
-					if err != nil {
-						log.WithError(err).Errorln("error writing prefixed content")
-					}
-					if count != len(prefixed) {
-						log.WithFields(log.Fields{
-							"wrote":    count,
-							"required": len(prefixed),
-						}).Errorln("no enough content wrote")
-						return nil, errors.New("no enough content wrote")
-					}
+				if count != len(prefixed) {
+					log.WithFields(log.Fields{
+						"wrote":    count,
+						"required": len(prefixed),
+					}).Errorln("no enough content wrote")
+					return nil, errors.New("no enough content wrote")
 				}
 			}
 		}
@@ -95,6 +104,9 @@ func (mfs MetricsForwaders) GetMetric() (val interface{}, err error) {
 			return nil, err
 		}
 		return data, nil
+	}
+	if len(mfs.servicesMetricsForwader) == 0 {
+		return nil, nil
 	}
 	if customData, err := getCustomData(); err == nil {
 		val = customData

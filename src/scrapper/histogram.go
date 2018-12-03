@@ -17,9 +17,9 @@ type Histogram struct {
 	buckets histogramClientOptions
 }
 
-func newHistogram(client client.Client, parser BodyParser, metric config.Metric) Scrapper {
+func newHistogram(cf client.Factory, parser BodyParser, metric config.Metric) Scrapper {
 	return Histogram{
-		baseScrapper: baseScrapper{client: client, parser: parser, jsonPath: metric.Path},
+		baseScrapper: baseScrapper{clientFactory: cf, parser: parser, jsonPath: metric.Path},
 		buckets:      histogramClientOptions(metric.HistogramOptions.Buckets),
 	}
 }
@@ -28,7 +28,7 @@ func newHistogram(client client.Client, parser BodyParser, metric config.Metric)
 func (h Histogram) GetMetric() (val interface{}, err error) {
 	const generalScopeErr = "error scrapping histogram metric"
 	var iBody interface{}
-	if iBody, err = getData(h.client, h.parser); err != nil {
+	if iBody, err = getData(h.clientFactory, h.parser); err != nil {
 		errCause := "histogram client can not decode the body"
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

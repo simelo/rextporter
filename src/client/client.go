@@ -12,6 +12,16 @@ type CacheableClient interface {
 	DataPath() string
 }
 
+// Factory can create different kind of clients
+type Factory interface {
+	CreateClient() (cl Client, err error)
+}
+
+// CacheableFactory can create different kind of cacheable clients
+type CacheableFactory interface {
+	CreateClient() (cl CacheableClient, err error)
+}
+
 type baseCacheableClient string
 
 // DataPath is the endpoint in the case of http clients
