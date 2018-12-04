@@ -88,7 +88,7 @@ func createHistogramValueWithFromData(buckets []float64, data interface{}) (hist
 		}
 		histogram.Sum += metricVal
 		for _, bucket := range buckets {
-			if bucket <= metricVal {
+			if metricVal <= bucket {
 				histogram.Buckets[bucket]++
 			}
 		}
