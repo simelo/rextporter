@@ -58,9 +58,9 @@ func newDefaultMetrics() *defaultMetrics {
 	scrapeDurationSecondsDesc := prometheus.NewDesc("scrape_duration_seconds", "Scrape duration in seconds", labels, nil)
 	scrapeSamplesScrapedDesc := prometheus.NewDesc("scrape_samples_scraped", "The number of samples the target exposed", labels, nil)
 	return &defaultMetrics{
-		scrapesDuration:           newScrapDuration(),
+		scrapedDurations:          newScrapDuration(),
 		scrapeDurationSecondsDesc: scrapeDurationSecondsDesc,
-		scrapeSamplesScraped:      newScrapDuration(),
+		scrapedSamples:            newScrapDuration(),
 		scrapeSamplesScrapedDesc:  scrapeSamplesScrapedDesc,
 	}
 }
