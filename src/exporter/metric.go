@@ -28,7 +28,7 @@ func createMetricsForwaders(conf config.RootConfig) (scrapper.Scrapper, error) {
 // constMetric has a scrapper to get remote data, can be a previously cached content
 type constMetric struct {
 	kind             string
-	scrapper         scrapper.Scrapper
+	scrapper         scrapper.APIRestScrapper
 	lastSuccessValue interface{}
 	metricDesc       *prometheus.Desc
 	statusDesc       *prometheus.Desc
@@ -53,6 +53,12 @@ func createMetrics(cache cache.Cache, srvsConf []config.Service) (metrics endpoi
 	return metrics, err
 }
 
+func createDefaultMetrics() defaultMetrics {
+	labels := []string{"job", "instance"}
+	scrapeDurationSecondsDesc := prometheus.NewDesc("scrape_duration_seconds", "Scrape duration in seconds", labels, nil)
+	return defaultMetrics{scrapeDurationSecondsDesc: scrapeDurationSecondsDesc}
+}
+
 func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf config.Service) (metric constMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
 	var ccf client.CacheableFactory
@@ -61,8 +67,8 @@ func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf conf
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	cc := client.CatcherCreator{Cache: cache, ClientFactory: ccf}
-	var numScrapper scrapper.Scrapper
-	if numScrapper, err = scrapper.NewScrapper(cc, scrapper.JSONParser{}, metricConf); err != nil {
+	var numScrapper scrapper.APIRestScrapper
+	if numScrapper, err = scrapper.NewScrapper(cc, scrapper.JSONParser{}, metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

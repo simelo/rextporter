@@ -17,10 +17,16 @@ type Histogram struct {
 	buckets histogramClientOptions
 }
 
-func newHistogram(cf client.Factory, parser BodyParser, metric config.Metric) Scrapper {
+func newHistogram(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName string) APIRestScrapper {
 	return Histogram{
-		baseScrapper: baseScrapper{clientFactory: cf, parser: parser, jsonPath: metric.Path},
-		buckets:      histogramClientOptions(metric.HistogramOptions.Buckets),
+		baseScrapper: baseScrapper{
+			clientFactory: cf,
+			parser:        parser,
+			jsonPath:      metric.Path,
+			jobName:       jobName,
+			instanceName:  instanceName,
+		},
+		buckets: histogramClientOptions(metric.HistogramOptions.Buckets),
 	}
 }
 

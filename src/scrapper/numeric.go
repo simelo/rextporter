@@ -12,8 +12,15 @@ type Numeric struct {
 	baseScrapper
 }
 
-func newNumeric(cf client.Factory, p BodyParser, path string) Scrapper {
-	return Numeric{baseScrapper: baseScrapper{clientFactory: cf, parser: p, jsonPath: path}}
+func newNumeric(cf client.Factory, p BodyParser, path, jobName, instanceName string) APIRestScrapper {
+	return Numeric{
+		baseScrapper: baseScrapper{
+			clientFactory: cf,
+			parser:        p,
+			jsonPath:      path,
+			jobName:       jobName,
+			instanceName:  instanceName},
+	}
 }
 
 // GetMetric returns a single number with the metric value, is a counter or a gauge

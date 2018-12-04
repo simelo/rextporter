@@ -16,12 +16,18 @@ type NumericVec struct {
 	itemPath   string
 }
 
-func newNumericVec(cf client.Factory, p BodyParser, metric config.Metric) Scrapper {
+func newNumericVec(cf client.Factory, p BodyParser, metric config.Metric, jobName, instanceName string) APIRestScrapper {
 	return NumericVec{
-		baseScrapper: baseScrapper{clientFactory: cf, parser: p, jsonPath: metric.Path},
-		labels:       metric.Options.Labels,
-		labelsName:   metric.LabelNames(),
-		itemPath:     metric.Options.ItemPath}
+		baseScrapper: baseScrapper{
+			clientFactory: cf,
+			parser:        p,
+			jsonPath:      metric.Path,
+			jobName:       jobName,
+			instanceName:  instanceName,
+		},
+		labels:     metric.Options.Labels,
+		labelsName: metric.LabelNames(),
+		itemPath:   metric.Options.ItemPath}
 }
 
 // NumericVecItemVal can instances a numeric(Gauge or Counter) vec item with the required labels values

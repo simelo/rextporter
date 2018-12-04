@@ -129,7 +129,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadSeq() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -182,7 +182,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadBlockHash() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -235,7 +235,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadPreviousBlockHash() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -288,7 +288,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadTimestamp() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -341,7 +341,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadFee() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -394,7 +394,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadVersion() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -447,7 +447,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadTxBodyHash() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -500,7 +500,7 @@ func (suite *numericStatsSuit) TestMetricBlockChainHeadUxHash() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -553,7 +553,7 @@ func (suite *numericStatsSuit) TestMetricBlockchainUnspens() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -606,7 +606,7 @@ func (suite *numericStatsSuit) TestMetricBlockchainUnconfirmed() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -659,7 +659,7 @@ func (suite *numericStatsSuit) TestMetricBlockchainTimeSinceLastBlock() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -712,7 +712,7 @@ func (suite *numericStatsSuit) TestMetricVersionVersion() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -765,7 +765,7 @@ func (suite *numericStatsSuit) TestMetricVersionCommit() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -818,7 +818,7 @@ func (suite *numericStatsSuit) TestMetricVersionBranch() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -871,7 +871,7 @@ func (suite *numericStatsSuit) TestMetricOpenConnections() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -924,7 +924,7 @@ func (suite *numericStatsSuit) TestMetricUptime() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -977,7 +977,7 @@ func (suite *numericStatsSuit) TestMetricCsrfEnabled() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1030,7 +1030,7 @@ func (suite *numericStatsSuit) TestMetricCspEnabled() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1083,7 +1083,7 @@ func (suite *numericStatsSuit) TestMetricWalletApiEnabled() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1136,7 +1136,7 @@ func (suite *numericStatsSuit) TestMetricGuiEnabled() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1189,7 +1189,7 @@ func (suite *numericStatsSuit) TestMetricUnversionedApiEnabled() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -1242,7 +1242,7 @@ func (suite *numericStatsSuit) TestMetricJsonRpcEnabled() {
 	require.Nil(err)
 	cc := client.CatcherCreator{Cache: suite.cache, ClientFactory: ccf}
 	var sc Scrapper
-	sc, err = NewScrapper(cc, JSONParser{}, metricConf)
+	sc, err = NewScrapper(cc, JSONParser{}, metricConf, serviceConf)
 	require.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When

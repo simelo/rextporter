@@ -29,7 +29,9 @@ func newMetricsForwader(clc client.ProxyMetricClientCreator) metricsForwader {
 
 // NewMetricsForwaders create a scrapper that handle all the forwaded services
 func NewMetricsForwaders(pmclsc []client.ProxyMetricClientCreator) Scrapper {
-	scrapper := MetricsForwaders{servicesMetricsForwader: make([]metricsForwader, len(pmclsc))}
+	scrapper := MetricsForwaders{
+		servicesMetricsForwader: make([]metricsForwader, len(pmclsc)),
+	}
 	for idxScrapper := range scrapper.servicesMetricsForwader {
 		scrapper.servicesMetricsForwader[idxScrapper] = newMetricsForwader(pmclsc[idxScrapper])
 	}

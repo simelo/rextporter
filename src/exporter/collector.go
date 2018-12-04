@@ -3,6 +3,7 @@ package exporter
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/cache"
@@ -14,8 +15,9 @@ import (
 
 // MetricsCollector has the metrics to be exposed
 type MetricsCollector struct {
-	metrics endpointData2MetricsConsumer
-	cache   cache.Cache
+	metrics    endpointData2MetricsConsumer
+	cache      cache.Cache
+	defMetrics defaultMetrics
 }
 
 func newMetricsCollector(c cache.Cache, conf config.RootConfig) (collector *MetricsCollector, err error) {
@@ -25,7 +27,7 @@ func newMetricsCollector(c cache.Cache, conf config.RootConfig) (collector *Metr
 		errCause := fmt.Sprintln("error creating metrics: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	collector = &MetricsCollector{metrics: metrics, cache: c}
+	collector = &MetricsCollector{metrics: metrics, cache: c, defMetrics: createDefaultMetrics()}
 	return collector, err
 }
 
@@ -39,7 +41,7 @@ func (collector *MetricsCollector) Describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
-func collectCounters(metricsColl []constMetric, ch chan<- prometheus.Metric) {
+func collectCounters(metricsColl []constMetric, sd scrapDurationInJob, ch chan<- prometheus.Metric) {
 	onCollectFail := func(counter constMetric, fch chan<- prometheus.Metric) {
 		if metric, err := prometheus.NewConstMetric(counter.statusDesc, prometheus.GaugeValue, 1); err == nil {
 			fch <- metric
@@ -127,9 +129,18 @@ func collectCounters(metricsColl []constMetric, ch chan<- prometheus.Metric) {
 	errC := make(chan scrapper.ScrapErrResult)
 	defer close(errC)
 	var metrcisNum = 0
+	startScrappingInPool := time.Now().UTC()
 	for idxM, mColl := range metricsColl {
 		scrapper.WorkPool.Apply(
-			scrapper.ScrapRequest{Scrap: mColl.scrapper, Res: resC, ConstMetricIdxIn: idxM, Err: errC})
+			scrapper.ScrapRequest{
+				Scrap:            mColl.scrapper,
+				Res:              resC,
+				ConstMetricIdxIn: idxM,
+				JobName:          mColl.scrapper.GetJobName(),
+				InstanceName:     mColl.scrapper.GetInstanceName(),
+				Err:              errC,
+			},
+		)
 		metrcisNum++
 	}
 	for i := 0; i < metrcisNum; i++ {
@@ -156,14 +167,16 @@ func collectCounters(metricsColl []constMetric, ch chan<- prometheus.Metric) {
 				log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to determine value %+v type", res.Val))
 				onCollectFail(metricsColl[res.ConstMetricIdxOut], ch)
 			}
+			sd.addSeconds(time.Since(startScrappingInPool).Seconds(), res.JobName, res.InstanceName)
 		case err := <-errC:
 			log.WithError(err.Err).Errorln("can not get the data")
 			onCollectFail(metricsColl[err.ConstMetricIdxOut], ch)
+			sd.addSeconds(time.Since(startScrappingInPool).Seconds(), err.JobName, err.InstanceName)
 		}
 	}
 }
 
-func collectGauges(metricsColl []constMetric, ch chan<- prometheus.Metric) {
+func collectGauges(metricsColl []constMetric, sd scrapDurationInJob, ch chan<- prometheus.Metric) {
 	onCollectFail := func(gauge constMetric, fch chan<- prometheus.Metric) {
 		if metric, err := prometheus.NewConstMetric(gauge.statusDesc, prometheus.GaugeValue, 1); err == nil {
 			fch <- metric
@@ -230,9 +243,18 @@ func collectGauges(metricsColl []constMetric, ch chan<- prometheus.Metric) {
 	errC := make(chan scrapper.ScrapErrResult)
 	defer close(errC)
 	var metrcisNum = 0
+	startScrappingInPool := time.Now().UTC()
 	for idxM, mColl := range metricsColl {
 		scrapper.WorkPool.Apply(
-			scrapper.ScrapRequest{Scrap: mColl.scrapper, Res: resC, ConstMetricIdxIn: idxM, Err: errC})
+			scrapper.ScrapRequest{
+				Scrap:            mColl.scrapper,
+				Res:              resC,
+				ConstMetricIdxIn: idxM,
+				JobName:          mColl.scrapper.GetJobName(),
+				InstanceName:     mColl.scrapper.GetInstanceName(),
+				Err:              errC,
+			},
+		)
 		metrcisNum++
 	}
 	for i := 0; i < metrcisNum; i++ {
@@ -259,14 +281,16 @@ func collectGauges(metricsColl []constMetric, ch chan<- prometheus.Metric) {
 				log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to determine value %+v type", res.Val))
 				onCollectFail(metricsColl[res.ConstMetricIdxOut], ch)
 			}
+			sd.addSeconds(time.Since(startScrappingInPool).Seconds(), res.JobName, res.InstanceName)
 		case err := <-errC:
 			log.WithError(err.Err).Errorln("can not get the data")
 			onCollectFail(metricsColl[err.ConstMetricIdxOut], ch)
+			sd.addSeconds(time.Since(startScrappingInPool).Seconds(), err.JobName, err.InstanceName)
 		}
 	}
 }
 
-func collectHistograms(metricsColl []constMetric, ch chan<- prometheus.Metric) {
+func collectHistograms(metricsColl []constMetric, sd scrapDurationInJob, ch chan<- prometheus.Metric) {
 	onCollectFail := func(histogram constMetric, fch chan<- prometheus.Metric) {
 		if metric, err := prometheus.NewConstMetric(histogram.statusDesc, prometheus.GaugeValue, 1); err == nil {
 			fch <- metric
@@ -312,9 +336,18 @@ func collectHistograms(metricsColl []constMetric, ch chan<- prometheus.Metric) {
 	errC := make(chan scrapper.ScrapErrResult)
 	defer close(errC)
 	var metrcisNum = 0
+	startScrappingInPool := time.Now().UTC()
 	for idxM, mColl := range metricsColl {
 		scrapper.WorkPool.Apply(
-			scrapper.ScrapRequest{Scrap: mColl.scrapper, Res: resC, ConstMetricIdxIn: idxM, Err: errC})
+			scrapper.ScrapRequest{
+				Scrap:            mColl.scrapper,
+				Res:              resC,
+				ConstMetricIdxIn: idxM,
+				JobName:          mColl.scrapper.GetJobName(),
+				InstanceName:     mColl.scrapper.GetInstanceName(),
+				Err:              errC,
+			},
+		)
 		metrcisNum++
 	}
 	for i := 0; i < metrcisNum; i++ {
@@ -326,9 +359,11 @@ func collectHistograms(metricsColl []constMetric, ch chan<- prometheus.Metric) {
 			} else {
 				log.WithField("val", res.Val).Errorln("can not assert the metric value to type histogram")
 			}
+			sd.addSeconds(time.Since(startScrappingInPool).Seconds(), res.JobName, res.InstanceName)
 		case err := <-errC:
 			log.WithError(err.Err).Errorln("can not get the data")
 			onCollectFail(metricsColl[err.ConstMetricIdxOut], ch)
+			sd.addSeconds(time.Since(startScrappingInPool).Seconds(), err.JobName, err.InstanceName)
 		}
 	}
 }
@@ -344,13 +379,15 @@ func (collector *MetricsCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 		return filteredMetrics
 	}
+	sdj := newScrapDuration()
 	for k := range collector.metrics {
 		counters := filterMetricsByKind(config.KeyTypeCounter, collector.metrics[k])
 		gauges := filterMetricsByKind(config.KeyTypeGauge, collector.metrics[k])
 		histograms := filterMetricsByKind(config.KeyTypeHistogram, collector.metrics[k])
-		collectCounters(counters, ch)
-		collectGauges(gauges, ch)
-		collectHistograms(histograms, ch)
+		collectCounters(counters, sdj, ch)
+		collectGauges(gauges, sdj, ch)
+		collectHistograms(histograms, sdj, ch)
 		collector.cache.Reset()
 	}
+	collector.defMetrics.collectDefaultMetrics(sdj, ch)
 }

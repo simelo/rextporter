@@ -7,12 +7,16 @@ import (
 // ScrapResult is the success case with the metric value
 type ScrapResult struct {
 	Val               interface{}
+	JobName           string
+	InstanceName      string
 	ConstMetricIdxOut int
 }
 
 // ScrapErrResult is the fail case with the error happened
 type ScrapErrResult struct {
 	Err               error
+	JobName           string
+	InstanceName      string
 	ConstMetricIdxOut int
 }
 
@@ -21,6 +25,8 @@ type ScrapRequest struct {
 	Scrap            Scrapper
 	Res              chan ScrapResult
 	ConstMetricIdxIn int
+	JobName          string
+	InstanceName     string
 	Err              chan ScrapErrResult
 }
 
@@ -28,6 +34,8 @@ type scrapWork struct {
 	scrapper         Scrapper
 	res              chan ScrapResult
 	constMetricIdxIn int
+	jobName          string
+	instanceName     string
 	err              chan ScrapErrResult
 }
 
@@ -63,6 +71,8 @@ func (p *Pool) Apply(ri ScrapRequest) {
 		scrapper:         ri.Scrap,
 		res:              ri.Res,
 		constMetricIdxIn: ri.ConstMetricIdxIn,
+		jobName:          ri.JobName,
+		instanceName:     ri.InstanceName,
 		err:              ri.Err,
 	}
 	p.works <- work
@@ -95,9 +105,9 @@ func (w *workerT) start() {
 			case work := <-w.works:
 				val, err := work.scrapper.GetMetric()
 				if err == nil {
-					work.res <- ScrapResult{Val: val, ConstMetricIdxOut: work.constMetricIdxIn}
+					work.res <- ScrapResult{Val: val, ConstMetricIdxOut: work.constMetricIdxIn, JobName: work.jobName, InstanceName: work.instanceName}
 				} else {
-					work.err <- ScrapErrResult{Err: err, ConstMetricIdxOut: work.constMetricIdxIn}
+					work.err <- ScrapErrResult{Err: err, ConstMetricIdxOut: work.constMetricIdxIn, JobName: work.jobName, InstanceName: work.instanceName}
 				}
 				// wait for a quit msg
 			case <-w.quitChan:
