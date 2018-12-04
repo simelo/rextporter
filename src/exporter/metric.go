@@ -56,7 +56,11 @@ func createMetrics(cache cache.Cache, srvsConf []config.Service) (metrics endpoi
 func createDefaultMetrics() defaultMetrics {
 	labels := []string{"job", "instance"}
 	scrapeDurationSecondsDesc := prometheus.NewDesc("scrape_duration_seconds", "Scrape duration in seconds", labels, nil)
-	return defaultMetrics{scrapeDurationSecondsDesc: scrapeDurationSecondsDesc}
+	scrapeSamplesScrapedDesc := prometheus.NewDesc("scrape_samples_scraped", "The number of samples the target exposed", labels, nil)
+	return defaultMetrics{
+		scrapeDurationSecondsDesc: scrapeDurationSecondsDesc,
+		scrapeSamplesScrapedDesc:  scrapeSamplesScrapedDesc,
+	}
 }
 
 func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf config.Service) (metric constMetric, err error) {

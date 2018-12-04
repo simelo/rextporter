@@ -41,7 +41,7 @@ func (collector *MetricsCollector) Describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
-func collectCounters(metricsColl []constMetric, sd scrapDurationInJob, ch chan<- prometheus.Metric) {
+func collectCounters(metricsColl []constMetric, sd scrapDurationInJob, scrapedSamples scrapDurationInJob, ch chan<- prometheus.Metric) {
 	onCollectFail := func(counter constMetric, fch chan<- prometheus.Metric) {
 		if metric, err := prometheus.NewConstMetric(counter.statusDesc, prometheus.GaugeValue, 1); err == nil {
 			fch <- metric
@@ -149,6 +149,7 @@ func collectCounters(metricsColl []constMetric, sd scrapDurationInJob, ch chan<-
 			switch res.Val.(type) {
 			case float64:
 				counterVal, okCounterVal := res.Val.(float64)
+				scrapedSamples.addSeconds(1, res.JobName, res.InstanceName)
 				if okCounterVal {
 					onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), ch, counterVal)
 				} else {
@@ -157,6 +158,7 @@ func collectCounters(metricsColl []constMetric, sd scrapDurationInJob, ch chan<-
 				}
 			case scrapper.NumericVecVals:
 				counterVecVal, okCounterVecVal := res.Val.(scrapper.NumericVecVals)
+				scrapedSamples.addSeconds(float64(len(counterVecVal)), res.JobName, res.InstanceName)
 				if okCounterVecVal {
 					onCollectVecSuccess(&(metricsColl[res.ConstMetricIdxOut]), ch, counterVecVal)
 				} else {
@@ -176,7 +178,7 @@ func collectCounters(metricsColl []constMetric, sd scrapDurationInJob, ch chan<-
 	}
 }
 
-func collectGauges(metricsColl []constMetric, sd scrapDurationInJob, ch chan<- prometheus.Metric) {
+func collectGauges(metricsColl []constMetric, sd scrapDurationInJob, scrapedSamples scrapDurationInJob, ch chan<- prometheus.Metric) {
 	onCollectFail := func(gauge constMetric, fch chan<- prometheus.Metric) {
 		if metric, err := prometheus.NewConstMetric(gauge.statusDesc, prometheus.GaugeValue, 1); err == nil {
 			fch <- metric
@@ -262,6 +264,7 @@ func collectGauges(metricsColl []constMetric, sd scrapDurationInJob, ch chan<- p
 		case res := <-resC:
 			switch res.Val.(type) {
 			case float64:
+				scrapedSamples.addSeconds(1, res.JobName, res.InstanceName)
 				gaugeVal, okGaugeVal := res.Val.(float64)
 				if okGaugeVal {
 					onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), ch, gaugeVal)
@@ -271,6 +274,7 @@ func collectGauges(metricsColl []constMetric, sd scrapDurationInJob, ch chan<- p
 				}
 			case scrapper.NumericVecVals:
 				gaugeVecVal, okGaugeVecVal := res.Val.(scrapper.NumericVecVals)
+				scrapedSamples.addSeconds(float64(len(gaugeVecVal)), res.JobName, res.InstanceName)
 				if okGaugeVecVal {
 					onCollectVecSuccess(&(metricsColl[res.ConstMetricIdxOut]), ch, gaugeVecVal)
 				} else {
@@ -290,7 +294,7 @@ func collectGauges(metricsColl []constMetric, sd scrapDurationInJob, ch chan<- p
 	}
 }
 
-func collectHistograms(metricsColl []constMetric, sd scrapDurationInJob, ch chan<- prometheus.Metric) {
+func collectHistograms(metricsColl []constMetric, sd scrapDurationInJob, scrapedSamples scrapDurationInJob, ch chan<- prometheus.Metric) {
 	onCollectFail := func(histogram constMetric, fch chan<- prometheus.Metric) {
 		if metric, err := prometheus.NewConstMetric(histogram.statusDesc, prometheus.GaugeValue, 1); err == nil {
 			fch <- metric
@@ -354,6 +358,7 @@ func collectHistograms(metricsColl []constMetric, sd scrapDurationInJob, ch chan
 		select {
 		case res := <-resC:
 			metricVal, okMetricVal := res.Val.(scrapper.HistogramValue)
+			scrapedSamples.addSeconds(float64(len(metricVal.Buckets)+2), res.JobName, res.InstanceName)
 			if okMetricVal {
 				onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), ch, metricVal)
 			} else {
@@ -380,14 +385,15 @@ func (collector *MetricsCollector) Collect(ch chan<- prometheus.Metric) {
 		return filteredMetrics
 	}
 	sdj := newScrapDuration()
+	scrapedSamples := newScrapDuration()
 	for k := range collector.metrics {
 		counters := filterMetricsByKind(config.KeyTypeCounter, collector.metrics[k])
 		gauges := filterMetricsByKind(config.KeyTypeGauge, collector.metrics[k])
 		histograms := filterMetricsByKind(config.KeyTypeHistogram, collector.metrics[k])
-		collectCounters(counters, sdj, ch)
-		collectGauges(gauges, sdj, ch)
-		collectHistograms(histograms, sdj, ch)
+		collectCounters(counters, sdj, scrapedSamples, ch)
+		collectGauges(gauges, sdj, scrapedSamples, ch)
+		collectHistograms(histograms, sdj, scrapedSamples, ch)
 		collector.cache.Reset()
 	}
-	collector.defMetrics.collectDefaultMetrics(sdj, ch)
+	collector.defMetrics.collectDefaultMetrics(sdj, scrapedSamples, ch)
 }

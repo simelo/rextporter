@@ -25,9 +25,10 @@ func (sd scrapDurationInJob) addSeconds(amount float64, jobName, instanceName st
 
 type defaultMetrics struct {
 	scrapeDurationSecondsDesc *prometheus.Desc
+	scrapeSamplesScrapedDesc  *prometheus.Desc
 }
 
-func (dm defaultMetrics) collectDefaultMetrics(sd scrapDurationInJob, ch chan<- prometheus.Metric) {
+func (dm defaultMetrics) collectDefaultMetrics(sd, scrapedSamples scrapDurationInJob, ch chan<- prometheus.Metric) {
 	for jobName, job := range sd {
 		for instanceName, val := range job {
 			labels := []string{jobName, instanceName}
@@ -35,6 +36,16 @@ func (dm defaultMetrics) collectDefaultMetrics(sd scrapDurationInJob, ch chan<- 
 				ch <- metric
 			} else {
 				log.WithError(err).Errorln("collectDefaultMetrics -> scrapeDurationSeconds")
+			}
+		}
+	}
+	for jobName, job := range scrapedSamples {
+		for instanceName, val := range job {
+			labels := []string{jobName, instanceName}
+			if metric, err := prometheus.NewConstMetric(dm.scrapeSamplesScrapedDesc, prometheus.GaugeValue, val, labels...); err == nil {
+				ch <- metric
+			} else {
+				log.WithError(err).Errorln("collectDefaultMetrics -> scrapeSamplesScrapedDesc")
 			}
 		}
 	}
