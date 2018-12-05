@@ -14,8 +14,10 @@ import (
 
 // ProxyMetricClientCreator create a metrics fordwader client
 type ProxyMetricClientCreator struct {
-	dataPath    string
-	ServiceName string
+	dataPath     string
+	ServiceName  string
+	JobName      string
+	InstanceName string
 }
 
 // CreateProxyMetricClientCreator create a ProxyMetricClientCreator with required info to create a metrics fordwader client
@@ -24,8 +26,10 @@ func CreateProxyMetricClientCreator(service config.Service) (cf ProxyMetricClien
 		return ProxyMetricClientCreator{}, errors.New("can not create a forward_metrics metric client from a service whitout type " + config.ServiceTypeProxy)
 	}
 	cf = ProxyMetricClientCreator{
-		dataPath:    service.URIToGetExposedMetric(),
-		ServiceName: service.Name,
+		dataPath:     service.URIToGetExposedMetric(),
+		ServiceName:  service.Name,
+		JobName:      service.JobName(),
+		InstanceName: service.InstanceName(),
 	}
 	return cf, err
 }

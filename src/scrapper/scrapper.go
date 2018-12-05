@@ -2,7 +2,6 @@ package scrapper
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/config"
@@ -46,8 +45,8 @@ type BodyParser interface {
 
 // NewScrapper will put all the required info to scrap metrics from the body returned by the client.
 func NewScrapper(cf client.Factory, parser BodyParser, metric config.Metric, srvConf config.Service) (APIRestScrapper, error) {
-	jobName := srvConf.Name
-	instanceName := fmt.Sprintf("%s:%d", srvConf.Location.Location, srvConf.Port)
+	jobName := srvConf.JobName()
+	instanceName := srvConf.InstanceName()
 	if len(metric.LabelNames()) > 0 {
 		return createVecScrapper(cf, parser, metric, jobName, instanceName)
 	}

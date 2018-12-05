@@ -33,6 +33,16 @@ type Service struct {
 	Metrics              []Metric `json:"metrics"`
 }
 
+// JobName returns the default label value for job
+func (srv Service) JobName() string {
+	return srv.Name
+}
+
+// InstanceName returns the default label value for instance
+func (srv Service) InstanceName() string {
+	return fmt.Sprintf("%s:%d", srv.Location.Location, srv.Port)
+}
+
 // URIToGetMetric build the URI from where you will to get metric information
 func (srv Service) URIToGetMetric(metric Metric) string {
 	return fmt.Sprintf("%s://%s:%d%s%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath, metric.URL)

@@ -1,13 +1,14 @@
 package scrapper
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http/httptest"
-	"regexp"
-	"strings"
 
+	io_prometheus_client "github.com/prometheus/client_model/go"
+	"github.com/prometheus/common/expfmt"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
@@ -16,6 +17,8 @@ import (
 type metricsForwader struct {
 	clientFactory client.Factory
 	serviceName   string
+	jobName       string
+	instanceName  string
 }
 
 // MetricsForwaders have a slice of metricsForwader, that are capable of forward a metrics endpoint with service name as prefix
@@ -24,7 +27,12 @@ type MetricsForwaders struct {
 }
 
 func newMetricsForwader(clc client.ProxyMetricClientCreator) metricsForwader {
-	return metricsForwader{clientFactory: clc, serviceName: clc.ServiceName}
+	return metricsForwader{
+		clientFactory: clc,
+		serviceName:   clc.ServiceName,
+		jobName:       clc.JobName,
+		instanceName:  clc.InstanceName,
+	}
 }
 
 // NewMetricsForwaders create a scrapper that handle all the forwaded services
@@ -38,33 +46,29 @@ func NewMetricsForwaders(pmclsc []client.ProxyMetricClientCreator) Scrapper {
 	return scrapper
 }
 
-func findMetricsName(metricsData string) (metricsNames []string) {
-	rex := regexp.MustCompile(`# TYPE [a-zA-Z_:][a-zA-Z0-9_:]*`)
-	metricsNameLines := rex.FindAllString(metricsData, -1)
-	metricsNames = make([]string, len(metricsNameLines))
-	for idx, metricsNameLine := range metricsNameLines {
-		metricsNameLineColumns := strings.Split(metricsNameLine, " ")
-		// FIXME(denissacostaq@gmail.com): be careful indexing here
-		metricsNames[idx] = metricsNameLineColumns[2]
+func appendLables(metrics []byte, labels []*io_prometheus_client.LabelPair) ([]byte, error) {
+	var parser expfmt.TextParser
+	in := bytes.NewReader(metrics)
+	metricFamilies, err := parser.TextToMetricFamilies(in)
+	if err != nil {
+		log.WithError(err).Errorln("error, reading text format failed")
+		return metrics, err
 	}
-	return metricsNames
-}
-
-func appendPrefixForMetrics(prefix string, metricsData string) ([]byte, error) {
-	metricsName := findMetricsName(metricsData)
-	for _, metricName := range metricsName {
-		repl := strings.NewReplacer(
-			"# HELP "+metricName+" ", "# HELP "+prefix+"_"+metricName+" ",
-			"# TYPE "+metricName+" ", "# TYPE "+prefix+"_"+metricName+" ",
-		)
-		metricsData = repl.Replace(metricsData)
-		metricsData = strings.Replace(metricsData, "\n"+metricName, "\n"+prefix+"_"+metricName, -1)
+	var buff bytes.Buffer
+	writer := bufio.NewWriter(&buff)
+	encoder := expfmt.NewEncoder(writer, expfmt.FmtText)
+	for _, mf := range metricFamilies {
+		for idxMetrics := range mf.Metric {
+			mf.Metric[idxMetrics].Label = append(mf.Metric[idxMetrics].Label, labels...)
+		}
+		err := encoder.Encode(mf)
+		if err != nil {
+			log.WithFields(log.Fields{"err": err, "metric family": mf}).Errorln("can not encode metric family")
+			return metrics, err
+		}
 	}
-	if len(metricsName) == 0 {
-		err := fmt.Errorf("data from %s not appear to be from a metrics(trough prometheus instrumentation) endpoint", string(prefix))
-		log.WithError(err).Errorln("append prefix error, content ignored")
-	}
-	return []byte(metricsData), nil
+	writer.Flush()
+	return buff.Bytes(), nil
 }
 
 // GetMetric return the original metrics but with a service name as prefix in his names
@@ -84,8 +88,22 @@ func (mfs MetricsForwaders) GetMetric() (val interface{}, err error) {
 				errCause := "can not get the data"
 				return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
-			var prefixed []byte
-			if prefixed, err = appendPrefixForMetrics(mf.serviceName, string(exposedMetricsData)); err != nil {
+			job := "job"
+			instance := "instance"
+			prefixed, err := appendLables(
+				exposedMetricsData,
+				[]*io_prometheus_client.LabelPair{
+					&io_prometheus_client.LabelPair{
+						Name:  &job,
+						Value: &mf.jobName,
+					},
+					&io_prometheus_client.LabelPair{
+						Name:  &instance,
+						Value: &mf.instanceName,
+					},
+				},
+			)
+			if err != nil {
 				return nil, err
 			}
 			if count, err := recorder.Write(prefixed); err != nil || count != len(prefixed) {
