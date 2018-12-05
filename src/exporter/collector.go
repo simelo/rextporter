@@ -78,7 +78,7 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 	defer close(resC)
 	errC := make(chan scrapper.ScrapErrResult)
 	defer close(errC)
-	var metrcisNum = 0
+	var metricsNum = 0
 	startScrappingInPool := time.Now().UTC()
 	for idxM, mColl := range metricsColl {
 		scrapper.WorkPool.Apply(
@@ -91,9 +91,9 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 				Err:              errC,
 			},
 		)
-		metrcisNum++
+		metricsNum++
 	}
-	for i := 0; i < metrcisNum; i++ {
+	for i := 0; i < metricsNum; i++ {
 		select {
 		case res := <-resC:
 			switch res.Val.(type) {
@@ -149,7 +149,7 @@ func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch cha
 	defer close(resC)
 	errC := make(chan scrapper.ScrapErrResult)
 	defer close(errC)
-	var metrcisNum = 0
+	var metricsNum = 0
 	startScrappingInPool := time.Now().UTC()
 	for idxM, mColl := range metricsColl {
 		scrapper.WorkPool.Apply(
@@ -162,9 +162,9 @@ func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch cha
 				Err:              errC,
 			},
 		)
-		metrcisNum++
+		metricsNum++
 	}
-	for i := 0; i < metrcisNum; i++ {
+	for i := 0; i < metricsNum; i++ {
 		select {
 		case res := <-resC:
 			switch res.Val.(type) {
@@ -218,7 +218,7 @@ func collectHistograms(metricsColl []constMetric, defMetrics *defaultMetrics, ch
 	defer close(resC)
 	errC := make(chan scrapper.ScrapErrResult)
 	defer close(errC)
-	var metrcisNum = 0
+	var metricsNum = 0
 	startScrappingInPool := time.Now().UTC()
 	for idxM, mColl := range metricsColl {
 		scrapper.WorkPool.Apply(
@@ -231,9 +231,9 @@ func collectHistograms(metricsColl []constMetric, defMetrics *defaultMetrics, ch
 				Err:              errC,
 			},
 		)
-		metrcisNum++
+		metricsNum++
 	}
-	for i := 0; i < metrcisNum; i++ {
+	for i := 0; i < metricsNum; i++ {
 		select {
 		case res := <-resC:
 			metricVal, okMetricVal := res.Val.(scrapper.HistogramValue)
