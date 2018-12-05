@@ -92,7 +92,7 @@ func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf conf
 		kind:     metricConf.Options.Type,
 		scrapper: numScrapper,
 		// FIXME(denisacostaq@gmail.com): if you use a duplicated name can panic?
-		metricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
+		metricDesc: prometheus.NewDesc(metricConf.Name, metricConf.Options.Description, labels, nil),
 	}
 	return metric, err
 }

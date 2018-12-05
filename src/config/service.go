@@ -33,12 +33,6 @@ type Service struct {
 	Metrics              []Metric `json:"metrics"`
 }
 
-// MetricName returns a promehteus style name for the giving metric name.
-func (srv Service) MetricName(metricName string) string {
-	// return prometheus.BuildFQName(SystemProgramName, srv.Name, metricName)
-	return metricName
-}
-
 // URIToGetMetric build the URI from where you will to get metric information
 func (srv Service) URIToGetMetric(metric Metric) string {
 	return fmt.Sprintf("%s://%s:%d%s%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath, metric.URL)
