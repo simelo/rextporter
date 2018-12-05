@@ -20,11 +20,6 @@ type MetricsCollector struct {
 	defMetrics *defaultMetrics
 }
 
-const (
-	metricHealthFlagSuccess = 1
-	metricHealthFlagFail    = 0
-)
-
 func newMetricsCollector(c cache.Cache, conf config.RootConfig) (collector *MetricsCollector, err error) {
 	const generalScopeErr = "error creating collector"
 	var metrics endpointData2MetricsConsumer

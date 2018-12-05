@@ -35,21 +35,21 @@ func (defMetrics *defaultMetrics) reset() {
 	defMetrics.scrapedSamples = newScrapDuration()
 }
 
-func (dm defaultMetrics) collectDefaultMetrics(ch chan<- prometheus.Metric) {
-	for jobName, job := range dm.scrapedDurations {
+func (defMetrics defaultMetrics) collectDefaultMetrics(ch chan<- prometheus.Metric) {
+	for jobName, job := range defMetrics.scrapedDurations {
 		for instanceName, val := range job {
 			labels := []string{jobName, instanceName}
-			if metric, err := prometheus.NewConstMetric(dm.scrapeDurationSecondsDesc, prometheus.GaugeValue, val, labels...); err == nil {
+			if metric, err := prometheus.NewConstMetric(defMetrics.scrapeDurationSecondsDesc, prometheus.GaugeValue, val, labels...); err == nil {
 				ch <- metric
 			} else {
 				log.WithError(err).Errorln("collectDefaultMetrics -> scrapeDurationSeconds")
 			}
 		}
 	}
-	for jobName, job := range dm.scrapedSamples {
+	for jobName, job := range defMetrics.scrapedSamples {
 		for instanceName, val := range job {
 			labels := []string{jobName, instanceName}
-			if metric, err := prometheus.NewConstMetric(dm.scrapeSamplesScrapedDesc, prometheus.GaugeValue, val, labels...); err == nil {
+			if metric, err := prometheus.NewConstMetric(defMetrics.scrapeSamplesScrapedDesc, prometheus.GaugeValue, val, labels...); err == nil {
 				ch <- metric
 			} else {
 				log.WithError(err).Errorln("collectDefaultMetrics -> scrapeSamplesScrapedDesc")
