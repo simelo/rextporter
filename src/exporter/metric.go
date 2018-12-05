@@ -53,10 +53,21 @@ func createMetrics(cache cache.Cache, srvsConf []config.Service) (metrics endpoi
 	return metrics, err
 }
 
+var instance4JobLabels = []string{"job", "instance"}
+
 func newDefaultMetrics() *defaultMetrics {
-	labels := []string{"job", "instance"}
-	scrapeDurationSecondsDesc := prometheus.NewDesc("scrape_duration_seconds", "Scrape duration in seconds", labels, nil)
-	scrapeSamplesScrapedDesc := prometheus.NewDesc("scrape_samples_scraped", "The number of samples the target exposed", labels, nil)
+	scrapeDurationSecondsDesc := prometheus.NewDesc(
+		"scrape_duration_seconds",
+		"Scrape duration in seconds",
+		instance4JobLabels,
+		nil,
+	)
+	scrapeSamplesScrapedDesc := prometheus.NewDesc(
+		"scrape_samples_scraped",
+		"The number of samples the target exposed",
+		instance4JobLabels,
+		nil,
+	)
 	return &defaultMetrics{
 		scrapedDurations:          newScrapDuration(),
 		scrapeDurationSecondsDesc: scrapeDurationSecondsDesc,
@@ -78,13 +89,13 @@ func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf conf
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	labels := metricConf.LabelNames()
+	labels := append(metricConf.LabelNames(), instance4JobLabels...)
 	metric = constMetric{
 		kind:     metricConf.Options.Type,
 		scrapper: numScrapper,
 		// FIXME(denisacostaq@gmail.com): if you use a duplicated name can panic?
 		metricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
-		statusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", nil, nil),
+		statusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", instance4JobLabels, nil),
 	}
 	return metric, err
 }
