@@ -20,6 +20,11 @@ type MetricsCollector struct {
 	defMetrics *defaultMetrics
 }
 
+const (
+	metricHealthFlagSuccess = 1
+	metricHealthFlagFail    = 0
+)
+
 func newMetricsCollector(c cache.Cache, conf config.RootConfig) (collector *MetricsCollector, err error) {
 	const generalScopeErr = "error creating collector"
 	var metrics endpointData2MetricsConsumer
@@ -36,44 +41,11 @@ func (collector *MetricsCollector) Describe(ch chan<- *prometheus.Desc) {
 	for k := range collector.metrics {
 		for idxMColl := range collector.metrics[k] {
 			ch <- collector.metrics[k][idxMColl].metricDesc
-			ch <- collector.metrics[k][idxMColl].statusDesc
 		}
 	}
 }
 
 func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch chan<- prometheus.Metric) {
-	onCollectFail := func(counter constMetric, jobName, instanceName string, fch chan<- prometheus.Metric) {
-		if metric, err := prometheus.NewConstMetric(counter.statusDesc, prometheus.GaugeValue, 1, jobName, instanceName); err == nil {
-			fch <- metric
-		} else {
-			log.WithError(err).Errorln("collectCounter -> onCollectFail can not set up flag")
-		}
-		switch counter.lastSuccessValue.(type) {
-		case float64:
-			val, okVal := counter.lastSuccessValue.(float64)
-			if !okVal {
-				log.WithField("val", val).Errorln("can not get las success val")
-			}
-			if metric, err := prometheus.NewConstMetric(counter.metricDesc, prometheus.CounterValue, val, jobName, instanceName); err == nil {
-				fch <- metric
-			} else {
-				log.WithError(err).Errorln("collectCounter -> onCollectFail can not set the last success value")
-			}
-		case scrapper.NumericVecVals:
-			vals, okVals := counter.lastSuccessValue.(scrapper.NumericVecVals)
-			if !okVals {
-				log.WithField("vals", vals).Errorln("can not get las success vals")
-			}
-			for _, val := range vals {
-				labels := append(val.Labels, jobName, instanceName)
-				if metric, err := prometheus.NewConstMetric(counter.metricDesc, prometheus.CounterValue, val.Val, labels...); err == nil {
-					fch <- metric
-				} else {
-					log.WithError(err).Errorln("collectCounter -> onCollectFail can not set the last success vec value")
-				}
-			}
-		}
-	}
 	recoverNegativeCounter := func(counter constMetric, fch chan<- prometheus.Metric) {
 		if r := recover(); r != nil {
 			switch val := r.(type) {
@@ -84,47 +56,28 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 			default:
 				log.WithField("val", val).Errorln("recovered with un-know type")
 			}
-			// FIXME(denisacostaq@gmail.com): Handle this onCollectFail(counter, fch)
 		}
 	}
 	onCollectSuccess := func(counter *constMetric, jobName, instanceName string, fch chan<- prometheus.Metric, val float64) {
 		defer recoverNegativeCounter(*counter, fch)
-		if metric, err := prometheus.NewConstMetric(counter.statusDesc, prometheus.GaugeValue, 0, jobName, instanceName); err == nil {
-			fch <- metric
-		} else {
-			log.WithError(err).Errorln("collectCounter -> onCollectSuccess can not set down flag")
-			onCollectFail(*counter, jobName, instanceName, fch)
-			return
-		}
 		if metric, err := prometheus.NewConstMetric(counter.metricDesc, prometheus.CounterValue, val, jobName, instanceName); err == nil {
 			fch <- metric
 		} else {
 			log.WithError(err).Errorln("collectCounter -> onCollectSuccess can not set the value")
-			onCollectFail(*counter, jobName, instanceName, fch)
+			// FIXME(denisacostaq@gmail.com): onCollectFail(*counter, jobName, instanceName, fch)
 			return
 		}
-		counter.lastSuccessValue = val
 	}
 	onCollectVecSuccess := func(counter *constMetric, jobName, instanceName string, fch chan<- prometheus.Metric, vals scrapper.NumericVecVals) {
 		defer recoverNegativeCounter(*counter, fch)
-		if metric, err := prometheus.NewConstMetric(counter.statusDesc, prometheus.GaugeValue, 0, jobName, instanceName); err == nil {
-			fch <- metric
-		} else {
-			log.WithError(err).Errorln("collectCounter -> onCollectVecSuccess can not set down flag")
-			onCollectFail(*counter, jobName, instanceName, fch)
-			return
-		}
 		for _, val := range vals {
 			labels := append(val.Labels, jobName, instanceName)
 			if metric, err := prometheus.NewConstMetric(counter.metricDesc, prometheus.CounterValue, val.Val, labels...); err == nil {
 				fch <- metric
 			} else {
 				log.WithError(err).Errorln("collectCounter -> onCollectVecSuccess can not set the value")
-				onCollectFail(*counter, jobName, instanceName, fch)
-				return
 			}
 		}
-		counter.lastSuccessValue = vals
 	}
 	resC := make(chan scrapper.ScrapResult)
 	defer close(resC)
@@ -156,7 +109,6 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 					onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, counterVal)
 				} else {
 					log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to get value %+v as float64", res.Val))
-					onCollectFail(metricsColl[res.ConstMetricIdxOut], res.JobName, res.InstanceName, ch)
 				}
 			case scrapper.NumericVecVals:
 				counterVecVal, okCounterVecVal := res.Val.(scrapper.NumericVecVals)
@@ -165,84 +117,38 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 					onCollectVecSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, counterVecVal)
 				} else {
 					log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to get value %+v as float64", res.Val))
-					onCollectFail(metricsColl[res.ConstMetricIdxOut], res.JobName, res.InstanceName, ch)
 				}
 			default:
 				log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to determine value %+v type", res.Val))
-				onCollectFail(metricsColl[res.ConstMetricIdxOut], res.JobName, res.InstanceName, ch)
 			}
 			defMetrics.scrapedDurations.addSeconds(time.Since(startScrappingInPool).Seconds(), res.JobName, res.InstanceName)
 		case err := <-errC:
 			log.WithError(err.Err).Errorln("can not get the data")
-			onCollectFail(metricsColl[err.ConstMetricIdxOut], err.JobName, err.InstanceName, ch)
+			// FIXME(denisacostaq@gmail.com): onCollectFail(metricsColl[err.ConstMetricIdxOut], err.JobName, err.InstanceName, ch)
 			defMetrics.scrapedDurations.addSeconds(time.Since(startScrappingInPool).Seconds(), err.JobName, err.InstanceName)
 		}
 	}
 }
 
 func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch chan<- prometheus.Metric) {
-	onCollectFail := func(gauge constMetric, jobName, instanceName string, fch chan<- prometheus.Metric) {
-		if metric, err := prometheus.NewConstMetric(gauge.statusDesc, prometheus.GaugeValue, 1, jobName, instanceName); err == nil {
-			fch <- metric
-		} else {
-			log.WithError(err).Errorln("collectGauge -> onCollectFail can not set up flag")
-		}
-		switch gauge.lastSuccessValue.(type) {
-		case float64:
-			val := gauge.lastSuccessValue.(float64)
-			if metric, err := prometheus.NewConstMetric(gauge.metricDesc, prometheus.GaugeValue, val, jobName, instanceName); err == nil {
-				fch <- metric
-			} else {
-				log.WithError(err).Errorln("collectGauge -> onCollectFail can not set the last success value")
-			}
-		case scrapper.NumericVecVals:
-			vals := gauge.lastSuccessValue.(scrapper.NumericVecVals)
-			for _, val := range vals {
-				labels := append(val.Labels, jobName, instanceName)
-				if metric, err := prometheus.NewConstMetric(gauge.metricDesc, prometheus.GaugeValue, val.Val, labels...); err == nil {
-					fch <- metric
-				} else {
-					log.WithError(err).Errorln("collectGauge -> onCollectFail can not set the last success vec value")
-				}
-			}
-		}
-	}
 	onCollectSuccess := func(gauge *constMetric, jobName, instanceName string, fch chan<- prometheus.Metric, val float64) {
-		if metric, err := prometheus.NewConstMetric(gauge.statusDesc, prometheus.GaugeValue, 0, jobName, instanceName); err == nil {
-			fch <- metric
-		} else {
-			log.WithError(err).Errorln("collectGauge -> onCollectSuccess can not set down flag")
-			onCollectFail(*gauge, jobName, instanceName, fch)
-			return
-		}
 		if metric, err := prometheus.NewConstMetric(gauge.metricDesc, prometheus.GaugeValue, val, jobName, instanceName); err == nil {
 			fch <- metric
 		} else {
 			log.WithError(err).Errorln("collectGauge -> onCollectSuccess can not set the value")
-			onCollectFail(*gauge, jobName, instanceName, fch)
+			// FIXME(denisacostaq@gmail.com): onCollectFail(*gauge, jobName, instanceName, fch)
 			return
 		}
-		gauge.lastSuccessValue = val
 	}
 	onCollectVecSuccess := func(gauge *constMetric, jobName, instanceName string, fch chan<- prometheus.Metric, vals scrapper.NumericVecVals) {
-		if metric, err := prometheus.NewConstMetric(gauge.statusDesc, prometheus.GaugeValue, 0, jobName, instanceName); err == nil {
-			fch <- metric
-		} else {
-			log.WithError(err).Errorln("collectGauge -> onCollectVecSuccess can not set down flag")
-			onCollectFail(*gauge, jobName, instanceName, fch)
-			return
-		}
 		for _, val := range vals {
 			labels := append(val.Labels, jobName, instanceName)
 			if metric, err := prometheus.NewConstMetric(gauge.metricDesc, prometheus.GaugeValue, val.Val, labels...); err == nil {
 				fch <- metric
 			} else {
 				log.WithError(err).Errorln("collectGauge -> onCollectVecSuccess can not set the value")
-				onCollectFail(*gauge, jobName, instanceName, fch)
-				return
 			}
 		}
-		gauge.lastSuccessValue = vals
 	}
 	resC := make(chan scrapper.ScrapResult)
 	defer close(resC)
@@ -274,7 +180,7 @@ func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch cha
 					onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, gaugeVal)
 				} else {
 					log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to get value %+v as float64", res.Val))
-					onCollectFail(metricsColl[res.ConstMetricIdxOut], res.JobName, res.InstanceName, ch)
+					// FIXME(denisacostaq@gmail.com): onCollectFail(metricsColl[res.ConstMetricIdxOut], res.JobName, res.InstanceName, ch)
 				}
 			case scrapper.NumericVecVals:
 				gaugeVecVal, okGaugeVecVal := res.Val.(scrapper.NumericVecVals)
@@ -283,52 +189,23 @@ func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch cha
 					onCollectVecSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, gaugeVecVal)
 				} else {
 					log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to get value %+v as float64", res.Val))
-					onCollectFail(metricsColl[res.ConstMetricIdxOut], res.JobName, res.InstanceName, ch)
+					// FIXME(denisacostaq@gmail.com): onCollectFail(metricsColl[res.ConstMetricIdxOut], res.JobName, res.InstanceName, ch)
 				}
 			default:
 				log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to determine value %+v type", res.Val))
-				onCollectFail(metricsColl[res.ConstMetricIdxOut], res.JobName, res.InstanceName, ch)
+				// FIXME(denisacostaq@gmail.com): onCollectFail(metricsColl[res.ConstMetricIdxOut], res.JobName, res.InstanceName, ch)
 			}
 			defMetrics.scrapedDurations.addSeconds(time.Since(startScrappingInPool).Seconds(), res.JobName, res.InstanceName)
 		case err := <-errC:
 			log.WithError(err.Err).Errorln("can not get the data")
-			onCollectFail(metricsColl[err.ConstMetricIdxOut], err.JobName, err.InstanceName, ch)
+			// FIXME(denisacostaq@gmail.com): onCollectFail(metricsColl[err.ConstMetricIdxOut], err.JobName, err.InstanceName, ch)
 			defMetrics.scrapedDurations.addSeconds(time.Since(startScrappingInPool).Seconds(), err.JobName, err.InstanceName)
 		}
 	}
 }
 
 func collectHistograms(metricsColl []constMetric, defMetrics *defaultMetrics, ch chan<- prometheus.Metric) {
-	onCollectFail := func(histogram constMetric, jobName, instanceName string, fch chan<- prometheus.Metric) {
-		if metric, err := prometheus.NewConstMetric(histogram.statusDesc, prometheus.GaugeValue, 1, jobName, instanceName); err == nil {
-			fch <- metric
-		} else {
-			log.WithError(err).Errorln("collectHistogram -> onCollectFail can not set up flag")
-		}
-		lastSuccessVal, okLastSuccessVal := histogram.lastSuccessValue.(scrapper.HistogramValue)
-		if okLastSuccessVal {
-			if metric, err := prometheus.NewConstHistogram(
-				histogram.metricDesc,
-				lastSuccessVal.Count,
-				lastSuccessVal.Sum,
-				lastSuccessVal.Buckets,
-				jobName,
-				instanceName,
-			); err == nil {
-				fch <- metric
-			} else {
-				log.WithError(err).Errorln("collectHistogram -> onCollectFail can not set the last success value")
-			}
-		} else {
-			log.WithField("val", histogram).Errorln(fmt.Sprintf("unable to get value %+v as histogram val", histogram))
-		}
-	}
 	onCollectSuccess := func(histogram *constMetric, jobName, instanceName string, fch chan<- prometheus.Metric, val scrapper.HistogramValue) {
-		if metric, err := prometheus.NewConstMetric(histogram.statusDesc, prometheus.GaugeValue, 0, jobName, instanceName); err == nil {
-			fch <- metric
-		} else {
-			log.WithError(err).Errorln("collectHistogram -> onCollectSuccess can not set down flag")
-		}
 		if metric, err := prometheus.NewConstHistogram(
 			histogram.metricDesc,
 			val.Count,
@@ -341,7 +218,6 @@ func collectHistograms(metricsColl []constMetric, defMetrics *defaultMetrics, ch
 		} else {
 			log.WithError(err).Errorln("collectHistogram -> onCollectSuccess can not set the value")
 		}
-		histogram.lastSuccessValue = val
 	}
 	resC := make(chan scrapper.ScrapResult)
 	defer close(resC)
@@ -375,14 +251,13 @@ func collectHistograms(metricsColl []constMetric, defMetrics *defaultMetrics, ch
 			defMetrics.scrapedDurations.addSeconds(time.Since(startScrappingInPool).Seconds(), res.JobName, res.InstanceName)
 		case err := <-errC:
 			log.WithError(err.Err).Errorln("can not get the data")
-			onCollectFail(metricsColl[err.ConstMetricIdxOut], err.JobName, err.InstanceName, ch)
+			// FIXME(denisacostaq@gmail.com): onCollectFail(metricsColl[err.ConstMetricIdxOut], err.JobName, err.InstanceName, ch)
 			defMetrics.scrapedDurations.addSeconds(time.Since(startScrappingInPool).Seconds(), err.JobName, err.InstanceName)
 		}
 	}
 }
 
 //Collect update all the descriptors is values
-// TODO(denisacostaq@gmail.com): Make a research about race conditions here, "lastSuccessValue"
 func (collector *MetricsCollector) Collect(ch chan<- prometheus.Metric) {
 	filterMetricsByKind := func(kind string, orgMetrics []constMetric) (filteredMetrics []constMetric) {
 		for _, metric := range orgMetrics {

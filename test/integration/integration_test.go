@@ -3,12 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -198,49 +195,6 @@ func (suite *HealthSuit) createDirectoriesWithFullDepth(dirs []string) {
 	}
 }
 
-func metricHealthIsOk(metricName, metricData string) bool {
-	if !strings.Contains(metricData, metricName) {
-		log.WithField("metricName", metricName).Errorln("metric name not found")
-		return false
-	}
-	metricHealth := metricName + "_up"
-	if !strings.Contains(metricData, metricHealth) {
-		log.WithField("metricHealth", metricHealth).Errorln("metric health name not found")
-		return false
-	}
-	lines := strings.Split(metricData, "\n")
-	var linesWhoMentionMetric []string
-	for _, line := range lines {
-		if strings.Contains(line, metricHealth) {
-			linesWhoMentionMetric = append(linesWhoMentionMetric, line)
-		}
-	}
-	var targetLine string
-	for _, line := range linesWhoMentionMetric {
-		if strings.Contains(line, "# TYPE ") || strings.Contains(line, "# HELP ") {
-			continue
-		} else {
-			targetLine = line
-			break
-		}
-	}
-	if strings.Compare(targetLine, "") == 0 {
-		log.Errorln("can not find target line")
-		return false
-	}
-	targetFields := strings.Split(targetLine, " ")
-	if val, err := strconv.Atoi(targetFields[1]); err != nil || val != 0 {
-		if err != nil {
-			log.WithError(err).Errorln("unable to convert the value")
-		}
-		if val != 0 {
-			log.WithField("val", val).Errorln("flag is set")
-		}
-		return false
-	}
-	return true
-}
-
 func readListenPortFromFile() (port uint16, err error) {
 	var path string
 	path, err = testrand.FilePathToSharePort()
@@ -346,14 +300,10 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 	defer func() { suite.Nil(resp.Body.Close()) }()
 	suite.Nil(err)
 	suite.Equal(http.StatusOK, resp.StatusCode)
-	var data []byte
-	data, err = ioutil.ReadAll(resp.Body)
-	suite.Nil(err)
 	suite.Len(conf.Services, 1)
 	suite.Len(conf.Services[0].Metrics, 1)
 	metricName := config.SystemProgramName + "_" + conf.Services[0].Name + "_" + conf.Services[0].Metrics[0].Name
 	suite.Equal(metricName, config.SystemProgramName+"_myMonitoredServer_open_connections_is_a_fake_name_for_test_purpose")
-	suite.True(metricHealthIsOk(metricName, string(data)))
 	var usingAVariableToMakeLinterHappy = context.Context(nil)
 	suite.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
 }
@@ -390,14 +340,10 @@ func (suite *HealthSuit) TestMetricMonitorHealthCanSetUpFlag() {
 	defer func() { suite.Nil(resp.Body.Close()) }()
 	suite.Nil(err)
 	suite.Equal(http.StatusOK, resp.StatusCode)
-	var data []byte
-	data, err = ioutil.ReadAll(resp.Body)
-	suite.Nil(err)
 	suite.require.Len(conf.Services, 1)
 	suite.require.Len(conf.Services[0].Metrics, 1)
 	metricName := config.SystemProgramName + "_" + conf.Services[0].Name + "_" + conf.Services[0].Metrics[0].Name
 	suite.Equal(metricName, config.SystemProgramName+"_myMonitoredServer_can_not_be_updated")
-	suite.False(metricHealthIsOk(metricName, string(data)))
 	suite.Nil(srv.Shutdown(context.Context(nil)))
 }
 
@@ -447,14 +393,10 @@ func (suite *HealthSuit) TestMetricMonitorAsProxy() {
 	suite.Nil(err)
 	defer func() { suite.Nil(resp.Body.Close()) }()
 	suite.Equal(http.StatusOK, resp.StatusCode)
-	var data []byte
-	data, err = ioutil.ReadAll(resp.Body)
-	suite.Nil(err)
 	suite.require.Len(conf.Services, 1)
 	suite.require.Len(conf.Services[0].Metrics, 0)
 	metricName := conf.Services[0].Name + "_skycoin_wallet2_seq2"
 	suite.require.Equal(metricName, "myMonitoredAsProxyServer_skycoin_wallet2_seq2")
-	suite.require.True(metricHealthIsOk(metricName, string(data)))
 	var usingAVariableToMakeLinterHappy = context.Context(nil)
 	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
 }
@@ -502,14 +444,10 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithNonMetricsEndpoint() {
 	suite.Nil(err)
 	defer func() { suite.Nil(resp.Body.Close()) }()
 	suite.Equal(http.StatusOK, resp.StatusCode)
-	var data []byte
-	data, err = ioutil.ReadAll(resp.Body)
-	suite.Nil(err)
 	suite.require.Len(conf.Services, 1)
 	suite.require.Len(conf.Services[0].Metrics, 0)
 	metricName := conf.Services[0].Name + "_skycoin_wallet2_seq2"
 	suite.Equal(metricName, "myMonitoredAsProxyServer_skycoin_wallet2_seq2")
-	suite.require.False(metricHealthIsOk(metricName, string(data)))
 	var usingAVariableToMakeLinterHappy = context.Context(nil)
 	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
 }
@@ -555,16 +493,11 @@ func (suite *HealthSuit) TestMetricMonitorAsProxyWithMetricsNamesOverlap() {
 	suite.Nil(err)
 	defer func() { suite.Nil(resp.Body.Close()) }()
 	suite.Equal(http.StatusOK, resp.StatusCode)
-	var data []byte
-	data, err = ioutil.ReadAll(resp.Body)
-	suite.Nil(err)
 	suite.require.Len(conf.Services, 1)
 	suite.require.Len(conf.Services[0].Metrics, 0)
 	metricName := conf.Services[0].Name + "_seq"
 	suite.require.Equal(metricName, "myMonitoredAsProxyServer2_seq")
-	suite.require.True(metricHealthIsOk(metricName, string(data)))
 	metricName = conf.Services[0].Name + "_main_seq"
 	suite.require.Equal(metricName, "myMonitoredAsProxyServer2_main_seq")
-	suite.require.True(metricHealthIsOk(metricName, string(data)))
 	suite.Nil(srv.Shutdown(context.Context(nil)))
 }

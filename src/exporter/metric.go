@@ -27,11 +27,9 @@ func createMetricsForwaders(conf config.RootConfig) (scrapper.Scrapper, error) {
 
 // constMetric has a scrapper to get remote data, can be a previously cached content
 type constMetric struct {
-	kind             string
-	scrapper         scrapper.APIRestScrapper
-	lastSuccessValue interface{}
-	metricDesc       *prometheus.Desc
-	statusDesc       *prometheus.Desc
+	kind       string
+	scrapper   scrapper.APIRestScrapper
+	metricDesc *prometheus.Desc
 }
 
 type endpointData2MetricsConsumer map[string][]constMetric
@@ -95,7 +93,6 @@ func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf conf
 		scrapper: numScrapper,
 		// FIXME(denisacostaq@gmail.com): if you use a duplicated name can panic?
 		metricDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name), metricConf.Options.Description, labels, nil),
-		statusDesc: prometheus.NewDesc(srvConf.MetricName(metricConf.Name)+"_up", "Says if the same name metric("+srvConf.MetricName(metricConf.Name)+") was success updated, 1 for ok, 0 for failed.", instance4JobLabels, nil),
 	}
 	return metric, err
 }
