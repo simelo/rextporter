@@ -12,11 +12,6 @@ import (
 type Scrapper interface {
 	// GetMetric receive some data as input and should return the metric val
 	GetMetric() (val interface{}, err error)
-}
-
-// APIRestScrapper is a scrapper that know the service name and the server base path, useful for API rest based scrappers
-type APIRestScrapper interface {
-	Scrapper
 	GetJobName() string
 	GetInstanceName() string
 }
@@ -44,7 +39,7 @@ type BodyParser interface {
 }
 
 // NewScrapper will put all the required info to scrap metrics from the body returned by the client.
-func NewScrapper(cf client.Factory, parser BodyParser, metric config.Metric, srvConf config.Service) (APIRestScrapper, error) {
+func NewScrapper(cf client.Factory, parser BodyParser, metric config.Metric, srvConf config.Service) (Scrapper, error) {
 	jobName := srvConf.JobName()
 	instanceName := srvConf.InstanceName()
 	if len(metric.LabelNames()) > 0 {
@@ -53,14 +48,14 @@ func NewScrapper(cf client.Factory, parser BodyParser, metric config.Metric, srv
 	return createAtomicScrapper(cf, parser, metric, jobName, instanceName)
 }
 
-func createVecScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName string) (APIRestScrapper, error) {
+func createVecScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName string) (Scrapper, error) {
 	if metric.Options.Type == config.KeyTypeCounter || metric.Options.Type == config.KeyTypeGauge {
 		return newNumericVec(cf, parser, metric, jobName, instanceName), nil
 	}
 	return NumericVec{}, errors.New("histogram vec and summary vec are not supported yet")
 }
 
-func createAtomicScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName string) (APIRestScrapper, error) {
+func createAtomicScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName string) (Scrapper, error) {
 	if metric.Options.Type == config.KeyTypeSummary {
 		return Histogram{}, errors.New("summary scrapper is not supported yet")
 	}

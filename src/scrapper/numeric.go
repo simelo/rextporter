@@ -12,7 +12,7 @@ type Numeric struct {
 	baseScrapper
 }
 
-func newNumeric(cf client.Factory, p BodyParser, path, jobName, instanceName string) APIRestScrapper {
+func newNumeric(cf client.Factory, p BodyParser, path, jobName, instanceName string) Scrapper {
 	return Numeric{
 		baseScrapper: baseScrapper{
 			clientFactory: cf,

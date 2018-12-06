@@ -15,7 +15,6 @@ import (
 // ProxyMetricClientCreator create a metrics fordwader client
 type ProxyMetricClientCreator struct {
 	dataPath     string
-	ServiceName  string
 	JobName      string
 	InstanceName string
 }
@@ -27,7 +26,6 @@ func CreateProxyMetricClientCreator(service config.Service) (cf ProxyMetricClien
 	}
 	cf = ProxyMetricClientCreator{
 		dataPath:     service.URIToGetExposedMetric(),
-		ServiceName:  service.Name,
 		JobName:      service.JobName(),
 		InstanceName: service.InstanceName(),
 	}

@@ -11,24 +11,25 @@ import (
 	"github.com/simelo/rextporter/src/util"
 )
 
-func createMetricsForwaders(conf config.RootConfig) (scrapper.Scrapper, error) {
+func createMetricsForwaders(conf config.RootConfig) (fordwaderScrappers []scrapper.Scrapper, err error) {
 	generalScopeErr := "can not create metrics Middleware"
 	services := conf.FilterServicesByType(config.ServiceTypeProxy)
-	proxyMetricClientCreators := make([]client.ProxyMetricClientCreator, len(services))
+	fordwaderScrappers = make([]scrapper.Scrapper, len(services))
 	for idxService := range services {
-		var err error
-		if proxyMetricClientCreators[idxService], err = client.CreateProxyMetricClientCreator(services[idxService]); err != nil {
+		var metricFordwaderCreator client.ProxyMetricClientCreator
+		if metricFordwaderCreator, err = client.CreateProxyMetricClientCreator(services[idxService]); err != nil {
 			errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
+		fordwaderScrappers[idxService] = scrapper.NewMetricsForwader(metricFordwaderCreator)
 	}
-	return scrapper.NewMetricsForwaders(proxyMetricClientCreators), nil
+	return fordwaderScrappers, nil
 }
 
 // constMetric has a scrapper to get remote data, can be a previously cached content
 type constMetric struct {
 	kind       string
-	scrapper   scrapper.APIRestScrapper
+	scrapper   scrapper.Scrapper
 	metricDesc *prometheus.Desc
 }
 
@@ -82,7 +83,7 @@ func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf conf
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	cc := client.CatcherCreator{Cache: cache, ClientFactory: ccf}
-	var numScrapper scrapper.APIRestScrapper
+	var numScrapper scrapper.Scrapper
 	if numScrapper, err = scrapper.NewScrapper(cc, scrapper.JSONParser{}, metricConf, srvConf); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)

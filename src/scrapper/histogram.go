@@ -17,7 +17,7 @@ type Histogram struct {
 	buckets histogramClientOptions
 }
 
-func newHistogram(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName string) APIRestScrapper {
+func newHistogram(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName string) Scrapper {
 	return Histogram{
 		baseScrapper: baseScrapper{
 			clientFactory: cf,

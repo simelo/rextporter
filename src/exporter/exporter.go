@@ -19,7 +19,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func exposedMetricsMiddleware(fs scrapper.Scrapper, promHandler http.Handler) http.Handler {
+func exposedMetricsMiddleware(fordwaderScrappers []scrapper.Scrapper, promHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		getDefaultData := func() (data []byte, err error) {
 			generalScopeErr := "error reding default data"
@@ -49,12 +49,12 @@ func exposedMetricsMiddleware(fs scrapper.Scrapper, promHandler http.Handler) ht
 		} else {
 			allData = append(allData, defaultData...)
 		}
-		var iMetrics interface{}
-		var err error
-		if iMetrics, err = fs.GetMetric(); err != nil {
-			log.WithError(err).Errorln("error scrapping fordwader metrics")
-		} else {
-			if iMetrics != nil {
+		for _, fs := range fordwaderScrappers {
+			var iMetrics interface{}
+			var err error
+			if iMetrics, err = fs.GetMetric(); err != nil {
+				log.WithError(err).Errorln("error scrapping fordwader metrics")
+			} else {
 				customData, okCustomData := iMetrics.([]byte)
 				if okCustomData {
 					allData = append(allData, customData...)

@@ -16,7 +16,7 @@ type NumericVec struct {
 	itemPath   string
 }
 
-func newNumericVec(cf client.Factory, p BodyParser, metric config.Metric, jobName, instanceName string) APIRestScrapper {
+func newNumericVec(cf client.Factory, p BodyParser, metric config.Metric, jobName, instanceName string) Scrapper {
 	return NumericVec{
 		baseScrapper: baseScrapper{
 			clientFactory: cf,
