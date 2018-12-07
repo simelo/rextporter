@@ -20,7 +20,7 @@ var instance4JobLabels = []string{"job", "instance"}
 
 func newDefaultMetrics() *defaultMetrics {
 	scrapeDurationsDesc := prometheus.NewDesc(
-		"scrape_duration",
+		"scrape_duration_seconds",
 		"Elapse time(in seconds) to get a response from a scrapper",
 		instance4JobLabels,
 		nil,
@@ -32,13 +32,13 @@ func newDefaultMetrics() *defaultMetrics {
 		nil,
 	)
 	datasourceResponseDurationDesc := prometheus.NewDesc(
-		"datasource_response_duration",
+		"datasource_response_duration_seconds",
 		"Elapse time(in seconds) to get a response from a datasource",
 		append(instance4JobLabels, "datasource"),
 		nil,
 	)
 	dataSourceScrapeDurationDesc := prometheus.NewDesc(
-		"datasource_scrape_duration",
+		"datasource_scrape_duration_seconds",
 		"Elapse time(in seconds) to get a response from a datasource in a scrapper",
 		append(instance4JobLabels, "datasource"),
 		nil,
