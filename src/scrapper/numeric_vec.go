@@ -3,6 +3,7 @@ package scrapper
 import (
 	"fmt"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
@@ -40,10 +41,10 @@ type NumericVecItemVal struct {
 type NumericVecVals []NumericVecItemVal
 
 // GetMetric returns a numeric(Gauge or Counter) vector metric by using remote data.
-func (nv NumericVec) GetMetric() (val interface{}, err error) {
+func (nv NumericVec) GetMetric(metricsCollector chan<- prometheus.Metric) (val interface{}, err error) {
 	const generalScopeErr = "error scrapping numeric vec(gauge|counter) metric vec"
 	var iBody interface{}
-	if iBody, err = getData(nv.clientFactory, nv.parser); err != nil {
+	if iBody, err = getData(nv.clientFactory, nv.parser, metricsCollector); err != nil {
 		errCause := "numeric vec client can not decode the body"
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

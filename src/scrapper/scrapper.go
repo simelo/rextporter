@@ -3,6 +3,7 @@ package scrapper
 import (
 	"errors"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
@@ -10,8 +11,8 @@ import (
 
 // Scrapper get metrics from raw data
 type Scrapper interface {
-	// GetMetric receive some data as input and should return the metric val
-	GetMetric() (val interface{}, err error)
+	// GetMetric the metrics collector channel and should return the metric val
+	GetMetric(metricsCollector chan<- prometheus.Metric) (val interface{}, err error)
 	GetJobName() string
 	GetInstanceName() string
 }
@@ -65,7 +66,7 @@ func createAtomicScrapper(cf client.Factory, parser BodyParser, metric config.Me
 	return newNumeric(cf, parser, metric.Path, jobName, instanceName), nil
 }
 
-func getData(cf client.Factory, p BodyParser) (data interface{}, err error) {
+func getData(cf client.Factory, p BodyParser, metricsCollector chan<- prometheus.Metric) (data interface{}, err error) {
 	const generalScopeErr = "error getting data"
 	var cl client.Client
 	if cl, err = cf.CreateClient(); err != nil {
@@ -73,7 +74,7 @@ func getData(cf client.Factory, p BodyParser) (data interface{}, err error) {
 		return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var body []byte
-	if body, err = cl.GetData(); err != nil {
+	if body, err = cl.GetData(metricsCollector); err != nil {
 		errCause := "client can not get data"
 		return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

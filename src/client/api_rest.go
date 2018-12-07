@@ -6,14 +6,18 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/oliveagle/jsonpath"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
+	log "github.com/sirupsen/logrus"
 )
 
 // APIRestCreator have info to create api rest an client
 type APIRestCreator struct {
+	baseFactory
 	httpMethod           string
 	dataPath             string
 	tokenPath            string
@@ -22,8 +26,14 @@ type APIRestCreator struct {
 }
 
 // CreateAPIRestCreator create an APIRestCreator
-func CreateAPIRestCreator(metric config.Metric, service config.Service) (cf CacheableFactory, err error) {
+func CreateAPIRestCreator(metric config.Metric, service config.Service, datasourceResponseDurationDesc *prometheus.Desc) (cf CacheableFactory, err error) {
 	cf = APIRestCreator{
+		baseFactory: baseFactory{
+			jobName:                        service.JobName(),
+			instanceName:                   service.InstanceName(),
+			datasource:                     metric.URL,
+			datasourceResponseDurationDesc: datasourceResponseDurationDesc,
+		},
 		httpMethod:           metric.HTTPMethod,
 		dataPath:             service.URIToGetMetric(metric),
 		tokenPath:            service.URIToGetToken(),
@@ -42,12 +52,26 @@ func (ac APIRestCreator) CreateClient() (cl CacheableClient, err error) {
 		return APIRest{}, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	var tokenClient Client
-	tc := TokenCreator{URIToGenToken: ac.tokenPath}
+	tc := TokenCreator{
+		baseFactory: baseFactory{
+			jobName:                        ac.jobName,
+			instanceName:                   ac.instanceName,
+			datasource:                     ac.tokenPath,
+			datasourceResponseDurationDesc: ac.datasourceResponseDurationDesc,
+		},
+		URIToGenToken: ac.tokenPath,
+	}
 	if tokenClient, err = tc.CreateClient(); err != nil {
 		errCause := fmt.Sprintln("create token client: ", err.Error())
 		return APIRest{}, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	cl = APIRest{
+		baseClient: baseClient{
+			jobName:                        ac.jobName,
+			instanceName:                   ac.instanceName,
+			datasource:                     ac.datasource,
+			datasourceResponseDurationDesc: ac.datasourceResponseDurationDesc,
+		},
 		baseCacheableClient:  baseCacheableClient(ac.dataPath),
 		req:                  req,
 		tokenClient:          tokenClient,
@@ -59,6 +83,7 @@ func (ac APIRestCreator) CreateClient() (cl CacheableClient, err error) {
 
 // APIRest have common data to be shared through embedded struct in those type who implement the client.Client interface
 type APIRest struct {
+	baseClient
 	baseCacheableClient
 	req                  *http.Request
 	tokenClient          Client
@@ -68,21 +93,37 @@ type APIRest struct {
 }
 
 // GetData can retrieve data from a rest API with a retry pollicy for token expiration.
-func (cl APIRest) GetData() (data []byte, err error) {
+func (cl APIRest) GetData(metricsCollector chan<- prometheus.Metric) (data []byte, err error) {
 	const generalScopeErr = "error making a server request to get metric from remote endpoint"
 	cl.req.Header.Set(cl.tokenHeaderKey, cl.token)
 	getData := func() (data []byte, err error) {
 		httpClient := &http.Client{}
 		var resp *http.Response
-		if resp, err = httpClient.Do(cl.req); err != nil {
-			errCause := fmt.Sprintln("can not do the request: ", err.Error())
-			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
+		{
+			successResponse := false
+			defer func(startTime time.Time) {
+				duration := time.Since(startTime).Seconds()
+				labels := []string{cl.jobName, cl.instanceName, cl.datasource}
+				if successResponse {
+					if metric, err := prometheus.NewConstMetric(cl.datasourceResponseDurationDesc, prometheus.GaugeValue, duration, labels...); err == nil {
+						metricsCollector <- metric
+					} else {
+						log.WithFields(log.Fields{"err": err, "labels": labels}).Errorln("can not send datasource response duration resolving api rest")
+						return
+					}
+				}
+			}(time.Now().UTC())
+			if resp, err = httpClient.Do(cl.req); err != nil {
+				errCause := fmt.Sprintln("can not do the request: ", err.Error())
+				return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
+			}
+			if resp.StatusCode != http.StatusOK {
+				errCause := fmt.Sprintf("no success response, status %s", resp.Status)
+				return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
+			}
+			successResponse = true
 		}
 		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			errCause := fmt.Sprintf("no success response, status %s", resp.Status)
-			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
-		}
 		if data, err = ioutil.ReadAll(resp.Body); err != nil {
 			errCause := fmt.Sprintln("can not read the body: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
@@ -91,7 +132,7 @@ func (cl APIRest) GetData() (data []byte, err error) {
 	}
 	if data, err = getData(); err != nil {
 		// log.Println("can not do the request:", err.Error(), "trying with a new token...")
-		if err = cl.resetToken(); err != nil {
+		if err = cl.resetToken(metricsCollector); err != nil {
 			errCause := fmt.Sprintln("can not reset the token: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
@@ -103,11 +144,11 @@ func (cl APIRest) GetData() (data []byte, err error) {
 	return data, nil
 }
 
-func (cl APIRest) resetToken() (err error) {
+func (cl APIRest) resetToken(metricsCollector chan<- prometheus.Metric) (err error) {
 	const generalScopeErr = "error making resetting the token"
 	cl.token = ""
 	var data []byte
-	if data, err = cl.tokenClient.GetData(); err != nil {
+	if data, err = cl.tokenClient.GetData(metricsCollector); err != nil {
 		errCause := fmt.Sprintln("can make the request to get a token: ", err.Error())
 		return util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

@@ -13,13 +13,13 @@ func newScrapDuration() scrapDurationInJob {
 }
 
 func (sd scrapDurationInJob) addSeconds(amount float64, jobName, instanceName string) {
-	instance, okInstance := sd[jobName]
-	if okInstance {
-		instance[instanceName] += amount
+	instances, okInstances := sd[jobName]
+	if okInstances {
+		instances[instanceName] += amount
 	} else {
-		sdi := make(scrapDurationInInstance)
-		sdi[instanceName] = amount
-		sd[jobName] = sdi
+		instances := make(scrapDurationInInstance)
+		instances[instanceName] = amount
+		sd[jobName] = instances
 	}
 }
 
@@ -28,6 +28,13 @@ type defaultMetrics struct {
 	scrapeDurationSecondsDesc *prometheus.Desc
 	scrapedSamples            scrapDurationInJob
 	scrapeSamplesScrapedDesc  *prometheus.Desc
+	datasourceResponseDurationDesc *prometheus.Desc
+}
+
+func (defMetrics defaultMetrics) describe(ch chan<- *prometheus.Desc) {
+	ch <- defMetrics.scrapeDurationSecondsDesc
+	ch <- defMetrics.scrapeSamplesScrapedDesc
+	ch <- defMetrics.datasourceResponseDurationDesc
 }
 
 func (defMetrics *defaultMetrics) reset() {

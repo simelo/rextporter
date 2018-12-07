@@ -3,6 +3,7 @@ package scrapper
 import (
 	"fmt"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/util"
 )
@@ -24,10 +25,10 @@ func newNumeric(cf client.Factory, p BodyParser, path, jobName, instanceName str
 }
 
 // GetMetric returns a single number with the metric value, is a counter or a gauge
-func (n Numeric) GetMetric() (val interface{}, err error) {
+func (n Numeric) GetMetric(metricsCollector chan<- prometheus.Metric) (val interface{}, err error) {
 	const generalScopeErr = "error scrapping numeric(gauge|counter) metric"
 	var iBody interface{}
-	if iBody, err = getData(n.clientFactory, n.parser); err != nil {
+	if iBody, err = getData(n.clientFactory, n.parser, metricsCollector); err != nil {
 		errCause := "numeric client can not decode the body"
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

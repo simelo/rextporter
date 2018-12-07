@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
 )
@@ -53,7 +54,7 @@ type ProxyMetricClient struct {
 }
 
 // GetData can get raw metrics from a endpoint
-func (client ProxyMetricClient) GetData() (data []byte, err error) {
+func (client ProxyMetricClient) GetData(metricsCollector chan<- prometheus.Metric) (data []byte, err error) {
 	const generalScopeErr = "error making a server request to get the metrics from remote endpoint"
 	httpClient := &http.Client{}
 	var resp *http.Response

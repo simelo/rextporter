@@ -22,12 +22,13 @@ type MetricsCollector struct {
 
 func newMetricsCollector(c cache.Cache, conf config.RootConfig) (collector *MetricsCollector, err error) {
 	const generalScopeErr = "error creating collector"
+	defMetrics := newDefaultMetrics()
 	var metrics endpointData2MetricsConsumer
-	if metrics, err = createMetrics(c, conf.Services); err != nil {
+	if metrics, err = createMetrics(c, conf.Services, defMetrics.datasourceResponseDurationDesc); err != nil {
 		errCause := fmt.Sprintln("error creating metrics: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	collector = &MetricsCollector{metrics: metrics, cache: c, defMetrics: newDefaultMetrics()}
+	collector = &MetricsCollector{metrics: metrics, cache: c, defMetrics: defMetrics}
 	return collector, err
 }
 
@@ -38,6 +39,7 @@ func (collector *MetricsCollector) Describe(ch chan<- *prometheus.Desc) {
 			ch <- collector.metrics[k][idxMColl].metricDesc
 		}
 	}
+	collector.defMetrics.describe(ch)
 }
 
 func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch chan<- prometheus.Metric) {
@@ -89,6 +91,7 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 				JobName:          mColl.scrapper.GetJobName(),
 				InstanceName:     mColl.scrapper.GetInstanceName(),
 				Err:              errC,
+				MetricsCollector: ch,
 			},
 		)
 		metricsNum++
@@ -160,6 +163,7 @@ func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch cha
 				JobName:          mColl.scrapper.GetJobName(),
 				InstanceName:     mColl.scrapper.GetInstanceName(),
 				Err:              errC,
+				MetricsCollector: ch,
 			},
 		)
 		metricsNum++
@@ -229,6 +233,7 @@ func collectHistograms(metricsColl []constMetric, defMetrics *defaultMetrics, ch
 				JobName:          mColl.scrapper.GetJobName(),
 				InstanceName:     mColl.scrapper.GetInstanceName(),
 				Err:              errC,
+				MetricsCollector: ch,
 			},
 		)
 		metricsNum++

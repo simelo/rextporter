@@ -3,6 +3,7 @@ package scrapper
 import (
 	"fmt"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
@@ -31,10 +32,10 @@ func newHistogram(cf client.Factory, parser BodyParser, metric config.Metric, jo
 }
 
 // GetMetric return a histogram metrics val
-func (h Histogram) GetMetric() (val interface{}, err error) {
+func (h Histogram) GetMetric(metricsCollector chan<- prometheus.Metric) (val interface{}, err error) {
 	const generalScopeErr = "error scrapping histogram metric"
 	var iBody interface{}
-	if iBody, err = getData(h.clientFactory, h.parser); err != nil {
+	if iBody, err = getData(h.clientFactory, h.parser, metricsCollector); err != nil {
 		errCause := "histogram client can not decode the body"
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

@@ -52,7 +52,8 @@ func exposedMetricsMiddleware(fordwaderScrappers []scrapper.Scrapper, promHandle
 		for _, fs := range fordwaderScrappers {
 			var iMetrics interface{}
 			var err error
-			if iMetrics, err = fs.GetMetric(); err != nil {
+			// FIXME(denisacostaq@gmail.com): This approach not work here.
+			if iMetrics, err = fs.GetMetric(nil /*metricsCollector*/); err != nil {
 				log.WithError(err).Errorln("error scrapping fordwader metrics")
 			} else {
 				customData, okCustomData := iMetrics.([]byte)

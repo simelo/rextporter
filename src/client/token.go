@@ -4,18 +4,39 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/util"
+	log "github.com/sirupsen/logrus"
 )
 
 // TokenCreator create token clients
 type TokenCreator struct {
+	baseFactory
 	URIToGenToken string
 }
 
 // CreateClient create a token client
 func (tc TokenCreator) CreateClient() (cl Client, err error) {
-	return newTokenClient(tc.URIToGenToken)
+	const generalScopeErr = "error creating a client to get a toke from remote endpoint for making future requests"
+	// client = TokenClient{baseClient: baseClient{service: service}}
+	// FIXME(denisacostaq@gmail.com): make the "GET" configurable.
+	var req *http.Request
+	if req, err = http.NewRequest("GET", tc.URIToGenToken, nil); err != nil {
+		errCause := fmt.Sprintln("can not create the request: ", err.Error())
+		return cl, util.ErrorFromThisScope(errCause, generalScopeErr)
+	}
+	cl = TokenClient{
+		baseClient: baseClient{
+			jobName:                        tc.jobName,
+			instanceName:                   tc.instanceName,
+			datasource:                     tc.datasource,
+			datasourceResponseDurationDesc: tc.datasourceResponseDurationDesc,
+		},
+		req: req,
+	}
+	return cl, nil
 }
 
 // TokenClient implements the getRemoteInfo method from `client.Client` interface by using some .toml config parameters
@@ -23,34 +44,41 @@ func (tc TokenCreator) CreateClient() (cl Client, err error) {
 // to get a token from the server.
 // sa newTokenClient method.
 type TokenClient struct {
+	baseClient
 	req *http.Request
 }
 
-func newTokenClient(uriToGenToken string) (client TokenClient, err error) {
-	const generalScopeErr = "error creating a client to get a toke from remote endpoint for making future requests"
-	// client = TokenClient{baseClient: baseClient{service: service}}
-	// FIXME(denisacostaq@gmail.com): make the "GET" configurable.
-	if client.req, err = http.NewRequest("GET", uriToGenToken, nil); err != nil {
-		errCause := fmt.Sprintln("can not create the request: ", err.Error())
-		return client, util.ErrorFromThisScope(errCause, generalScopeErr)
-	}
-	return client, nil
-}
-
 // GetData can get a token value from a remote server
-func (client TokenClient) GetData() (data []byte, err error) {
+func (client TokenClient) GetData(metricsCollector chan<- prometheus.Metric) (data []byte, err error) {
 	const generalScopeErr = "error making a server request to get token from remote endpoint"
 	httpClient := &http.Client{}
 	var resp *http.Response
-	if resp, err = httpClient.Do(client.req); err != nil {
-		errCause := fmt.Sprintln("can not do the request: ", err.Error())
-		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
+	{
+		successResponse := false
+		defer func(startTime time.Time) {
+			duration := time.Since(startTime).Seconds()
+			labels := []string{client.jobName, client.instanceName, client.datasource}
+			if successResponse {
+				if _, err := prometheus.NewConstMetric(client.datasourceResponseDurationDesc, prometheus.GaugeValue, duration, labels...); err == nil {
+					// FIXME(denisacostaq@gmail.com): this approach may not work for auth because multiple calls
+					// metricsCollector <- metric
+				} else {
+					log.WithFields(log.Fields{"err": err, "labels": labels}).Errorln("can not send datasource response duration resolving token")
+					return
+				}
+			}
+		}(time.Now().UTC())
+		if resp, err = httpClient.Do(client.req); err != nil {
+			errCause := fmt.Sprintln("can not do the request: ", err.Error())
+			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
+		}
+		if resp.StatusCode != http.StatusOK {
+			errCause := fmt.Sprintf("no success response, status %s", resp.Status)
+			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
+		}
+		successResponse = true
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		errCause := fmt.Sprintf("no success response, status %s", resp.Status)
-		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
-	}
 	if data, err = ioutil.ReadAll(resp.Body); err != nil {
 		errCause := fmt.Sprintln("can not read the body: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)

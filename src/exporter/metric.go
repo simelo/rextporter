@@ -35,14 +35,14 @@ type constMetric struct {
 
 type endpointData2MetricsConsumer map[string][]constMetric
 
-func createMetrics(cache cache.Cache, srvsConf []config.Service) (metrics endpointData2MetricsConsumer, err error) {
+func createMetrics(cache cache.Cache, srvsConf []config.Service, datasourceResponseDurationDesc *prometheus.Desc) (metrics endpointData2MetricsConsumer, err error) {
 	generalScopeErr := "can not create metrics"
 	metrics = make(endpointData2MetricsConsumer)
 	for _, srvConf := range srvsConf {
 		for _, mConf := range srvConf.Metrics {
 			k := srvConf.URIToGetMetric(mConf)
 			var m constMetric
-			if m, err = createConstMetric(cache, mConf, srvConf); err != nil {
+			if m, err = createConstMetric(cache, mConf, srvConf, datasourceResponseDurationDesc); err != nil {
 				errCause := fmt.Sprintln(fmt.Sprintf("error creating metric client for %s metric of kind %s. ", mConf.Name, mConf.Options.Type), err.Error())
 				return metrics, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
@@ -67,18 +67,25 @@ func newDefaultMetrics() *defaultMetrics {
 		instance4JobLabels,
 		nil,
 	)
+	datasourceResponseDurationDesc := prometheus.NewDesc(
+		"datasource_response_duration",
+		"Elapse time to get a response from a datasource",
+		append(instance4JobLabels, "datasource"),
+		nil,
+	)
 	return &defaultMetrics{
-		scrapedDurations:          newScrapDuration(),
-		scrapeDurationSecondsDesc: scrapeDurationSecondsDesc,
-		scrapedSamples:            newScrapDuration(),
-		scrapeSamplesScrapedDesc:  scrapeSamplesScrapedDesc,
+		scrapedDurations:               newScrapDuration(),
+		scrapeDurationSecondsDesc:      scrapeDurationSecondsDesc,
+		scrapedSamples:                 newScrapDuration(),
+		scrapeSamplesScrapedDesc:       scrapeSamplesScrapedDesc,
+		datasourceResponseDurationDesc: datasourceResponseDurationDesc,
 	}
 }
 
-func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf config.Service) (metric constMetric, err error) {
+func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf config.Service, datasourceResponseDurationDesc *prometheus.Desc) (metric constMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
 	var ccf client.CacheableFactory
-	if ccf, err = client.CreateAPIRestCreator(metricConf, srvConf); err != nil {
+	if ccf, err = client.CreateAPIRestCreator(metricConf, srvConf, datasourceResponseDurationDesc); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http/httptest"
 
+	"github.com/prometheus/client_golang/prometheus"
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 	"github.com/simelo/rextporter/src/client"
@@ -64,7 +65,7 @@ func appendLables(metrics []byte, labels []*io_prometheus_client.LabelPair) ([]b
 }
 
 // GetMetric return the original metrics but with a service name as prefix in his names
-func (mf MetricsForwader) GetMetric() (val interface{}, err error) {
+func (mf MetricsForwader) GetMetric(metricsCollector chan<- prometheus.Metric) (val interface{}, err error) {
 	getCustomData := func() (data []byte, err error) {
 		generalScopeErr := "Error getting custom data for metrics fordwader"
 		recorder := httptest.NewRecorder()
@@ -74,7 +75,7 @@ func (mf MetricsForwader) GetMetric() (val interface{}, err error) {
 			return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		var exposedMetricsData []byte
-		if exposedMetricsData, err = cl.GetData(); err != nil {
+		if exposedMetricsData, err = cl.GetData(metricsCollector); err != nil {
 			log.WithError(err).Error("error getting metrics from service " + mf.GetJobName())
 			errCause := "can not get the data"
 			return data, util.ErrorFromThisScope(errCause, generalScopeErr)

@@ -2,6 +2,8 @@ package scrapper
 
 import (
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // ScrapResult is the success case with the metric value
@@ -28,6 +30,7 @@ type ScrapRequest struct {
 	JobName          string
 	InstanceName     string
 	Err              chan ScrapErrResult
+	MetricsCollector chan<- prometheus.Metric
 }
 
 type scrapWork struct {
@@ -37,6 +40,7 @@ type scrapWork struct {
 	jobName          string
 	instanceName     string
 	err              chan ScrapErrResult
+	metricsCollector chan<- prometheus.Metric
 }
 
 type workQueue chan scrapWork
@@ -74,6 +78,7 @@ func (p *Pool) Apply(ri ScrapRequest) {
 		jobName:          ri.JobName,
 		instanceName:     ri.InstanceName,
 		err:              ri.Err,
+		metricsCollector: ri.MetricsCollector,
 	}
 	p.works <- work
 }
@@ -103,7 +108,7 @@ func (w *workerT) start() {
 			select {
 			// Wait for a work request.
 			case work := <-w.works:
-				val, err := work.scrapper.GetMetric()
+				val, err := work.scrapper.GetMetric(work.metricsCollector)
 				if err == nil {
 					work.res <- ScrapResult{Val: val, ConstMetricIdxOut: work.constMetricIdxIn, JobName: work.jobName, InstanceName: work.instanceName}
 				} else {
