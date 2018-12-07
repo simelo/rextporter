@@ -31,6 +31,11 @@ func (cl Catcher) GetData() (body []byte, err error) {
 	if body, err = cl.cache.Get(cl.dataKey); err == nil {
 		return body, err
 	}
+	cl.cache.Lock()
+	defer cl.cache.Unlock()
+	if body, err = cl.cache.Get(cl.dataKey); err == nil {
+		return body, err
+	}
 	var ccl CacheableClient
 	if ccl, err = cl.clientFactory.CreateClient(); err != nil {
 		return nil, err
