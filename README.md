@@ -1,4 +1,3 @@
-
 # Rextporter
 This is the executable entry point for the server.
 - [Install](#install)
