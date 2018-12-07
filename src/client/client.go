@@ -10,6 +10,11 @@ type Client interface {
 	GetData(metricsCollector chan<- prometheus.Metric) (body []byte, err error)
 }
 
+// FordwaderClient a client to get metrics from a metrics endpoint
+type FordwaderClient interface {
+	GetData() (body []byte, err error)
+}
+
 type baseClient struct {
 	jobName                        string
 	instanceName                   string
@@ -26,6 +31,11 @@ type CacheableClient interface {
 // Factory can create different kind of clients
 type Factory interface {
 	CreateClient() (cl Client, err error)
+}
+
+// FordwaderFactory create fordwader client
+type FordwaderFactory interface {
+	CreateClient() (cl FordwaderClient, err error)
 }
 
 type baseFactory struct {

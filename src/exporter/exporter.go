@@ -16,10 +16,11 @@ import (
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/scrapper"
 	"github.com/simelo/rextporter/src/util"
+	"github.com/simelo/rextporter/src/util/metrics"
 	log "github.com/sirupsen/logrus"
 )
 
-func exposedMetricsMiddleware(scrappers []scrapper.Scrapper, promHandler http.Handler) http.Handler {
+func exposedMetricsMiddleware(scrappers []scrapper.FordwaderScrapper, promHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		getDefaultData := func() (data []byte, err error) {
 			generalScopeErr := "error reding default data"
@@ -52,8 +53,7 @@ func exposedMetricsMiddleware(scrappers []scrapper.Scrapper, promHandler http.Ha
 		for _, fs := range scrappers {
 			var iMetrics interface{}
 			var err error
-			// FIXME(denisacostaq@gmail.com): This approach not work here.
-			if iMetrics, err = fs.GetMetric(nil /*metricsCollector*/); err != nil {
+			if iMetrics, err = fs.GetMetric(); err != nil {
 				log.WithError(err).Errorln("error scrapping fordwader metrics")
 			} else {
 				customData, okCustomData := iMetrics.([]byte)
@@ -79,6 +79,8 @@ func exposedMetricsMiddleware(scrappers []scrapper.Scrapper, promHandler http.Ha
 	})
 }
 
+var fDefMetrics *metrics.DefaultFordwaderMetrics
+
 // MustExportMetrics will read the config from mainConfigFile if any or use a default one.
 func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf config.RootConfig) (srv *http.Server) {
 	c := cache.NewCache()
@@ -86,8 +88,10 @@ func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf config.Ro
 		log.WithError(err).Panicln("Can not create metrics")
 	} else {
 		prometheus.MustRegister(collector)
+		fDefMetrics = metrics.NewDefaultFordwaderMetrics()
+		fDefMetrics.MustRegister()
 	}
-	metricsForwaders, err := createMetricsForwaders(conf)
+	metricsForwaders, err := createMetricsForwaders(conf, fDefMetrics)
 	if err != nil {
 		log.WithError(err).Panicln("Can not create forward_metrics metrics")
 	}

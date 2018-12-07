@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http/httptest"
 
-	"github.com/prometheus/client_golang/prometheus"
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 	"github.com/simelo/rextporter/src/client"
@@ -17,10 +16,7 @@ import (
 
 // MetricsForwader is a scrapper kind capable to forward a metrics endpoint with job and instance labels at least
 type MetricsForwader struct {
-	baseScrapper
-	clientFactory client.Factory
-	jobName       string
-	instanceName  string
+	baseFordwaderScrapper
 }
 
 // GetJobName return the name of the job(service)
@@ -34,11 +30,15 @@ func (scrapper MetricsForwader) GetInstanceName() string {
 }
 
 // NewMetricsForwader create a scrapper that handle the forwaded metrics
-func NewMetricsForwader(pmcls client.ProxyMetricClientCreator) Scrapper {
+func NewMetricsForwader(pmcls client.ProxyMetricClientCreator) FordwaderScrapper {
 	return MetricsForwader{
-		clientFactory: pmcls,
-		jobName:       pmcls.JobName,
-		instanceName:  pmcls.InstanceName,
+		baseFordwaderScrapper: baseFordwaderScrapper{
+			baseScrapper: baseScrapper{
+				jobName:      pmcls.JobName,
+				instanceName: pmcls.InstanceName,
+			},
+			clientFactory: pmcls,
+		},
 	}
 }
 
@@ -68,17 +68,17 @@ func appendLables(metrics []byte, labels []*io_prometheus_client.LabelPair) ([]b
 }
 
 // GetMetric return the original metrics but with a service name as prefix in his names
-func (scrapper MetricsForwader) GetMetric(metricsCollector chan<- prometheus.Metric) (val interface{}, err error) {
+func (scrapper MetricsForwader) GetMetric() (val interface{}, err error) {
 	getCustomData := func() (data []byte, err error) {
 		generalScopeErr := "Error getting custom data for metrics fordwader"
 		recorder := httptest.NewRecorder()
-		var cl client.Client
+		var cl client.FordwaderClient
 		if cl, err = scrapper.clientFactory.CreateClient(); err != nil {
 			errCause := "can not create client"
 			return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		var exposedMetricsData []byte
-		if exposedMetricsData, err = cl.GetData(metricsCollector); err != nil {
+		if exposedMetricsData, err = cl.GetData(); err != nil {
 			log.WithError(err).Error("error getting metrics from service " + scrapper.GetJobName())
 			errCause := "can not get the data"
 			return data, util.ErrorFromThisScope(errCause, generalScopeErr)

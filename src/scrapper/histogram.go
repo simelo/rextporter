@@ -14,19 +14,21 @@ type histogramClientOptions []float64
 
 // Histogram implements the Client interface(is able to get histogram metrics through `GetMetric`)
 type Histogram struct {
-	baseScrapper
+	baseApiScrapper
 	buckets histogramClientOptions
 }
 
 func newHistogram(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName, datasource string) Scrapper {
 	return Histogram{
-		baseScrapper: baseScrapper{
+		baseApiScrapper: baseApiScrapper{
+			baseScrapper: baseScrapper{
+				jobName:      jobName,
+				instanceName: instanceName,
+				datasource:   datasource,
+			},
 			clientFactory: cf,
 			parser:        parser,
 			jsonPath:      metric.Path,
-			jobName:       jobName,
-			instanceName:  instanceName,
-			datasource:    datasource,
 		},
 		buckets: histogramClientOptions(metric.HistogramOptions.Buckets),
 	}

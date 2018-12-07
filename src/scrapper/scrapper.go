@@ -18,13 +18,30 @@ type Scrapper interface {
 	GetDatasource() string
 }
 
+// FordwaderScrapper get metrics from an already metrics endpoint
+type FordwaderScrapper interface {
+	// GetMetric should return the metrics vals as raw string
+	GetMetric() (val interface{}, err error)
+	GetJobName() string
+	GetInstanceName() string
+}
+
 type baseScrapper struct {
+	jobName      string
+	instanceName string
+	datasource   string
+}
+
+type baseApiScrapper struct {
+	baseScrapper
 	clientFactory client.Factory
 	parser        BodyParser
 	jsonPath      string
-	jobName       string
-	instanceName  string
-	datasource    string
+}
+
+type baseFordwaderScrapper struct {
+	baseScrapper
+	clientFactory client.FordwaderFactory
 }
 
 func (s baseScrapper) GetJobName() string {

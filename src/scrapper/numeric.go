@@ -10,18 +10,20 @@ import (
 
 // Numeric scrapper can get numeric(gauges or counters) metrics
 type Numeric struct {
-	baseScrapper
+	baseApiScrapper
 }
 
 func newNumeric(cf client.Factory, p BodyParser, path, jobName, instanceName, datasource string) Scrapper {
 	return Numeric{
-		baseScrapper: baseScrapper{
+		baseApiScrapper: baseApiScrapper{
+			baseScrapper: baseScrapper{
+				jobName:      jobName,
+				instanceName: instanceName,
+				datasource:   datasource,
+			},
 			clientFactory: cf,
 			parser:        p,
 			jsonPath:      path,
-			jobName:       jobName,
-			instanceName:  instanceName,
-			datasource:    datasource,
 		},
 	}
 }

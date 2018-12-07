@@ -9,15 +9,16 @@ import (
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/scrapper"
 	"github.com/simelo/rextporter/src/util"
+	"github.com/simelo/rextporter/src/util/metrics"
 )
 
-func createMetricsForwaders(conf config.RootConfig) (fordwaderScrappers []scrapper.Scrapper, err error) {
+func createMetricsForwaders(conf config.RootConfig, fDefMetrics *metrics.DefaultFordwaderMetrics) (fordwaderScrappers []scrapper.FordwaderScrapper, err error) {
 	generalScopeErr := "can not create metrics Middleware"
 	services := conf.FilterServicesByType(config.ServiceTypeProxy)
-	fordwaderScrappers = make([]scrapper.Scrapper, len(services))
+	fordwaderScrappers = make([]scrapper.FordwaderScrapper, len(services))
 	for idxService := range services {
 		var metricFordwaderCreator client.ProxyMetricClientCreator
-		if metricFordwaderCreator, err = client.CreateProxyMetricClientCreator(services[idxService]); err != nil {
+		if metricFordwaderCreator, err = client.CreateProxyMetricClientCreator(services[idxService], fDefMetrics); err != nil {
 			errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
