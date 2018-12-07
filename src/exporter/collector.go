@@ -104,6 +104,7 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 			case float64:
 				counterVal, okCounterVal := res.Val.(float64)
 				defMetrics.scrapeSamples.addSeconds(1, res.JobName, res.InstanceName)
+				defMetrics.dataSourceScrapeSamples.add(1, res.JobName, res.InstanceName, res.DataSource)
 				if okCounterVal {
 					onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, counterVal)
 				} else {
@@ -112,6 +113,7 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 			case scrapper.NumericVecVals:
 				counterVecVal, okCounterVecVal := res.Val.(scrapper.NumericVecVals)
 				defMetrics.scrapeSamples.addSeconds(float64(len(counterVecVal)), res.JobName, res.InstanceName)
+				defMetrics.dataSourceScrapeSamples.add(float64(len(counterVecVal)), res.JobName, res.InstanceName, res.DataSource)
 				if okCounterVecVal {
 					onCollectVecSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, counterVecVal)
 				} else {
@@ -180,6 +182,7 @@ func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch cha
 			switch res.Val.(type) {
 			case float64:
 				defMetrics.scrapeSamples.addSeconds(1, res.JobName, res.InstanceName)
+				defMetrics.dataSourceScrapeSamples.add(1, res.JobName, res.InstanceName, res.DataSource)
 				gaugeVal, okGaugeVal := res.Val.(float64)
 				if okGaugeVal {
 					onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, gaugeVal)
@@ -190,6 +193,7 @@ func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch cha
 			case scrapper.NumericVecVals:
 				gaugeVecVal, okGaugeVecVal := res.Val.(scrapper.NumericVecVals)
 				defMetrics.scrapeSamples.addSeconds(float64(len(gaugeVecVal)), res.JobName, res.InstanceName)
+				defMetrics.dataSourceScrapeSamples.add(float64(len(gaugeVecVal)), res.JobName, res.InstanceName, res.DataSource)
 				if okGaugeVecVal {
 					onCollectVecSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, gaugeVecVal)
 				} else {
@@ -254,6 +258,7 @@ func collectHistograms(metricsColl []constMetric, defMetrics *defaultMetrics, ch
 		case res := <-resC:
 			metricVal, okMetricVal := res.Val.(scrapper.HistogramValue)
 			defMetrics.scrapeSamples.addSeconds(float64(len(metricVal.Buckets)+2), res.JobName, res.InstanceName)
+			defMetrics.dataSourceScrapeSamples.add(float64(len(metricVal.Buckets)+2), res.JobName, res.InstanceName, res.DataSource)
 			if okMetricVal {
 				onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, metricVal)
 			} else {

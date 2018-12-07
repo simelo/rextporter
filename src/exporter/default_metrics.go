@@ -12,14 +12,14 @@ type datasource2Value map[string]float64
 type instance2D2V map[string]datasource2Value
 type job2I map[string]instance2D2V
 
-func newResponseDuration() job2I {
+func newDataSourceMappedValue() job2I {
 	return make(job2I)
 }
 
 var instance4JobLabels = []string{"job", "instance"}
 
 func newDefaultMetrics() *defaultMetrics {
-	scrapeDurationDesc := prometheus.NewDesc(
+	scrapeDurationsDesc := prometheus.NewDesc(
 		"scrape_duration",
 		"Elapse time(in seconds) to get a response from a scrapper",
 		instance4JobLabels,
@@ -31,26 +31,34 @@ func newDefaultMetrics() *defaultMetrics {
 		instance4JobLabels,
 		nil,
 	)
-	dataSourceScrapeDurationDesc := prometheus.NewDesc(
-		"datasource_scrape_duration",
-		"Elapse time(in seconds) to get a response from a datasource in a scrapper",
-		append(instance4JobLabels, "datasource"),
-		nil,
-	)
 	datasourceResponseDurationDesc := prometheus.NewDesc(
 		"datasource_response_duration",
 		"Elapse time(in seconds) to get a response from a datasource",
 		append(instance4JobLabels, "datasource"),
 		nil,
 	)
+	dataSourceScrapeDurationDesc := prometheus.NewDesc(
+		"datasource_scrape_duration",
+		"Elapse time(in seconds) to get a response from a datasource in a scrapper",
+		append(instance4JobLabels, "datasource"),
+		nil,
+	)
+	dataSourceScrapeSamplesDesc := prometheus.NewDesc(
+		"datasource_scrape_samples_scraped",
+		"The number of samples scrapped in datasource",
+		append(instance4JobLabels, "datasource"),
+		nil,
+	)
 	return &defaultMetrics{
 		scrapeDurations:                newScrapDuration(),
-		scrapeDurationDesc:             scrapeDurationDesc,
+		scrapeDurationsDesc:            scrapeDurationsDesc,
 		scrapeSamples:                  newScrapDuration(),
 		scrapeSamplesScrapedDesc:       scrapeSamplesScrapedDesc,
-		datasourceResponseDurationDesc: datasourceResponseDurationDesc,
-		dataSourceScrapeDuration:       newResponseDuration(),
+		dataSourceScrapeDuration:       newDataSourceMappedValue(),
 		dataSourceScrapeDurationDesc:   dataSourceScrapeDurationDesc,
+		dataSourceScrapeSamples:        newDataSourceMappedValue(),
+		dataSourceScrapeSamplesDesc:    dataSourceScrapeSamplesDesc,
+		datasourceResponseDurationDesc: datasourceResponseDurationDesc,
 	}
 }
 
@@ -91,32 +99,36 @@ func (sd scrapDurationInJob) addSeconds(amount float64, jobName, instanceName st
 
 type defaultMetrics struct {
 	scrapeDurations                scrapDurationInJob
-	scrapeDurationDesc             *prometheus.Desc
+	scrapeDurationsDesc            *prometheus.Desc
 	scrapeSamples                  scrapDurationInJob
 	scrapeSamplesScrapedDesc       *prometheus.Desc
 	dataSourceScrapeDuration       job2I
 	dataSourceScrapeDurationDesc   *prometheus.Desc
+	dataSourceScrapeSamples        job2I
+	dataSourceScrapeSamplesDesc    *prometheus.Desc
 	datasourceResponseDurationDesc *prometheus.Desc
 }
 
 func (defMetrics defaultMetrics) describe(ch chan<- *prometheus.Desc) {
-	ch <- defMetrics.scrapeDurationDesc
+	ch <- defMetrics.scrapeDurationsDesc
 	ch <- defMetrics.scrapeSamplesScrapedDesc
 	ch <- defMetrics.dataSourceScrapeDurationDesc
+	ch <- defMetrics.dataSourceScrapeSamplesDesc
 	ch <- defMetrics.datasourceResponseDurationDesc
 }
 
 func (defMetrics *defaultMetrics) reset() {
 	defMetrics.scrapeDurations = newScrapDuration()
 	defMetrics.scrapeSamples = newScrapDuration()
-	defMetrics.dataSourceScrapeDuration = newResponseDuration()
+	defMetrics.dataSourceScrapeDuration = newDataSourceMappedValue()
+	defMetrics.dataSourceScrapeSamples = newDataSourceMappedValue()
 }
 
 func (defMetrics defaultMetrics) collectDefaultMetrics(ch chan<- prometheus.Metric) {
 	for jobName, job := range defMetrics.scrapeDurations {
 		for instanceName, val := range job {
 			labels := []string{jobName, instanceName}
-			if metric, err := prometheus.NewConstMetric(defMetrics.scrapeDurationDesc, prometheus.GaugeValue, val, labels...); err == nil {
+			if metric, err := prometheus.NewConstMetric(defMetrics.scrapeDurationsDesc, prometheus.GaugeValue, val, labels...); err == nil {
 				ch <- metric
 			} else {
 				log.WithError(err).Errorln("collectDefaultMetrics -> scrapeDurationDesc")
@@ -141,6 +153,18 @@ func (defMetrics defaultMetrics) collectDefaultMetrics(ch chan<- prometheus.Metr
 					ch <- metric
 				} else {
 					log.WithError(err).Errorln("collectDefaultMetrics -> dataSourceScrapeDuration")
+				}
+			}
+		}
+	}
+	for jobName, instances := range defMetrics.dataSourceScrapeSamples {
+		for instanceName, values := range instances {
+			for datasourceName, val := range values {
+				labels := []string{jobName, instanceName, datasourceName}
+				if metric, err := prometheus.NewConstMetric(defMetrics.dataSourceScrapeSamplesDesc, prometheus.GaugeValue, val, labels...); err == nil {
+					ch <- metric
+				} else {
+					log.WithError(err).Errorln("collectDefaultMetrics -> dataSourceScrapeSamples")
 				}
 			}
 		}
