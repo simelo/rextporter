@@ -11,10 +11,11 @@ import (
 
 // Scrapper get metrics from raw data
 type Scrapper interface {
-	// GetMetric the metrics collector channel and should return the metric val
+	// GetMetric recive the metrics collector channel and should return the metric val
 	GetMetric(metricsCollector chan<- prometheus.Metric) (val interface{}, err error)
 	GetJobName() string
 	GetInstanceName() string
+	GetDatasource() string
 }
 
 type baseScrapper struct {
@@ -23,6 +24,7 @@ type baseScrapper struct {
 	jsonPath      string
 	jobName       string
 	instanceName  string
+	datasource    string
 }
 
 func (s baseScrapper) GetJobName() string {
@@ -31,6 +33,10 @@ func (s baseScrapper) GetJobName() string {
 
 func (s baseScrapper) GetInstanceName() string {
 	return s.instanceName
+}
+
+func (s baseScrapper) GetDatasource() string {
+	return s.datasource
 }
 
 // BodyParser decode body from different formats, an get some data node

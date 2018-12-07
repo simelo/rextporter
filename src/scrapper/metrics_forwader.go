@@ -17,6 +17,7 @@ import (
 
 // MetricsForwaders is a scrapper kind capable to forward a metrics endpoint with job and instance labels at least
 type MetricsForwader struct {
+	baseScrapper
 	clientFactory client.Factory
 	jobName       string
 	instanceName  string

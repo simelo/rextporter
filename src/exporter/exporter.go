@@ -16,11 +16,10 @@ import (
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/scrapper"
 	"github.com/simelo/rextporter/src/util"
-	"github.com/simelo/rextporter/src/util/metrics"
 	log "github.com/sirupsen/logrus"
 )
 
-func exposedMetricsMiddleware(fordwaderScrappers []scrapper.FordwaderScrapper, promHandler http.Handler) http.Handler {
+func exposedMetricsMiddleware(scrappers []scrapper.Scrapper, promHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		getDefaultData := func() (data []byte, err error) {
 			generalScopeErr := "error reding default data"
@@ -50,7 +49,7 @@ func exposedMetricsMiddleware(fordwaderScrappers []scrapper.FordwaderScrapper, p
 		} else {
 			allData = append(allData, defaultData...)
 		}
-		for _, fs := range fordwaderScrappers {
+		for _, fs := range scrappers {
 			var iMetrics interface{}
 			var err error
 			// FIXME(denisacostaq@gmail.com): This approach not work here.
