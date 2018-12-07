@@ -36,14 +36,14 @@ type constMetric struct {
 
 type endpointData2MetricsConsumer map[string][]constMetric
 
-func createMetrics(cache cache.Cache, srvsConf []config.Service, datasourceResponseDurationDesc *prometheus.Desc) (metrics endpointData2MetricsConsumer, err error) {
+func createMetrics(cache cache.Cache, srvsConf []config.Service, dataSourceResponseDurationDesc *prometheus.Desc) (metrics endpointData2MetricsConsumer, err error) {
 	generalScopeErr := "can not create metrics"
 	metrics = make(endpointData2MetricsConsumer)
 	for _, srvConf := range srvsConf {
 		for _, mConf := range srvConf.Metrics {
 			k := srvConf.URIToGetMetric(mConf)
 			var m constMetric
-			if m, err = createConstMetric(cache, mConf, srvConf, datasourceResponseDurationDesc); err != nil {
+			if m, err = createConstMetric(cache, mConf, srvConf, dataSourceResponseDurationDesc); err != nil {
 				errCause := fmt.Sprintln(fmt.Sprintf("error creating metric client for %s metric of kind %s. ", mConf.Name, mConf.Options.Type), err.Error())
 				return metrics, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
@@ -53,10 +53,10 @@ func createMetrics(cache cache.Cache, srvsConf []config.Service, datasourceRespo
 	return metrics, err
 }
 
-func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf config.Service, datasourceResponseDurationDesc *prometheus.Desc) (metric constMetric, err error) {
+func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf config.Service, dataSourceResponseDurationDesc *prometheus.Desc) (metric constMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
 	var ccf client.CacheableFactory
-	if ccf, err = client.CreateAPIRestCreator(metricConf, srvConf, datasourceResponseDurationDesc); err != nil {
+	if ccf, err = client.CreateAPIRestCreator(metricConf, srvConf, dataSourceResponseDurationDesc); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

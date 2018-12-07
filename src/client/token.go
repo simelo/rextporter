@@ -31,8 +31,8 @@ func (tc TokenCreator) CreateClient() (cl Client, err error) {
 		baseClient: baseClient{
 			jobName:                        tc.jobName,
 			instanceName:                   tc.instanceName,
-			datasource:                     tc.datasource,
-			datasourceResponseDurationDesc: tc.datasourceResponseDurationDesc,
+			dataSource:                     tc.dataSource,
+			dataSourceResponseDurationDesc: tc.dataSourceResponseDurationDesc,
 		},
 		req: req,
 	}
@@ -57,13 +57,13 @@ func (client TokenClient) GetData(metricsCollector chan<- prometheus.Metric) (da
 		successResponse := false
 		defer func(startTime time.Time) {
 			duration := time.Since(startTime).Seconds()
-			labels := []string{client.jobName, client.instanceName, client.datasource}
+			labels := []string{client.jobName, client.instanceName, client.dataSource}
 			if successResponse {
-				if _, err := prometheus.NewConstMetric(client.datasourceResponseDurationDesc, prometheus.GaugeValue, duration, labels...); err == nil {
+				if _, err := prometheus.NewConstMetric(client.dataSourceResponseDurationDesc, prometheus.GaugeValue, duration, labels...); err == nil {
 					// FIXME(denisacostaq@gmail.com): this approach may not work for auth because multiple calls
 					// metricsCollector <- metric
 				} else {
-					log.WithFields(log.Fields{"err": err, "labels": labels}).Errorln("can not send datasource response duration resolving token")
+					log.WithFields(log.Fields{"err": err, "labels": labels}).Errorln("can not send dataSource response duration resolving token")
 					return
 				}
 			}

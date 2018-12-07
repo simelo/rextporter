@@ -24,7 +24,7 @@ func newMetricsCollector(c cache.Cache, conf config.RootConfig) (collector *Metr
 	const generalScopeErr = "error creating collector"
 	defMetrics := newDefaultMetrics()
 	var metrics endpointData2MetricsConsumer
-	if metrics, err = createMetrics(c, conf.Services, defMetrics.datasourceResponseDurationDesc); err != nil {
+	if metrics, err = createMetrics(c, conf.Services, defMetrics.dataSourceResponseDurationDesc); err != nil {
 		errCause := fmt.Sprintln("error creating metrics: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -90,7 +90,7 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 				ConstMetricIdxIn: idxM,
 				JobName:          mColl.scrapper.GetJobName(),
 				InstanceName:     mColl.scrapper.GetInstanceName(),
-				DataSource:       mColl.scrapper.GetDatasource(),
+				DataSource:       mColl.scrapper.GetDataSource(),
 				Err:              errC,
 				MetricsCollector: ch,
 			},
@@ -169,7 +169,7 @@ func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch cha
 				ConstMetricIdxIn: idxM,
 				JobName:          mColl.scrapper.GetJobName(),
 				InstanceName:     mColl.scrapper.GetInstanceName(),
-				DataSource:       mColl.scrapper.GetDatasource(),
+				DataSource:       mColl.scrapper.GetDataSource(),
 				Err:              errC,
 				MetricsCollector: ch,
 			},
@@ -246,7 +246,7 @@ func collectHistograms(metricsColl []constMetric, defMetrics *defaultMetrics, ch
 				ConstMetricIdxIn: idxM,
 				JobName:          mColl.scrapper.GetJobName(),
 				InstanceName:     mColl.scrapper.GetInstanceName(),
-				DataSource:       mColl.scrapper.GetDatasource(),
+				DataSource:       mColl.scrapper.GetDataSource(),
 				Err:              errC,
 				MetricsCollector: ch,
 			},

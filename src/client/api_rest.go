@@ -26,13 +26,13 @@ type APIRestCreator struct {
 }
 
 // CreateAPIRestCreator create an APIRestCreator
-func CreateAPIRestCreator(metric config.Metric, service config.Service, datasourceResponseDurationDesc *prometheus.Desc) (cf CacheableFactory, err error) {
+func CreateAPIRestCreator(metric config.Metric, service config.Service, dataSourceResponseDurationDesc *prometheus.Desc) (cf CacheableFactory, err error) {
 	cf = APIRestCreator{
 		baseFactory: baseFactory{
 			jobName:                        service.JobName(),
 			instanceName:                   service.InstanceName(),
-			datasource:                     metric.URL,
-			datasourceResponseDurationDesc: datasourceResponseDurationDesc,
+			dataSource:                     metric.URL,
+			dataSourceResponseDurationDesc: dataSourceResponseDurationDesc,
 		},
 		httpMethod:           metric.HTTPMethod,
 		dataPath:             service.URIToGetMetric(metric),
@@ -56,8 +56,8 @@ func (ac APIRestCreator) CreateClient() (cl CacheableClient, err error) {
 		baseFactory: baseFactory{
 			jobName:                        ac.jobName,
 			instanceName:                   ac.instanceName,
-			datasource:                     ac.tokenPath,
-			datasourceResponseDurationDesc: ac.datasourceResponseDurationDesc,
+			dataSource:                     ac.tokenPath,
+			dataSourceResponseDurationDesc: ac.dataSourceResponseDurationDesc,
 		},
 		URIToGenToken: ac.tokenPath,
 	}
@@ -69,8 +69,8 @@ func (ac APIRestCreator) CreateClient() (cl CacheableClient, err error) {
 		baseClient: baseClient{
 			jobName:                        ac.jobName,
 			instanceName:                   ac.instanceName,
-			datasource:                     ac.datasource,
-			datasourceResponseDurationDesc: ac.datasourceResponseDurationDesc,
+			dataSource:                     ac.dataSource,
+			dataSourceResponseDurationDesc: ac.dataSourceResponseDurationDesc,
 		},
 		baseCacheableClient:  baseCacheableClient(ac.dataPath),
 		req:                  req,
@@ -103,12 +103,12 @@ func (cl APIRest) GetData(metricsCollector chan<- prometheus.Metric) (data []byt
 			successResponse := false
 			defer func(startTime time.Time) {
 				duration := time.Since(startTime).Seconds()
-				labels := []string{cl.jobName, cl.instanceName, cl.datasource}
+				labels := []string{cl.jobName, cl.instanceName, cl.dataSource}
 				if successResponse {
-					if metric, err := prometheus.NewConstMetric(cl.datasourceResponseDurationDesc, prometheus.GaugeValue, duration, labels...); err == nil {
+					if metric, err := prometheus.NewConstMetric(cl.dataSourceResponseDurationDesc, prometheus.GaugeValue, duration, labels...); err == nil {
 						metricsCollector <- metric
 					} else {
-						log.WithFields(log.Fields{"err": err, "labels": labels}).Errorln("can not send datasource response duration resolving api rest")
+						log.WithFields(log.Fields{"err": err, "labels": labels}).Errorln("can not send dataSource response duration resolving api rest")
 						return
 					}
 				}

@@ -15,7 +15,7 @@ type Scrapper interface {
 	GetMetric(metricsCollector chan<- prometheus.Metric) (val interface{}, err error)
 	GetJobName() string
 	GetInstanceName() string
-	GetDatasource() string
+	GetDataSource() string
 }
 
 // FordwaderScrapper get metrics from an already metrics endpoint
@@ -33,7 +33,7 @@ type baseScrapper struct {
 
 type baseAPIScrapper struct {
 	baseScrapper
-	datasource    string
+	dataSource    string
 	clientFactory client.Factory
 	parser        BodyParser
 	jsonPath      string
@@ -52,8 +52,8 @@ func (s baseScrapper) GetInstanceName() string {
 	return s.instanceName
 }
 
-func (s baseAPIScrapper) GetDatasource() string {
-	return s.datasource
+func (s baseAPIScrapper) GetDataSource() string {
+	return s.dataSource
 }
 
 // BodyParser decode body from different formats, an get some data node
@@ -66,28 +66,28 @@ type BodyParser interface {
 func NewScrapper(cf client.Factory, parser BodyParser, metric config.Metric, srvConf config.Service) (Scrapper, error) {
 	jobName := srvConf.JobName()
 	instanceName := srvConf.InstanceName()
-	datasource := metric.URL
+	dataSource := metric.URL
 	if len(metric.LabelNames()) > 0 {
-		return createVecScrapper(cf, parser, metric, jobName, instanceName, datasource)
+		return createVecScrapper(cf, parser, metric, jobName, instanceName, dataSource)
 	}
-	return createAtomicScrapper(cf, parser, metric, jobName, instanceName, datasource)
+	return createAtomicScrapper(cf, parser, metric, jobName, instanceName, dataSource)
 }
 
-func createVecScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName, datasource string) (Scrapper, error) {
+func createVecScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName, dataSource string) (Scrapper, error) {
 	if metric.Options.Type == config.KeyTypeCounter || metric.Options.Type == config.KeyTypeGauge {
-		return newNumericVec(cf, parser, metric, jobName, instanceName, datasource), nil
+		return newNumericVec(cf, parser, metric, jobName, instanceName, dataSource), nil
 	}
 	return NumericVec{}, errors.New("histogram vec and summary vec are not supported yet")
 }
 
-func createAtomicScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName, datasource string) (Scrapper, error) {
+func createAtomicScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName, dataSource string) (Scrapper, error) {
 	if metric.Options.Type == config.KeyTypeSummary {
 		return Histogram{}, errors.New("summary scrapper is not supported yet")
 	}
 	if metric.Options.Type == config.KeyTypeHistogram {
-		return newHistogram(cf, parser, metric, jobName, instanceName, datasource), nil
+		return newHistogram(cf, parser, metric, jobName, instanceName, dataSource), nil
 	}
-	return newNumeric(cf, parser, metric.Path, jobName, instanceName, datasource), nil
+	return newNumeric(cf, parser, metric.Path, jobName, instanceName, dataSource), nil
 }
 
 func getData(cf client.Factory, p BodyParser, metricsCollector chan<- prometheus.Metric) (data interface{}, err error) {

@@ -17,7 +17,7 @@ type NumericVec struct {
 	itemPath   string
 }
 
-func newNumericVec(cf client.Factory, p BodyParser, metric config.Metric, jobName, instanceName, datasource string) Scrapper {
+func newNumericVec(cf client.Factory, p BodyParser, metric config.Metric, jobName, instanceName, dataSource string) Scrapper {
 	return NumericVec{
 		baseAPIScrapper: baseAPIScrapper{
 			baseScrapper: baseScrapper{
@@ -25,7 +25,7 @@ func newNumericVec(cf client.Factory, p BodyParser, metric config.Metric, jobNam
 				instanceName: instanceName,
 			},
 			clientFactory: cf,
-			datasource:    datasource,
+			dataSource:    dataSource,
 			parser:        p,
 			jsonPath:      metric.Path,
 		},

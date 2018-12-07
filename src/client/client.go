@@ -18,8 +18,8 @@ type FordwaderClient interface {
 type baseClient struct {
 	jobName                        string
 	instanceName                   string
-	datasource                     string
-	datasourceResponseDurationDesc *prometheus.Desc
+	dataSource                     string
+	dataSourceResponseDurationDesc *prometheus.Desc
 }
 
 // CacheableClient should return a key(DataPath) for catching resource values
@@ -41,8 +41,8 @@ type FordwaderFactory interface {
 type baseFactory struct {
 	jobName                        string
 	instanceName                   string
-	datasource                     string
-	datasourceResponseDurationDesc *prometheus.Desc
+	dataSource                     string
+	dataSourceResponseDurationDesc *prometheus.Desc
 }
 
 // CacheableFactory can create different kind of cacheable clients

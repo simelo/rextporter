@@ -13,7 +13,7 @@ type Numeric struct {
 	baseAPIScrapper
 }
 
-func newNumeric(cf client.Factory, p BodyParser, path, jobName, instanceName, datasource string) Scrapper {
+func newNumeric(cf client.Factory, p BodyParser, path, jobName, instanceName, dataSource string) Scrapper {
 	return Numeric{
 		baseAPIScrapper: baseAPIScrapper{
 			baseScrapper: baseScrapper{
@@ -21,7 +21,7 @@ func newNumeric(cf client.Factory, p BodyParser, path, jobName, instanceName, da
 				instanceName: instanceName,
 			},
 			clientFactory: cf,
-			datasource:    datasource,
+			dataSource:    dataSource,
 			parser:        p,
 			jsonPath:      path,
 		},
