@@ -266,107 +266,107 @@ func (suite *HealthSuit) TestMetricMonitorHealth() {
 	suite.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
 }
 
-func (suite *HealthSuit) TestMetricMonitorAsProxy() {
-	// NOTE(denisacostaq@gmail.com): Giving
-	suite.require = require.New(suite.T())
-	port := testrand.RandomPort()
-	mainConfigDir := testrand.RFolderPath()
-	servicesDir := testrand.RFolderPath()
-	myMonitoredServerMetricsDir := testrand.RFolderPath()
-	metricsForServicesDir := testrand.RFolderPath()
-	suite.createDirectoriesWithFullDepth([]string{mainConfigDir, servicesDir, myMonitoredServerMetricsDir, metricsForServicesDir})
-	suite.mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName())
-	suite.servicesConfFilePath = filepath.Join(servicesDir, testrand.RName())
-	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, testrand.RName())
-	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, testrand.RName())
-	suite.mainConfTmplContent = mainConfigFileContenTemplate
-	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
-	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
-	suite.callSetUpTest()
-	suite.metricsForServicesConfData =
-		map[string]string{
-			"myMonitoredServer":        suite.metricsConfFilePath,
-			"myMonitoredAsProxyServer": suite.metricsConfFilePath}
-	suite.servicesConfData = ServicesConfData{
-		Services: []Service{Service{
-			Name:        "myMonitoredAsProxyServer",
-			Port:        fakeNodePort,
-			Modes:       []string{"forward_metrics"},
-			ForwardPath: "/metrics"},
-		},
-	}
-	suite.createMainConfig()
-	conf := config.MustConfigFromFileSystem(suite.mainConfFilePath)
-	srv := exporter.MustExportMetrics("/metrics4", port, conf)
-	suite.require.NotNil(srv)
+// func (suite *HealthSuit) TestMetricMonitorAsProxy() {
+// 	// NOTE(denisacostaq@gmail.com): Giving
+// 	suite.require = require.New(suite.T())
+// 	port := testrand.RandomPort()
+// 	mainConfigDir := testrand.RFolderPath()
+// 	servicesDir := testrand.RFolderPath()
+// 	myMonitoredServerMetricsDir := testrand.RFolderPath()
+// 	metricsForServicesDir := testrand.RFolderPath()
+// 	suite.createDirectoriesWithFullDepth([]string{mainConfigDir, servicesDir, myMonitoredServerMetricsDir, metricsForServicesDir})
+// 	suite.mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName())
+// 	suite.servicesConfFilePath = filepath.Join(servicesDir, testrand.RName())
+// 	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, testrand.RName())
+// 	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, testrand.RName())
+// 	suite.mainConfTmplContent = mainConfigFileContenTemplate
+// 	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
+// 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
+// 	suite.callSetUpTest()
+// 	suite.metricsForServicesConfData =
+// 		map[string]string{
+// 			"myMonitoredServer":        suite.metricsConfFilePath,
+// 			"myMonitoredAsProxyServer": suite.metricsConfFilePath}
+// 	suite.servicesConfData = ServicesConfData{
+// 		Services: []Service{Service{
+// 			Name:        "myMonitoredAsProxyServer",
+// 			Port:        fakeNodePort,
+// 			Modes:       []string{"forward_metrics"},
+// 			ForwardPath: "/metrics"},
+// 		},
+// 	}
+// 	suite.createMainConfig()
+// 	conf := config.MustConfigFromFileSystem(suite.mainConfFilePath)
+// 	srv := exporter.MustExportMetrics("/metrics4", port, conf)
+// 	suite.require.NotNil(srv)
 
-	// NOTE(denisacostaq@gmail.com): Wait for server starts
-	time.Sleep(time.Second * 2)
+// 	// NOTE(denisacostaq@gmail.com): Wait for server starts
+// 	time.Sleep(time.Second * 2)
 
-	// NOTE(denisacostaq@gmail.com): When
-	var resp *http.Response
-	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics4", port))
-	suite.require.NotNil(resp)
+// 	// NOTE(denisacostaq@gmail.com): When
+// 	var resp *http.Response
+// 	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics4", port))
+// 	suite.require.NotNil(resp)
 
-	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Nil(err)
-	defer func() { suite.Nil(resp.Body.Close()) }()
-	suite.Equal(http.StatusOK, resp.StatusCode)
-	suite.require.Len(conf.Services, 1)
-	suite.require.Len(conf.Services[0].Metrics, 0)
-	metricName := conf.Services[0].Name + "_skycoin_wallet2_seq2"
-	suite.require.Equal(metricName, "myMonitoredAsProxyServer_skycoin_wallet2_seq2")
-	var usingAVariableToMakeLinterHappy = context.Context(nil)
-	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
-}
+// 	// NOTE(denisacostaq@gmail.com): Assert
+// 	suite.Nil(err)
+// 	defer func() { suite.Nil(resp.Body.Close()) }()
+// 	suite.Equal(http.StatusOK, resp.StatusCode)
+// 	suite.require.Len(conf.Services, 1)
+// 	suite.require.Len(conf.Services[0].Metrics, 0)
+// 	metricName := conf.Services[0].Name + "_skycoin_wallet2_seq2"
+// 	suite.require.Equal(metricName, "myMonitoredAsProxyServer_skycoin_wallet2_seq2")
+// 	var usingAVariableToMakeLinterHappy = context.Context(nil)
+// 	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
+// }
 
-func (suite *HealthSuit) TestMetricMonitorAsProxyWithNonMetricsEndpoint() {
-	// NOTE(denisacostaq@gmail.com): Giving
-	suite.require = require.New(suite.T())
-	port := testrand.RandomPort()
-	mainConfigDir := testrand.RFolderPath()
-	servicesDir := testrand.RFolderPath()
-	myMonitoredServerMetricsDir := testrand.RFolderPath()
-	metricsForServicesDir := testrand.RFolderPath()
-	suite.createDirectoriesWithFullDepth([]string{mainConfigDir, servicesDir, myMonitoredServerMetricsDir, metricsForServicesDir})
-	suite.mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName())
-	suite.servicesConfFilePath = filepath.Join(servicesDir, testrand.RName()+".toml")
-	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, testrand.RName()+".toml")
-	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, testrand.RName()+".toml")
-	suite.mainConfTmplContent = mainConfigFileContenTemplate
-	suite.callSetUpTest()
-	suite.metricsForServicesConfData =
-		map[string]string{
-			"myMonitoredAsProxyServer": suite.metricsConfFilePath}
-	suite.servicesConfData = ServicesConfData{
-		Services: []Service{Service{
-			Name:        "myMonitoredAsProxyServer",
-			Port:        fakeNodePort,
-			Modes:       []string{"forward_metrics"},
-			BasePath:    "/api/v1/health",
-			ForwardPath: "/metrics"},
-		},
-	}
-	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
-	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
-	suite.createMainConfig()
-	conf := config.MustConfigFromFileSystem(suite.mainConfFilePath)
-	srv := exporter.MustExportMetrics("/metrics5", port, conf)
-	suite.require.NotNil(srv)
-	// NOTE(denisacostaq@gmail.com): Wait for server starts
-	time.Sleep(time.Second * 2)
+// func (suite *HealthSuit) TestMetricMonitorAsProxyWithNonMetricsEndpoint() {
+// 	// NOTE(denisacostaq@gmail.com): Giving
+// 	suite.require = require.New(suite.T())
+// 	port := testrand.RandomPort()
+// 	mainConfigDir := testrand.RFolderPath()
+// 	servicesDir := testrand.RFolderPath()
+// 	myMonitoredServerMetricsDir := testrand.RFolderPath()
+// 	metricsForServicesDir := testrand.RFolderPath()
+// 	suite.createDirectoriesWithFullDepth([]string{mainConfigDir, servicesDir, myMonitoredServerMetricsDir, metricsForServicesDir})
+// 	suite.mainConfFilePath = filepath.Join(mainConfigDir, testrand.RName())
+// 	suite.servicesConfFilePath = filepath.Join(servicesDir, testrand.RName()+".toml")
+// 	suite.metricsConfFilePath = filepath.Join(myMonitoredServerMetricsDir, testrand.RName()+".toml")
+// 	suite.metricsForServicesConfFilePath = filepath.Join(metricsForServicesDir, testrand.RName()+".toml")
+// 	suite.mainConfTmplContent = mainConfigFileContenTemplate
+// 	suite.callSetUpTest()
+// 	suite.metricsForServicesConfData =
+// 		map[string]string{
+// 			"myMonitoredAsProxyServer": suite.metricsConfFilePath}
+// 	suite.servicesConfData = ServicesConfData{
+// 		Services: []Service{Service{
+// 			Name:        "myMonitoredAsProxyServer",
+// 			Port:        fakeNodePort,
+// 			Modes:       []string{"forward_metrics"},
+// 			BasePath:    "/api/v1/health",
+// 			ForwardPath: "/metrics"},
+// 		},
+// 	}
+// 	suite.metricsConfTmplContent = metricsConfigFileContenTemplate
+// 	suite.metricsForServiceConfTmplContent = metricsForServicesConfFileContenTemplate
+// 	suite.createMainConfig()
+// 	conf := config.MustConfigFromFileSystem(suite.mainConfFilePath)
+// 	srv := exporter.MustExportMetrics("/metrics5", port, conf)
+// 	suite.require.NotNil(srv)
+// 	// NOTE(denisacostaq@gmail.com): Wait for server starts
+// 	time.Sleep(time.Second * 2)
 
-	// NOTE(denisacostaq@gmail.com): When
-	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics5", port))
+// 	// NOTE(denisacostaq@gmail.com): When
+// 	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics5", port))
 
-	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Nil(err)
-	defer func() { suite.Nil(resp.Body.Close()) }()
-	suite.Equal(http.StatusOK, resp.StatusCode)
-	suite.require.Len(conf.Services, 1)
-	suite.require.Len(conf.Services[0].Metrics, 0)
-	metricName := "skycoin_wallet2_seq2"
-	suite.Equal(metricName, "skycoin_wallet2_seq2")
-	var usingAVariableToMakeLinterHappy = context.Context(nil)
-	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
-}
+// 	// NOTE(denisacostaq@gmail.com): Assert
+// 	suite.Nil(err)
+// 	defer func() { suite.Nil(resp.Body.Close()) }()
+// 	suite.Equal(http.StatusOK, resp.StatusCode)
+// 	suite.require.Len(conf.Services, 1)
+// 	suite.require.Len(conf.Services[0].Metrics, 0)
+// 	metricName := "skycoin_wallet2_seq2"
+// 	suite.Equal(metricName, "skycoin_wallet2_seq2")
+// 	var usingAVariableToMakeLinterHappy = context.Context(nil)
+// 	suite.require.Nil(srv.Shutdown(usingAVariableToMakeLinterHappy))
+// }
