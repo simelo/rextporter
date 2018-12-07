@@ -15,7 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// MetricsForwaders is a scrapper kind capable to forward a metrics endpoint with job and instance labels at least
+// MetricsForwader is a scrapper kind capable to forward a metrics endpoint with job and instance labels at least
 type MetricsForwader struct {
 	baseScrapper
 	clientFactory client.Factory
@@ -23,10 +23,12 @@ type MetricsForwader struct {
 	instanceName  string
 }
 
+// GetJobName return the name of the job(service)
 func (scrapper MetricsForwader) GetJobName() string {
 	return scrapper.jobName
 }
 
+// GetInstanceName return the name of the instance(ip:port)
 func (scrapper MetricsForwader) GetInstanceName() string {
 	return scrapper.instanceName
 }
@@ -66,18 +68,18 @@ func appendLables(metrics []byte, labels []*io_prometheus_client.LabelPair) ([]b
 }
 
 // GetMetric return the original metrics but with a service name as prefix in his names
-func (mf MetricsForwader) GetMetric(metricsCollector chan<- prometheus.Metric) (val interface{}, err error) {
+func (scrapper MetricsForwader) GetMetric(metricsCollector chan<- prometheus.Metric) (val interface{}, err error) {
 	getCustomData := func() (data []byte, err error) {
 		generalScopeErr := "Error getting custom data for metrics fordwader"
 		recorder := httptest.NewRecorder()
 		var cl client.Client
-		if cl, err = mf.clientFactory.CreateClient(); err != nil {
+		if cl, err = scrapper.clientFactory.CreateClient(); err != nil {
 			errCause := "can not create client"
 			return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		var exposedMetricsData []byte
 		if exposedMetricsData, err = cl.GetData(metricsCollector); err != nil {
-			log.WithError(err).Error("error getting metrics from service " + mf.GetJobName())
+			log.WithError(err).Error("error getting metrics from service " + scrapper.GetJobName())
 			errCause := "can not get the data"
 			return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
@@ -88,11 +90,11 @@ func (mf MetricsForwader) GetMetric(metricsCollector chan<- prometheus.Metric) (
 			[]*io_prometheus_client.LabelPair{
 				&io_prometheus_client.LabelPair{
 					Name:  &job,
-					Value: &mf.jobName,
+					Value: &scrapper.jobName,
 				},
 				&io_prometheus_client.LabelPair{
 					Name:  &instance,
-					Value: &mf.instanceName,
+					Value: &scrapper.instanceName,
 				},
 			},
 		)
