@@ -2,25 +2,35 @@ package metrics
 
 import "github.com/prometheus/client_golang/prometheus"
 
+// DefaultFordwaderMetrics default metrics for metrics fordwader
 type DefaultFordwaderMetrics struct {
-	FordwaderDatasourceResponseDuration *prometheus.GaugeVec
+	FordwaderResponseDuration      *prometheus.GaugeVec
+	FordwaderScrapeDurationSeconds *prometheus.GaugeVec
 }
 
-var fDefMetrics DefaultFordwaderMetrics
-
+// NewDefaultFordwaderMetrics create a new DefaultFordwaderMetrics
 func NewDefaultFordwaderMetrics() (fordwaderMetrics *DefaultFordwaderMetrics) {
 	fordwaderMetrics = &DefaultFordwaderMetrics{
-		FordwaderDatasourceResponseDuration: prometheus.NewGaugeVec(
+		FordwaderResponseDuration: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "fordwader_datasource_response_duration",
-				Help: "Elapse time(in seconds) to get a response from a fordwader datasource",
+				Name: "fordwader_response_duration_seconds",
+				Help: "Elapse time(in seconds) to get a response from a fordwader",
 			},
-			[]string{"job", "instance", "datasource"},
+			[]string{"job", "instance"},
+		),
+		FordwaderScrapeDurationSeconds: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "fordwader_scrape_duration_seconds",
+				Help: "Elapse time(in seconds) to get a response from a fordwader scrapper",
+			},
+			[]string{"job", "instance"},
 		),
 	}
 	return fordwaderMetrics
 }
 
+// MustRegister register default metrics for metrics fordwader in prometheus
 func (fordwaderMetrics DefaultFordwaderMetrics) MustRegister() {
-	prometheus.MustRegister(fordwaderMetrics.FordwaderDatasourceResponseDuration)
+	prometheus.MustRegister(fordwaderMetrics.FordwaderResponseDuration)
+	prometheus.MustRegister(fordwaderMetrics.FordwaderScrapeDurationSeconds)
 }

@@ -6,17 +6,20 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http/httptest"
+	"time"
 
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/util"
+	"github.com/simelo/rextporter/src/util/metrics"
 	log "github.com/sirupsen/logrus"
 )
 
 // MetricsForwader is a scrapper kind capable to forward a metrics endpoint with job and instance labels at least
 type MetricsForwader struct {
 	baseFordwaderScrapper
+	defFordwaderMetrics *metrics.DefaultFordwaderMetrics
 }
 
 // GetJobName return the name of the job(service)
@@ -30,7 +33,7 @@ func (scrapper MetricsForwader) GetInstanceName() string {
 }
 
 // NewMetricsForwader create a scrapper that handle the forwaded metrics
-func NewMetricsForwader(pmcls client.ProxyMetricClientCreator) FordwaderScrapper {
+func NewMetricsForwader(pmcls client.ProxyMetricClientCreator, fDefMetrics *metrics.DefaultFordwaderMetrics) FordwaderScrapper {
 	return MetricsForwader{
 		baseFordwaderScrapper: baseFordwaderScrapper{
 			baseScrapper: baseScrapper{
@@ -39,6 +42,7 @@ func NewMetricsForwader(pmcls client.ProxyMetricClientCreator) FordwaderScrapper
 			},
 			clientFactory: pmcls,
 		},
+		defFordwaderMetrics: fDefMetrics,
 	}
 }
 
@@ -70,6 +74,14 @@ func appendLables(metrics []byte, labels []*io_prometheus_client.LabelPair) ([]b
 // GetMetric return the original metrics but with a service name as prefix in his names
 func (scrapper MetricsForwader) GetMetric() (val interface{}, err error) {
 	getCustomData := func() (data []byte, err error) {
+		successResponse := false
+		defer func(startTime time.Time) {
+			duration := time.Since(startTime).Seconds()
+			labels := []string{scrapper.GetJobName(), scrapper.GetInstanceName()}
+			if successResponse {
+				scrapper.defFordwaderMetrics.FordwaderScrapeDurationSeconds.WithLabelValues(labels...).Set(duration)
+			}
+		}(time.Now().UTC())
 		generalScopeErr := "Error getting custom data for metrics fordwader"
 		recorder := httptest.NewRecorder()
 		var cl client.FordwaderClient
@@ -117,6 +129,7 @@ func (scrapper MetricsForwader) GetMetric() (val interface{}, err error) {
 			log.WithError(err).Errorln("can not read recorded custom data")
 			return nil, err
 		}
+		successResponse = true
 		return data, nil
 	}
 	if customData, err := getCustomData(); err == nil {

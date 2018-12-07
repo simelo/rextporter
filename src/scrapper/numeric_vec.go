@@ -11,7 +11,7 @@ import (
 
 // NumericVec implements the Client interface(is able to get numeric metrics through `GetMetric` like Gauge and Counter)
 type NumericVec struct {
-	baseApiScrapper
+	baseAPIScrapper
 	labels     []config.Label
 	labelsName []string
 	itemPath   string
@@ -19,13 +19,13 @@ type NumericVec struct {
 
 func newNumericVec(cf client.Factory, p BodyParser, metric config.Metric, jobName, instanceName, datasource string) Scrapper {
 	return NumericVec{
-		baseApiScrapper: baseApiScrapper{
+		baseAPIScrapper: baseAPIScrapper{
 			baseScrapper: baseScrapper{
 				jobName:      jobName,
 				instanceName: instanceName,
-				datasource:   datasource,
 			},
 			clientFactory: cf,
+			datasource:    datasource,
 			parser:        p,
 			jsonPath:      metric.Path,
 		},

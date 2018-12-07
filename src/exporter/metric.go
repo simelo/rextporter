@@ -22,7 +22,7 @@ func createMetricsForwaders(conf config.RootConfig, fDefMetrics *metrics.Default
 			errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		fordwaderScrappers[idxService] = scrapper.NewMetricsForwader(metricFordwaderCreator)
+		fordwaderScrappers[idxService] = scrapper.NewMetricsForwader(metricFordwaderCreator, fDefMetrics)
 	}
 	return fordwaderScrappers, nil
 }

@@ -29,11 +29,11 @@ type FordwaderScrapper interface {
 type baseScrapper struct {
 	jobName      string
 	instanceName string
-	datasource   string
 }
 
-type baseApiScrapper struct {
+type baseAPIScrapper struct {
 	baseScrapper
+	datasource    string
 	clientFactory client.Factory
 	parser        BodyParser
 	jsonPath      string
@@ -52,7 +52,7 @@ func (s baseScrapper) GetInstanceName() string {
 	return s.instanceName
 }
 
-func (s baseScrapper) GetDatasource() string {
+func (s baseAPIScrapper) GetDatasource() string {
 	return s.datasource
 }
 

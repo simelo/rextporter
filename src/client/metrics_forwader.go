@@ -49,7 +49,6 @@ func (pmc ProxyMetricClientCreator) CreateClient() (cl FordwaderClient, err erro
 		defFordwaderMetrics: pmc.defFordwaderMetrics,
 		jobName:             pmc.JobName,
 		instanceName:        pmc.InstanceName,
-		datasource:          pmc.dataPath,
 	}
 	return cl, err
 }
@@ -61,7 +60,6 @@ type ProxyMetricClient struct {
 	defFordwaderMetrics *metrics.DefaultFordwaderMetrics
 	jobName             string
 	instanceName        string
-	datasource          string
 }
 
 // GetData can get raw metrics from a endpoint
@@ -73,9 +71,9 @@ func (client ProxyMetricClient) GetData() (data []byte, err error) {
 		successResponse := false
 		defer func(startTime time.Time) {
 			duration := time.Since(startTime).Seconds()
-			labels := []string{client.jobName, client.instanceName, client.datasource}
+			labels := []string{client.jobName, client.instanceName}
 			if successResponse {
-				client.defFordwaderMetrics.FordwaderDatasourceResponseDuration.WithLabelValues(labels...).Set(duration)
+				client.defFordwaderMetrics.FordwaderResponseDuration.WithLabelValues(labels...).Set(duration)
 			}
 		}(time.Now().UTC())
 		if resp, err = httpClient.Do(client.req); err != nil {
