@@ -90,6 +90,7 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 				ConstMetricIdxIn: idxM,
 				JobName:          mColl.scrapper.GetJobName(),
 				InstanceName:     mColl.scrapper.GetInstanceName(),
+				DataSource:       mColl.scrapper.GetDatasource(),
 				Err:              errC,
 				MetricsCollector: ch,
 			},
@@ -102,7 +103,7 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 			switch res.Val.(type) {
 			case float64:
 				counterVal, okCounterVal := res.Val.(float64)
-				defMetrics.scrapedSamples.addSeconds(1, res.JobName, res.InstanceName)
+				defMetrics.scrapeSamples.addSeconds(1, res.JobName, res.InstanceName)
 				if okCounterVal {
 					onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, counterVal)
 				} else {
@@ -110,7 +111,7 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 				}
 			case scrapper.NumericVecVals:
 				counterVecVal, okCounterVecVal := res.Val.(scrapper.NumericVecVals)
-				defMetrics.scrapedSamples.addSeconds(float64(len(counterVecVal)), res.JobName, res.InstanceName)
+				defMetrics.scrapeSamples.addSeconds(float64(len(counterVecVal)), res.JobName, res.InstanceName)
 				if okCounterVecVal {
 					onCollectVecSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, counterVecVal)
 				} else {
@@ -119,11 +120,15 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 			default:
 				log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to determine value %+v type", res.Val))
 			}
-			defMetrics.scrapedDurations.addSeconds(time.Since(startScrappingInPool).Seconds(), res.JobName, res.InstanceName)
+			elapsed := time.Since(startScrappingInPool).Seconds()
+			defMetrics.scrapeDurations.addSeconds(elapsed, res.JobName, res.InstanceName)
+			defMetrics.dataSourceScrapeDuration.add(elapsed, res.JobName, res.InstanceName, res.DataSource)
 		case err := <-errC:
 			log.WithError(err.Err).Errorln("can not get the data")
 			// FIXME(denisacostaq@gmail.com): onCollectFail(metricsColl[err.ConstMetricIdxOut], err.JobName, err.InstanceName, ch)
-			defMetrics.scrapedDurations.addSeconds(time.Since(startScrappingInPool).Seconds(), err.JobName, err.InstanceName)
+			elapsed := time.Since(startScrappingInPool).Seconds()
+			defMetrics.scrapeDurations.addSeconds(elapsed, err.JobName, err.InstanceName)
+			defMetrics.dataSourceScrapeDuration.add(elapsed, err.JobName, err.InstanceName, err.DataSource)
 		}
 	}
 }
@@ -162,6 +167,7 @@ func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch cha
 				ConstMetricIdxIn: idxM,
 				JobName:          mColl.scrapper.GetJobName(),
 				InstanceName:     mColl.scrapper.GetInstanceName(),
+				DataSource:       mColl.scrapper.GetDatasource(),
 				Err:              errC,
 				MetricsCollector: ch,
 			},
@@ -173,7 +179,7 @@ func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch cha
 		case res := <-resC:
 			switch res.Val.(type) {
 			case float64:
-				defMetrics.scrapedSamples.addSeconds(1, res.JobName, res.InstanceName)
+				defMetrics.scrapeSamples.addSeconds(1, res.JobName, res.InstanceName)
 				gaugeVal, okGaugeVal := res.Val.(float64)
 				if okGaugeVal {
 					onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, gaugeVal)
@@ -183,7 +189,7 @@ func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch cha
 				}
 			case scrapper.NumericVecVals:
 				gaugeVecVal, okGaugeVecVal := res.Val.(scrapper.NumericVecVals)
-				defMetrics.scrapedSamples.addSeconds(float64(len(gaugeVecVal)), res.JobName, res.InstanceName)
+				defMetrics.scrapeSamples.addSeconds(float64(len(gaugeVecVal)), res.JobName, res.InstanceName)
 				if okGaugeVecVal {
 					onCollectVecSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, gaugeVecVal)
 				} else {
@@ -194,11 +200,15 @@ func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch cha
 				log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to determine value %+v type", res.Val))
 				// FIXME(denisacostaq@gmail.com): onCollectFail(metricsColl[res.ConstMetricIdxOut], res.JobName, res.InstanceName, ch)
 			}
-			defMetrics.scrapedDurations.addSeconds(time.Since(startScrappingInPool).Seconds(), res.JobName, res.InstanceName)
+			elapsed := time.Since(startScrappingInPool).Seconds()
+			defMetrics.scrapeDurations.addSeconds(elapsed, res.JobName, res.InstanceName)
+			defMetrics.dataSourceScrapeDuration.add(elapsed, res.JobName, res.InstanceName, res.DataSource)
 		case err := <-errC:
 			log.WithError(err.Err).Errorln("can not get the data")
 			// FIXME(denisacostaq@gmail.com): onCollectFail(metricsColl[err.ConstMetricIdxOut], err.JobName, err.InstanceName, ch)
-			defMetrics.scrapedDurations.addSeconds(time.Since(startScrappingInPool).Seconds(), err.JobName, err.InstanceName)
+			elapsed := time.Since(startScrappingInPool).Seconds()
+			defMetrics.scrapeDurations.addSeconds(elapsed, err.JobName, err.InstanceName)
+			defMetrics.dataSourceScrapeDuration.add(elapsed, err.JobName, err.InstanceName, err.DataSource)
 		}
 	}
 }
@@ -232,6 +242,7 @@ func collectHistograms(metricsColl []constMetric, defMetrics *defaultMetrics, ch
 				ConstMetricIdxIn: idxM,
 				JobName:          mColl.scrapper.GetJobName(),
 				InstanceName:     mColl.scrapper.GetInstanceName(),
+				DataSource:       mColl.scrapper.GetDatasource(),
 				Err:              errC,
 				MetricsCollector: ch,
 			},
@@ -242,17 +253,21 @@ func collectHistograms(metricsColl []constMetric, defMetrics *defaultMetrics, ch
 		select {
 		case res := <-resC:
 			metricVal, okMetricVal := res.Val.(scrapper.HistogramValue)
-			defMetrics.scrapedSamples.addSeconds(float64(len(metricVal.Buckets)+2), res.JobName, res.InstanceName)
+			defMetrics.scrapeSamples.addSeconds(float64(len(metricVal.Buckets)+2), res.JobName, res.InstanceName)
 			if okMetricVal {
 				onCollectSuccess(&(metricsColl[res.ConstMetricIdxOut]), res.JobName, res.InstanceName, ch, metricVal)
 			} else {
 				log.WithField("val", res.Val).Errorln("can not assert the metric value to type histogram")
 			}
-			defMetrics.scrapedDurations.addSeconds(time.Since(startScrappingInPool).Seconds(), res.JobName, res.InstanceName)
+			elapsed := time.Since(startScrappingInPool).Seconds()
+			defMetrics.scrapeDurations.addSeconds(elapsed, res.JobName, res.InstanceName)
+			defMetrics.dataSourceScrapeDuration.add(elapsed, res.JobName, res.InstanceName, res.DataSource)
 		case err := <-errC:
 			log.WithError(err.Err).Errorln("can not get the data")
 			// FIXME(denisacostaq@gmail.com): onCollectFail(metricsColl[err.ConstMetricIdxOut], err.JobName, err.InstanceName, ch)
-			defMetrics.scrapedDurations.addSeconds(time.Since(startScrappingInPool).Seconds(), err.JobName, err.InstanceName)
+			elapsed := time.Since(startScrappingInPool).Seconds()
+			defMetrics.scrapeDurations.addSeconds(elapsed, err.JobName, err.InstanceName)
+			defMetrics.dataSourceScrapeDuration.add(elapsed, err.JobName, err.InstanceName, err.DataSource)
 		}
 	}
 }

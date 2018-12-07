@@ -52,36 +52,6 @@ func createMetrics(cache cache.Cache, srvsConf []config.Service, datasourceRespo
 	return metrics, err
 }
 
-var instance4JobLabels = []string{"job", "instance"}
-
-func newDefaultMetrics() *defaultMetrics {
-	scrapeDurationSecondsDesc := prometheus.NewDesc(
-		"scrape_duration_seconds",
-		"Scrape duration in seconds",
-		instance4JobLabels,
-		nil,
-	)
-	scrapeSamplesScrapedDesc := prometheus.NewDesc(
-		"scrape_samples_scraped",
-		"The number of samples the target exposed",
-		instance4JobLabels,
-		nil,
-	)
-	datasourceResponseDurationDesc := prometheus.NewDesc(
-		"datasource_response_duration",
-		"Elapse time to get a response from a datasource",
-		append(instance4JobLabels, "datasource"),
-		nil,
-	)
-	return &defaultMetrics{
-		scrapedDurations:               newScrapDuration(),
-		scrapeDurationSecondsDesc:      scrapeDurationSecondsDesc,
-		scrapedSamples:                 newScrapDuration(),
-		scrapeSamplesScrapedDesc:       scrapeSamplesScrapedDesc,
-		datasourceResponseDurationDesc: datasourceResponseDurationDesc,
-	}
-}
-
 func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf config.Service, datasourceResponseDurationDesc *prometheus.Desc) (metric constMetric, err error) {
 	generalScopeErr := "can not create metric " + metricConf.Name
 	var ccf client.CacheableFactory

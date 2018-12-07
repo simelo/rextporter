@@ -43,27 +43,28 @@ type BodyParser interface {
 func NewScrapper(cf client.Factory, parser BodyParser, metric config.Metric, srvConf config.Service) (Scrapper, error) {
 	jobName := srvConf.JobName()
 	instanceName := srvConf.InstanceName()
+	datasource := metric.URL
 	if len(metric.LabelNames()) > 0 {
-		return createVecScrapper(cf, parser, metric, jobName, instanceName)
+		return createVecScrapper(cf, parser, metric, jobName, instanceName, datasource)
 	}
-	return createAtomicScrapper(cf, parser, metric, jobName, instanceName)
+	return createAtomicScrapper(cf, parser, metric, jobName, instanceName, datasource)
 }
 
-func createVecScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName string) (Scrapper, error) {
+func createVecScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName, datasource string) (Scrapper, error) {
 	if metric.Options.Type == config.KeyTypeCounter || metric.Options.Type == config.KeyTypeGauge {
-		return newNumericVec(cf, parser, metric, jobName, instanceName), nil
+		return newNumericVec(cf, parser, metric, jobName, instanceName, datasource), nil
 	}
 	return NumericVec{}, errors.New("histogram vec and summary vec are not supported yet")
 }
 
-func createAtomicScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName string) (Scrapper, error) {
+func createAtomicScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName, datasource string) (Scrapper, error) {
 	if metric.Options.Type == config.KeyTypeSummary {
 		return Histogram{}, errors.New("summary scrapper is not supported yet")
 	}
 	if metric.Options.Type == config.KeyTypeHistogram {
-		return newHistogram(cf, parser, metric, jobName, instanceName), nil
+		return newHistogram(cf, parser, metric, jobName, instanceName, datasource), nil
 	}
-	return newNumeric(cf, parser, metric.Path, jobName, instanceName), nil
+	return newNumeric(cf, parser, metric.Path, jobName, instanceName, datasource), nil
 }
 
 func getData(cf client.Factory, p BodyParser, metricsCollector chan<- prometheus.Metric) (data interface{}, err error) {

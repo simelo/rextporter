@@ -16,10 +16,11 @@ import (
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/scrapper"
 	"github.com/simelo/rextporter/src/util"
+	"github.com/simelo/rextporter/src/util/metrics"
 	log "github.com/sirupsen/logrus"
 )
 
-func exposedMetricsMiddleware(fordwaderScrappers []scrapper.Scrapper, promHandler http.Handler) http.Handler {
+func exposedMetricsMiddleware(fordwaderScrappers []scrapper.FordwaderScrapper, promHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		getDefaultData := func() (data []byte, err error) {
 			generalScopeErr := "error reding default data"

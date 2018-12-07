@@ -9,17 +9,19 @@ import (
 // ScrapResult is the success case with the metric value
 type ScrapResult struct {
 	Val               interface{}
+	ConstMetricIdxOut int
 	JobName           string
 	InstanceName      string
-	ConstMetricIdxOut int
+	DataSource        string
 }
 
 // ScrapErrResult is the fail case with the error happened
 type ScrapErrResult struct {
 	Err               error
+	ConstMetricIdxOut int
 	JobName           string
 	InstanceName      string
-	ConstMetricIdxOut int
+	DataSource        string
 }
 
 // ScrapRequest have the scrapper to do an scrap, the channels to put the result, and the metric index to return
@@ -29,6 +31,7 @@ type ScrapRequest struct {
 	ConstMetricIdxIn int
 	JobName          string
 	InstanceName     string
+	DataSource       string
 	Err              chan ScrapErrResult
 	MetricsCollector chan<- prometheus.Metric
 }
@@ -39,6 +42,7 @@ type scrapWork struct {
 	constMetricIdxIn int
 	jobName          string
 	instanceName     string
+	dataSource       string
 	err              chan ScrapErrResult
 	metricsCollector chan<- prometheus.Metric
 }
@@ -77,6 +81,7 @@ func (p *Pool) Apply(ri ScrapRequest) {
 		constMetricIdxIn: ri.ConstMetricIdxIn,
 		jobName:          ri.JobName,
 		instanceName:     ri.InstanceName,
+		dataSource:       ri.DataSource,
 		err:              ri.Err,
 		metricsCollector: ri.MetricsCollector,
 	}
@@ -110,9 +115,9 @@ func (w *workerT) start() {
 			case work := <-w.works:
 				val, err := work.scrapper.GetMetric(work.metricsCollector)
 				if err == nil {
-					work.res <- ScrapResult{Val: val, ConstMetricIdxOut: work.constMetricIdxIn, JobName: work.jobName, InstanceName: work.instanceName}
+					work.res <- ScrapResult{Val: val, ConstMetricIdxOut: work.constMetricIdxIn, JobName: work.jobName, InstanceName: work.instanceName, DataSource: work.dataSource}
 				} else {
-					work.err <- ScrapErrResult{Err: err, ConstMetricIdxOut: work.constMetricIdxIn, JobName: work.jobName, InstanceName: work.instanceName}
+					work.err <- ScrapErrResult{Err: err, ConstMetricIdxOut: work.constMetricIdxIn, JobName: work.jobName, InstanceName: work.instanceName, DataSource: work.dataSource}
 				}
 				// wait for a quit msg
 			case <-w.quitChan:

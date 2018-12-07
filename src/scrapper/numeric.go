@@ -13,14 +13,16 @@ type Numeric struct {
 	baseScrapper
 }
 
-func newNumeric(cf client.Factory, p BodyParser, path, jobName, instanceName string) Scrapper {
+func newNumeric(cf client.Factory, p BodyParser, path, jobName, instanceName, datasource string) Scrapper {
 	return Numeric{
 		baseScrapper: baseScrapper{
 			clientFactory: cf,
 			parser:        p,
 			jsonPath:      path,
 			jobName:       jobName,
-			instanceName:  instanceName},
+			instanceName:  instanceName,
+			datasource:    datasource,
+		},
 	}
 }
 
