@@ -5,7 +5,7 @@ import "github.com/simelo/rextporter/src/core"
 type OptionsMap map[string]string
 
 func newOptionsMap() OptionsMap {
-
+	return make(OptionsMap)
 }
 
 type RxtDefScraperDataset struct {
@@ -17,7 +17,7 @@ type RxtDefScraperDataset struct {
 }
 
 type RxtDefAuth struct {
-	options OptionMap
+	options OptionsMap
 }
 
 type RxtDefSource struct {
