@@ -26,7 +26,7 @@ func dynamicTestingFolder() (timestampedTestingFolder string, err error) {
 		log.WithError(err).Errorln("getting testing root folder")
 		return timestampedTestingFolder, err
 	}
-	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	timestamp := strconv.FormatInt(int64(time.Now().Nanosecond()), 10)
 	timestampedTestingFolder = filepath.Join(timestampedTestingFolder, timestamp)
 	if err = os.MkdirAll(timestampedTestingFolder, 0750); err != nil {
 		log.WithError(err).Errorln("creating dynamic testing folder")
@@ -44,7 +44,7 @@ func FilePathToSharePort() (path string, err error) {
 
 // RName return a random string from a predefined list
 func RName() string {
-	names := []string{"a", "bsfdf", "test", "integration", "integration_test", "fake", "32", "other", "dfdf"}
+	names := []string{"a", "bsfdf", "test", "integration", "integration_test", "fake", "32", "other", "dfdf", "c", "d", "e", "f", "g", "h", "i"}
 	src := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(src)
 	i := r.Intn(len(names) - 1)

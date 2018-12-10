@@ -17,36 +17,23 @@ type RootConfig struct {
 	Services []Service `json:"services"`
 }
 
-var rootConfig RootConfig
-
-// Config TODO(denisacostaq@gmail.com): make a singleton
-func Config() RootConfig {
-	//if b, err := json.MarshalIndent(rootConfig, "", " "); err != nil {
-	//	log.Println("Error marshaling:", err)
-	//} else {
-	//	os.Stdout.Write(b)
-	//	log.Println("\n\n\n\n\n")
-	//}
-	// TODO(denisacostaq@gmail.com): Make it a singleton
-	return rootConfig
-}
-
-// NewConfigFromRawString allow you to define a `.toml` config in the fly, a raw string with the "config content"
-func NewConfigFromRawString(strConf string) error {
+// MustConfigFromRawString allow you to define a `.toml` config in the fly, a raw string with the "config content"
+func MustConfigFromRawString(strConf string) (conf RootConfig, err error) {
 	const generalScopeErr = "error creating a config instance"
 	viper.SetConfigType("toml")
 	buff := bytes.NewBuffer([]byte(strConf))
-	if err := viper.ReadConfig(buff); err != nil {
+	if err = viper.ReadConfig(buff); err != nil {
 		errCause := fmt.Sprintln("can not read the buffer: ", err.Error())
-		return util.ErrorFromThisScope(errCause, generalScopeErr)
+		return conf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	rootConfig = RootConfig{}
-	if err := viper.Unmarshal(&rootConfig); err != nil {
+	if err = viper.Unmarshal(&conf); err != nil {
 		errCause := fmt.Sprintln("can not decode the config data: ", err.Error())
-		return util.ErrorFromThisScope(errCause, generalScopeErr)
+		return conf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	rootConfig.validate()
-	return nil
+	if !conf.isValid() {
+		log.Panic("config is not valid")
+	}
+	return conf, err
 }
 
 // newMetricsConfig desserialize a metrics config from the 'toml' file path
@@ -73,43 +60,47 @@ func newMetricsConfig(path string) (metricsConf []Metric, err error) {
 	return metricsConf, nil
 }
 
-// newServiceConfigFromFile desserialize a service config from the 'toml' file path
-func newServiceConfigFromFile(path string, conf mainConfigData) (servicesConf []Service, err error) {
+// newServicesConfigFromFile desserialize a service config from the 'toml' file path
+func newServicesConfigFromFile(path string, conf mainConfigData) (servicesConf []Service, err error) {
 	const generalScopeErr = "error reading service config"
-	serviceConfReader := NewServiceConfigFromFile(path)
-	if servicesConf, err = serviceConfReader.GetConfig(); err != nil {
+	servicesConfReader := NewServicesConfigFromFile(path)
+	if servicesConf, err = servicesConfReader.GetConfig(); err != nil {
 		errCause := "error reading service config"
 		return servicesConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	for idxService, service := range servicesConf {
-		if servicesConf[idxService].Metrics, err = newMetricsConfig(conf.MetricsConfigPath(service.Name)); err != nil {
-			errCause := "error reading metrics config: " + err.Error()
-			panic(util.ErrorFromThisScope(errCause, generalScopeErr))
+		if util.StrSliceContains(service.Modes, ServiceTypeAPIRest) {
+			if servicesConf[idxService].Metrics, err = newMetricsConfig(conf.MetricsConfigPath(service.Name)); err != nil {
+				errCause := "error reading metrics config: " + err.Error()
+				return servicesConf, util.ErrorFromThisScope(errCause, generalScopeErr)
+			}
 		}
 	}
 	return servicesConf, err
 }
 
-// NewConfigFromFileSystem will read the config from the file system, you should send the
+// MustConfigFromFileSystem will read the config from the file system, you should send the
 // metric config file path and service config file path into metricsPath, servicePath respectively.
 // This function can cause a panic.
-// TODO(denisacostaq@gmail.com): make this a singleton
-func NewConfigFromFileSystem(mainConfigPath string) {
+func MustConfigFromFileSystem(mainConfigPath string) (rootConf RootConfig) {
 	const generalScopeErr = "error getting config values from file system"
 	var conf mainConfigData
 	var err error
 	if conf, err = newMainConfigData(mainConfigPath); err != nil {
-		errCause := "error reading metrics config: " + err.Error()
-		panic(errCause)
-	}
-	if rootConfig.Services, err = newServiceConfigFromFile(conf.ServicesConfigPath(), conf); err != nil {
 		errCause := "root cause: " + err.Error()
-		panic(util.ErrorFromThisScope(errCause, generalScopeErr))
+		log.WithError(util.ErrorFromThisScope(errCause, generalScopeErr)).Panicln("can not read main config")
 	}
-	rootConfig.validate()
+	if rootConf.Services, err = newServicesConfigFromFile(conf.ServicesConfigPath(), conf); err != nil {
+		errCause := "root cause: " + err.Error()
+		log.WithError(util.ErrorFromThisScope(errCause, generalScopeErr)).Errorln("can not read services config file")
+	}
+	if !rootConf.isValid() {
+		log.Panic("config is not valid")
+	}
+	return rootConf
 }
 
-// FilterMetricsByType will return all the metrics who match whit the 't' parameter.
+// FilterMetricsByType will return all the metrics who match with the 't' parameter.
 func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
 	tmpMetrics := list.New()
 	for _, service := range conf.Services {
@@ -127,34 +118,38 @@ func (conf RootConfig) FilterMetricsByType(t string) (metrics []Metric) {
 	return metrics
 }
 
-// FilterServicesByType will return all the services who match whit the 't' parameter.
+// FilterServicesByType will return all the services who match with the 't' parameter.
 func (conf RootConfig) FilterServicesByType(t string) (services []Service) {
+	return filterServicesByType(t, conf.Services)
+}
+
+func filterServicesByType(t string, services []Service) (filteredService []Service) {
 	tmpServices := list.New()
-	for _, service := range conf.Services {
-		if service.Mode == t {
+	for _, service := range services {
+		if util.StrSliceContains(service.Modes, t) {
 			tmpServices.PushBack(service)
 		}
 	}
-	services = make([]Service, tmpServices.Len())
+	filteredService = make([]Service, tmpServices.Len())
 	idxLink := 0
 	for it := tmpServices.Front(); it != nil; it = it.Next() {
-		services[idxLink] = it.Value.(Service)
+		filteredService[idxLink] = it.Value.(Service)
 		idxLink++
 	}
-	return services
+	return filteredService
 }
 
-func (conf RootConfig) validate() {
+func (conf RootConfig) isValid() bool {
 	var errs []error
 	for _, service := range conf.Services {
 		errs = append(errs, service.validate()...)
 	}
 	if len(errs) != 0 {
-		defer log.Panicln("some errors found")
 		for _, err := range errs {
 			log.WithError(err).Errorln("Error")
 		}
 	}
+	return len(errs) == 0
 }
 
 // isValidUrl tests a string to determine if it is a valid URL or not.

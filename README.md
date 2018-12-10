@@ -45,7 +45,7 @@ Example services configuration file:
 # Services configuration.
 [[services]]
   name = "skycoin"
-  mode = "rest_api"
+  modes = ["rest_api"]
   scheme = "http"
   port = 8000
   basePath = ""
@@ -78,4 +78,22 @@ Example metrics(for skycoin in this case) file configuration file.
   [metrics.options]
     type = "Counter"
     description = "Put a description for this metrics"
+```
+
+Example gauge vector metric configuration.
+```toml
+[[metrics]]
+  name = "burn_factor_by_service"
+  url = "/api/v1/network/connections"
+  httpMethod = "GET"
+  path = "/connections"
+
+  [metrics.options]
+    type = "Gauge"
+    itemPath = "/unconfirmed_verify_transaction/burn_factor"
+    description = "I am running since"
+
+  [[metrics.options.labels]]
+    name = "ip_port"
+    path = "/address"
 ```
