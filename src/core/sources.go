@@ -96,11 +96,9 @@ type RextResourceDef interface {
 	// SetDecoder set a decoder to parse the resource and get the info
 	SetDecoder(RextDecoderDef)
 
-	// AddRextDataPath add a data path inside a retrieved resource
-	AddRextDataPath(RextDataPathDef)
-
-	// GetRextDataPaths return the data paths inside a retrieved resource
-	GetRextDataPaths() []RextDataPathDef
+	// AddMetricDef set a metric definition for this resource path
+	AddMetricDef(RextMetricDef)
+	GetMetricDefs() []RextMetricDef
 
 	SetType(string)  // TODO(denisacostaq@gmail.com): remove this
 	GetType() string // TODO(denisacostaq@gmail.com): remove this
@@ -118,18 +116,6 @@ type RextDecoderDef interface {
 	GetOptions() RextKeyValueStore
 }
 
-// RextDataPathDef define the metric extraction inside a retrieved resource, a resource can have many
-// RextDataPathDef as you can see in RextResourceDef
-type RextDataPathDef interface {
-	// SetMetricDef set a metric definition to create a exposed metric
-	SetMetricDef(RextMetricDef)
-	GetMetricDef() RextMetricDef
-	// GetNodeSolver return a solver able to get the metric sample/s
-	GetNodeSolver() RextNodeSolver
-	SetNodeSolver(RextNodeSolver)
-	GetOptions() RextKeyValueStore
-}
-
 const (
 	// RextNodeSolverTypeJSONPath var name to use node solver of json kind
 	RextNodeSolverTypeJSONPath = "jsonPath"
@@ -139,6 +125,8 @@ const (
 // retrieved resource
 type RextNodeSolver interface {
 	// GetType return the strategy to find the data, it can be: jpath, xpath, .ini, plain_text, .tar.gz
+	// it is different to RextDecoderDef.type in the sense of a decoder can work over a binary encoded
+	// content and after, the node solver over a .rar
 	GetType() string
 
 	// GetNodePath return the path where you can find the value, it depends on the type, see some examples below:
@@ -166,6 +154,9 @@ type RextMetricDef interface {
 	GetMetricDescription() string
 	// GetLabels return the labels in which the metrics should be mapped in
 	GetLabels() []RextLabelDef
+	// GetNodeSolver return a solver able to get the metric sample/s
+	GetNodeSolver() RextNodeSolver
+	SetNodeSolver(RextNodeSolver)
 	SetMetricName(string)
 	SetMetricType(string)
 	SetMetricDescription(string)
