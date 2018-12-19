@@ -7,22 +7,18 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func newRootConfig(suite *rootConfigSuite) core.RextEnv {
-	return NewRootConfig(
-		suite.options,
-	)
+func newRootConfig(suite *rootConfigSuite) core.RextRoot {
+	return NewRootConfig(suite.services)
 }
 
 type rootConfigSuite struct {
 	suite.Suite
-	options    core.RextKeyValueStore
-	rootConfig core.RextEnv
+	services   []core.RextServiceDef
+	rootConfig core.RextRoot
 }
 
 func (suite *rootConfigSuite) SetupTest() {
-	suite.options = NewOptionsMap()
-	suite.options.SetString("k1", "v1")
-	suite.options.SetString("k2", "v2")
+	suite.services = []core.RextServiceDef{}
 	suite.rootConfig = newRootConfig(suite)
 }
 
@@ -30,16 +26,26 @@ func TestRootConfig(t *testing.T) {
 	suite.Run(t, new(rootConfigSuite))
 }
 
-func (suite *rootConfigSuite) TestNewMetricDef() {
+func (suite *rootConfigSuite) TestNewRootConf() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
 	rootConfig := newRootConfig(suite)
-	opts, err := suite.options.Clone()
-	suite.Nil(err)
-	suite.options.SetString("k1", "v2")
+	services := rootConfig.GetServices()
 
 	// NOTE(denisacostaq@gmail.com): Assert
-	suite.True(eqKvs(suite.Assert(), suite.options, rootConfig.GetOptions()))
-	suite.False(eqKvs(nil, opts, rootConfig.GetOptions()))
+	suite.Equal(len(suite.services), len(services))
+}
+
+func (suite *rootConfigSuite) TestAbleToAddService() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	orgServices := suite.rootConfig.GetServices()
+	service := &Service{}
+	suite.rootConfig.AddService(service)
+
+	// NOTE(denisacostaq@gmail.com): When
+	services2 := suite.rootConfig.GetServices()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Equal(len(orgServices)+1, len(services2))
 }
