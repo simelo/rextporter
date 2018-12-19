@@ -2,16 +2,16 @@ package client
 
 import (
 	"compress/gzip"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
 
-	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/core"
 	"github.com/simelo/rextporter/src/util"
 	"github.com/simelo/rextporter/src/util/metrics"
+	log "github.com/sirupsen/logrus"
 )
 
 // ProxyMetricClientCreator create a metrics fordwader client
@@ -23,15 +23,24 @@ type ProxyMetricClientCreator struct {
 }
 
 // CreateProxyMetricClientCreator create a ProxyMetricClientCreator with required info to create a metrics fordwader client
-func CreateProxyMetricClientCreator(service config.Service, fDefMetrics *metrics.DefaultFordwaderMetrics) (cf ProxyMetricClientCreator, err error) {
-	if !util.StrSliceContains(service.Modes, config.ServiceTypeProxy) {
-		return ProxyMetricClientCreator{}, errors.New("can not create a forward_metrics metric client from a service whitout type " + config.ServiceTypeProxy)
+func CreateProxyMetricClientCreator(resConf core.RextResourceDef, srvConf core.RextServiceDef, fDefMetrics *metrics.DefaultFordwaderMetrics) (cf ProxyMetricClientCreator, err error) {
+	srvOpts := srvConf.GetOptions()
+	jobName, err := srvOpts.GetString(core.OptKeyRextServiceDefJobName)
+	if err != nil {
+		log.WithError(err).Errorln("Can not find jobName")
+		return cf, err
 	}
+	instanceName, err := srvOpts.GetString(core.OptKeyRextServiceDefInstanceName)
+	if err != nil {
+		log.WithError(err).Errorln("Can not find instanceName")
+		return cf, err
+	}
+	resPath := resConf.GetResourcePATH(srvConf.GetBasePath())
 	cf = ProxyMetricClientCreator{
 		defFordwaderMetrics: fDefMetrics,
-		dataPath:            service.URIToGetExposedMetric(),
-		JobName:             service.JobName(),
-		InstanceName:        service.InstanceName(),
+		dataPath:            resPath,
+		JobName:             jobName,
+		InstanceName:        instanceName,
 	}
 	return cf, err
 }
