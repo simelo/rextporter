@@ -7,21 +7,21 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func newAuth(suite *authConfSuit) core.RextAuth {
-	return NewHTTPAuth(suite.authType, suite.authURL, suite.authOptions)
+func newAuth(suite *authConfSuit) core.RextAuthDef {
+	return NewHTTPAuth(suite.authType, suite.authURL, suite.options)
 }
 
 type authConfSuit struct {
 	suite.Suite
-	authConf          core.RextAuth
+	authConf          core.RextAuthDef
 	authType, authURL string
-	authOptions       OptionsMap
+	options           OptionsMap
 }
 
 func (suite *authConfSuit) SetupTest() {
-	suite.authOptions = NewOptionsMap()
-	suite.authOptions.SetString("k1", "v1")
-	suite.authOptions.SetString("k2", "v2")
+	suite.options = NewOptionsMap()
+	suite.options.SetString("k1", "v1")
+	suite.options.SetString("k2", "v2")
 	suite.authType = "CSRF"
 	suite.authURL = "http://localhost:9000/hosted_in/auth"
 	suite.authConf = newAuth(suite)
@@ -40,5 +40,29 @@ func (suite *authConfSuit) TestNewHTTPAuth() {
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Equal(suite.authType, authConf.GetAuthType())
 	// TODO(denisacostaq@gmail.com):
-	// suite.True(eqKvs(suite.Assert(), suite.authOptions, authConf.GetOptions()))
+	suite.True(eqKvs(suite.Assert(), suite.options, authConf.GetOptions()))
+}
+
+func (suite *authConfSuit) TestAbleToSetType() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	orgAuthType := suite.authConf.GetAuthType()
+	authType := "fgfg78"
+	suite.authConf.SetAuthType(authType)
+
+	// NOTE(denisacostaq@gmail.com): When
+	authType2 := suite.authConf.GetAuthType()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Equal(authType, authType2)
+	suite.NotEqual(orgAuthType, authType2)
+}
+
+func (suite *authConfSuit) TestInitializeEmptyOptionsInFly() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	authDef := HTTPAuth{}
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.NotNil(authDef.GetOptions())
 }
