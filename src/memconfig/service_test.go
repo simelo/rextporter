@@ -9,20 +9,26 @@ import (
 
 type serviceConfSuit struct {
 	suite.Suite
-	srvConf    core.RextDataSource
-	baseURL    string
-	location   string
-	httpMethod string
+	srvConf  core.RextServiceDef
+	basePath string
+	protocol string
+	auth     core.RextAuthDef
+	sources  []core.RextResourceDef
+	options  core.RextKeyValueStore
 }
 
-func newService(suite *serviceConfSuit) core.RextDataSource {
-	return NewServiceConf(suite.baseURL, suite.location, suite.httpMethod)
+func newService(suite *serviceConfSuit) core.RextServiceDef {
+	return NewServiceConf(suite.basePath, suite.protocol, suite.auth, suite.sources, suite.options)
 }
 
 func (suite *serviceConfSuit) SetupTest() {
-	suite.baseURL = "/hosted_in"
-	suite.location = "http://localhost:9000"
-	suite.httpMethod = "GET"
+	suite.basePath = "/hosted_in/root"
+	suite.protocol = "file"
+	suite.auth = &HTTPAuth{}
+	suite.sources = []core.RextResourceDef{&ResourceDef{}}
+	suite.options = NewOptionsMap()
+	suite.options.SetString("k1", "v1")
+	suite.options.SetString("k2", "v2")
 	suite.srvConf = newService(suite)
 }
 
@@ -30,37 +36,78 @@ func TestServiceConfSuit(t *testing.T) {
 	suite.Run(t, new(serviceConfSuit))
 }
 
-func (suite *serviceConfSuit) TestNewMetricDef() {
+func (suite *serviceConfSuit) TestNewServiceDef() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
-	service := newService(suite)
+	serviceDef := newService(suite)
+	opts, err := suite.options.Clone()
+	suite.Nil(err)
+	suite.options.SetString("k1", "v2")
 
 	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Equal(suite.location, service.GetResourceLocation())
-	suite.Equal(suite.httpMethod, service.GetMethod())
+	suite.Equal(suite.protocol, serviceDef.GetProtocol())
+	suite.True(eqKvs(suite.Assert(), suite.options, serviceDef.GetOptions()))
+	suite.False(eqKvs(nil, opts, serviceDef.GetOptions()))
 }
 
-func (suite *serviceConfSuit) TestAbleToSetResourceLocation() {
+func (suite *serviceConfSuit) TestAbleToSetProtocol() {
 	// NOTE(denisacostaq@gmail.com): Giving
-	loc := "fgfg78"
-	suite.srvConf.SetResourceLocation(loc)
+	protocol := "http"
+	suite.srvConf.SetProtocol(protocol)
 
 	// NOTE(denisacostaq@gmail.com): When
-	loc2 := suite.srvConf.GetResourceLocation()
+	protocol2 := suite.srvConf.GetProtocol()
 
 	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Equal(loc, loc2)
+	suite.Equal(protocol, protocol2)
 }
 
-func (suite *serviceConfSuit) TestAbleToSetMethod() {
+func (suite *serviceConfSuit) TestAbleToSetBasePath() {
 	// NOTE(denisacostaq@gmail.com): Giving
-	method := "fgfg78"
-	suite.srvConf.SetMethod(method)
+	basePath := "dfdf"
+	suite.srvConf.SetBasePath(basePath)
 
 	// NOTE(denisacostaq@gmail.com): When
-	method2 := suite.srvConf.GetMethod()
+	basePath2 := suite.srvConf.GetBasePath()
 
 	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Equal(method, method2)
+	suite.Equal(basePath, basePath2)
+}
+
+func (suite *serviceConfSuit) TestAbleToSetBaseAuth() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	orgAuth := suite.srvConf.GetAuthForBaseURL()
+	auth := &HTTPAuth{authType: "ds"}
+	suite.srvConf.SetAuthForBaseURL(auth)
+
+	// NOTE(denisacostaq@gmail.com): When
+	auth2 := suite.srvConf.GetAuthForBaseURL()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Equal(auth, auth2)
+	suite.NotEqual(orgAuth, auth2)
+}
+
+func (suite *serviceConfSuit) TestAbleToAddSource() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	orgSources := suite.srvConf.GetSources()
+	source := &ResourceDef{}
+	suite.srvConf.AddSource(source)
+
+	// NOTE(denisacostaq@gmail.com): When
+	sources2 := suite.srvConf.GetSources()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Equal(len(orgSources)+1, len(sources2))
+}
+
+func (suite *serviceConfSuit) TestInitializeEmptyOptionsInFly() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	resDef := Service{}
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.NotNil(resDef.GetOptions())
 }
