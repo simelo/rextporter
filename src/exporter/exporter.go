@@ -13,7 +13,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/simelo/rextporter/src/cache"
-	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/core"
 	"github.com/simelo/rextporter/src/scrapper"
 	"github.com/simelo/rextporter/src/util"
 	"github.com/simelo/rextporter/src/util/metrics"
@@ -82,7 +82,7 @@ func exposedMetricsMiddleware(scrappers []scrapper.FordwaderScrapper, promHandle
 var fDefMetrics *metrics.DefaultFordwaderMetrics
 
 // MustExportMetrics will read the config from mainConfigFile if any or use a default one.
-func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf config.RootConfig) (srv *http.Server) {
+func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf core.RextRoot) (srv *http.Server) {
 	c := cache.NewCache()
 	if collector, err := newMetricsCollector(c, conf); err != nil {
 		log.WithError(err).Panicln("Can not create metrics")
