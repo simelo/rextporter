@@ -5,7 +5,7 @@ import (
 )
 
 // OptionsMap in-memory key value store
-type OptionsMap map[string]string
+type OptionsMap map[string]interface{}
 
 // NewOptionsMap creates a new instance
 func NewOptionsMap() (m OptionsMap) {
@@ -13,33 +13,38 @@ func NewOptionsMap() (m OptionsMap) {
 	return
 }
 
-// GetString value for key
+// GetString return the string value for key
 func (m OptionsMap) GetString(key string) (string, error) {
+	if val, err := m.GetObject(key); err == nil {
+		strVal, okStrVal := val.(string)
+		if okStrVal {
+			return strVal, nil
+		}
+		return "", core.ErrKeyInvalidType
+	} else {
+		return "", err
+	}
+}
+
+// SetString set a string value for key
+func (m OptionsMap) SetString(key string, value string) (exists bool, err error) {
+	return m.SetObject(key, value)
+}
+
+// GetObject return a saved object
+func (m OptionsMap) GetObject(key string) (interface{}, error) {
 	if val, hasKey := m[key]; hasKey {
 		return val, nil
 	}
 	return "", core.ErrKeyNotFound
 }
 
-// SetString value for key
-func (m OptionsMap) SetString(key string, value string) (exists bool, err error) {
+// SetObject save an general object
+func (m OptionsMap) SetObject(key string, value interface{}) (exists bool, err error) {
 	err = nil
 	_, exists = m[key]
 	m[key] = value
 	return
-}
-
-// GetObject equivalent to GetString
-func (m OptionsMap) GetObject(key string) (interface{}, error) {
-	return m.GetString(key)
-}
-
-// SetObject only strings supported
-func (m OptionsMap) SetObject(key string, value interface{}) (bool, error) {
-	if s, isStr := value.(string); isStr {
-		return m.SetString(key, s)
-	}
-	return false, core.ErrInvalidType
 }
 
 // GetKeys return all the saved keys
