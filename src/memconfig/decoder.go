@@ -29,7 +29,14 @@ func (d Decoder) GetType() string {
 
 // GetOptions return key/value pairs for extra options
 func (d *Decoder) GetOptions() core.RextKeyValueStore {
+	if d.options == nil {
+		d.options = NewOptionsMap()
+	}
 	return d.options
+}
+
+func (d Decoder) Validate() bool {
+	return core.ValidateDecoder(&d)
 }
 
 // NewDecoder create a new decoder

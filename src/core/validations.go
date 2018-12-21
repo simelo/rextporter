@@ -110,3 +110,11 @@ func ValidateLabel(l RextLabelDef) (hasError bool) {
 	}
 	return hasError
 }
+
+func ValidateDecoder(d RextDecoderDef) (hasError bool) {
+	if len(d.GetType()) == 0 {
+		hasError = true
+		log.Errorln("type is required in decoder config")
+	}
+	return hasError
+}

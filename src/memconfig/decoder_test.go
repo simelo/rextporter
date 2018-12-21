@@ -47,3 +47,37 @@ func (suite *decoderSuit) TestNewDecoderDef() {
 	suite.True(eqKvs(suite.Assert(), suite.options, decoderDef.GetOptions()))
 	suite.False(eqKvs(nil, opts, decoderDef.GetOptions()))
 }
+
+func (suite *decoderSuit) TestInitializeEmptyOptionsInFly() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	decoderDef := Decoder{}
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.NotNil(decoderDef.GetOptions())
+}
+
+func (suite *decoderSuit) TestValidationClonedShouldBeValid() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	cDecoderConf, err := suite.decoder.Clone()
+	suite.Nil(err)
+	suite.Equal(suite.decoder, cDecoderConf)
+	hasError := cDecoderConf.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.False(hasError)
+}
+
+func (suite *decoderSuit) TestValidationTypeShouldNotBeEmpty() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	decoderDef := NewDecoder("", nil)
+
+	// NOTE(denisacostaq@gmail.com): When
+	hasError := decoderDef.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
