@@ -24,3 +24,5 @@ screenlog.*
 *.swp
 *.orig
 
+
+**/mocks
