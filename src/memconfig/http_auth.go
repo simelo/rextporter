@@ -15,7 +15,7 @@ type HTTPAuth struct {
 // Clone make a deep copy of NodeSolver or return an error if any
 func (auth HTTPAuth) Clone() (cAuth core.RextAuthDef, err error) {
 	var cOpts core.RextKeyValueStore
-	if cOpts, err = auth.options.Clone(); err != nil {
+	if cOpts, err = auth.GetOptions().Clone(); err != nil {
 		log.WithError(err).Errorln("Can not clone options in HTTPAuth")
 		return cAuth, err
 	}
@@ -39,6 +39,10 @@ func (auth *HTTPAuth) GetOptions() core.RextKeyValueStore {
 		auth.options = NewOptionsMap()
 	}
 	return auth.options
+}
+
+func (auth HTTPAuth) Validate() (haveError bool) {
+	return core.ValidateAuth(&auth)
 }
 
 // NewHTTPAuth create a auth

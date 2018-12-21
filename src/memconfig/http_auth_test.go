@@ -20,8 +20,9 @@ type authConfSuit struct {
 
 func (suite *authConfSuit) SetupTest() {
 	suite.options = NewOptionsMap()
-	suite.options.SetString("k1", "v1")
-	suite.options.SetString("k2", "v2")
+	suite.options.SetString(core.OptKeyRextAuthDefTokenHeaderKey, "v1")
+	suite.options.SetString(core.OptKeyRextAuthDefTokenGenEndpoint, "v2")
+	suite.options.SetString(core.OptKeyRextAuthDefTokenKeyFromEndpoint, "v3")
 	suite.authType = "CSRF"
 	suite.authURL = "http://localhost:9000/hosted_in/auth"
 	suite.authConf = newAuth(suite)
@@ -65,4 +66,100 @@ func (suite *authConfSuit) TestInitializeEmptyOptionsInFly() {
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.NotNil(authDef.GetOptions())
+}
+
+func (suite *authConfSuit) TestValidationClonedShouldBeValid() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	cAuthConf, err := suite.authConf.Clone()
+	suite.Nil(err)
+	hasError := cAuthConf.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.False(hasError)
+}
+
+func (suite *authConfSuit) TestValidationTypeShouldNotBeEmpty() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	authDef, err := suite.authConf.Clone()
+	suite.Nil(err)
+
+	// NOTE(denisacostaq@gmail.com): When
+	authDef.SetAuthType("")
+	hasError := authDef.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *authConfSuit) TestValidationTokenHeaderKeyShouldNotBeEmptyInCSRF() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	authDef, err := suite.authConf.Clone()
+	suite.Nil(err)
+
+	// NOTE(denisacostaq@gmail.com): When
+	opts := authDef.GetOptions()
+	pe, err := opts.SetString(core.OptKeyRextAuthDefTokenHeaderKey, "")
+	suite.True(pe)
+	suite.Nil(err)
+	hasError := authDef.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *authConfSuit) TestValidationTokenGenEndpointShouldNotBeEmptyInCSRF() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	authDef, err := suite.authConf.Clone()
+	suite.Nil(err)
+
+	// NOTE(denisacostaq@gmail.com): When
+	opts := authDef.GetOptions()
+	pe, err := opts.SetString(core.OptKeyRextAuthDefTokenGenEndpoint, "")
+	suite.True(pe)
+	suite.Nil(err)
+	hasError := authDef.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *authConfSuit) TestValidationTokenKeyFromEndpointShouldNotBeEmptyInCSRF() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	authDef, err := suite.authConf.Clone()
+	suite.Nil(err)
+
+	// NOTE(denisacostaq@gmail.com): When
+	opts := authDef.GetOptions()
+	pe, err := opts.SetString(core.OptKeyRextAuthDefTokenKeyFromEndpoint, "")
+	suite.True(pe)
+	suite.Nil(err)
+	hasError := authDef.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *authConfSuit) TestValidationTokenValsCanBeEmptyInNotCSRF() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	authDef, err := suite.authConf.Clone()
+	suite.Nil(err)
+	authDef.SetAuthType("tt3")
+
+	// NOTE(denisacostaq@gmail.com): When
+	opts := authDef.GetOptions()
+	pe, err := opts.SetString(core.OptKeyRextAuthDefTokenKeyFromEndpoint, "")
+	suite.True(pe)
+	suite.Nil(err)
+	pe, err = opts.SetString(core.OptKeyRextAuthDefTokenGenEndpoint, "")
+	suite.True(pe)
+	suite.Nil(err)
+	pe, err = opts.SetString(core.OptKeyRextAuthDefTokenHeaderKey, "")
+	suite.True(pe)
+	suite.Nil(err)
+	hasError := authDef.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.False(hasError)
 }
