@@ -4,8 +4,6 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -35,9 +33,14 @@ type Service struct {
 	Metrics              []Metric `json:"metrics"`
 }
 
-// MetricName returns a promehteus style name for the giving metric name.
-func (srv Service) MetricName(metricName string) string {
-	return prometheus.BuildFQName(SystemProgramName, srv.Name, metricName)
+// JobName returns the default label value for job
+func (srv Service) JobName() string {
+	return srv.Name
+}
+
+// InstanceName returns the default label value for instance
+func (srv Service) InstanceName() string {
+	return fmt.Sprintf("%s:%d", srv.Location.Location, srv.Port)
 }
 
 // URIToGetMetric build the URI from where you will to get metric information

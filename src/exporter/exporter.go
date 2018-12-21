@@ -16,10 +16,11 @@ import (
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/scrapper"
 	"github.com/simelo/rextporter/src/util"
+	"github.com/simelo/rextporter/src/util/metrics"
 	log "github.com/sirupsen/logrus"
 )
 
-func exposedMetricsMiddleware(fs scrapper.Scrapper, promHandler http.Handler) http.Handler {
+func exposedMetricsMiddleware(scrappers []scrapper.FordwaderScrapper, promHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		getDefaultData := func() (data []byte, err error) {
 			generalScopeErr := "error reding default data"
@@ -49,12 +50,12 @@ func exposedMetricsMiddleware(fs scrapper.Scrapper, promHandler http.Handler) ht
 		} else {
 			allData = append(allData, defaultData...)
 		}
-		var iMetrics interface{}
-		var err error
-		if iMetrics, err = fs.GetMetric(); err != nil {
-			log.WithError(err).Errorln("error scrapping fordwader metrics")
-		} else {
-			if iMetrics != nil {
+		for _, fs := range scrappers {
+			var iMetrics interface{}
+			var err error
+			if iMetrics, err = fs.GetMetric(); err != nil {
+				log.WithError(err).Errorln("error scrapping fordwader metrics")
+			} else {
 				customData, okCustomData := iMetrics.([]byte)
 				if okCustomData {
 					allData = append(allData, customData...)
@@ -78,6 +79,8 @@ func exposedMetricsMiddleware(fs scrapper.Scrapper, promHandler http.Handler) ht
 	})
 }
 
+var fDefMetrics *metrics.DefaultFordwaderMetrics
+
 // MustExportMetrics will read the config from mainConfigFile if any or use a default one.
 func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf config.RootConfig) (srv *http.Server) {
 	c := cache.NewCache()
@@ -85,8 +88,10 @@ func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf config.Ro
 		log.WithError(err).Panicln("Can not create metrics")
 	} else {
 		prometheus.MustRegister(collector)
+		fDefMetrics = metrics.NewDefaultFordwaderMetrics()
+		fDefMetrics.MustRegister()
 	}
-	metricsForwaders, err := createMetricsForwaders(conf)
+	metricsForwaders, err := createMetricsForwaders(conf, fDefMetrics)
 	if err != nil {
 		log.WithError(err).Panicln("Can not create forward_metrics metrics")
 	}

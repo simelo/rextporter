@@ -2,18 +2,26 @@ package scrapper
 
 import (
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // ScrapResult is the success case with the metric value
 type ScrapResult struct {
 	Val               interface{}
 	ConstMetricIdxOut int
+	JobName           string
+	InstanceName      string
+	DataSource        string
 }
 
 // ScrapErrResult is the fail case with the error happened
 type ScrapErrResult struct {
 	Err               error
 	ConstMetricIdxOut int
+	JobName           string
+	InstanceName      string
+	DataSource        string
 }
 
 // ScrapRequest have the scrapper to do an scrap, the channels to put the result, and the metric index to return
@@ -21,14 +29,22 @@ type ScrapRequest struct {
 	Scrap            Scrapper
 	Res              chan ScrapResult
 	ConstMetricIdxIn int
+	JobName          string
+	InstanceName     string
+	DataSource       string
 	Err              chan ScrapErrResult
+	MetricsCollector chan<- prometheus.Metric
 }
 
 type scrapWork struct {
 	scrapper         Scrapper
 	res              chan ScrapResult
 	constMetricIdxIn int
+	jobName          string
+	instanceName     string
+	dataSource       string
 	err              chan ScrapErrResult
+	metricsCollector chan<- prometheus.Metric
 }
 
 type workQueue chan scrapWork
@@ -63,7 +79,11 @@ func (p *Pool) Apply(ri ScrapRequest) {
 		scrapper:         ri.Scrap,
 		res:              ri.Res,
 		constMetricIdxIn: ri.ConstMetricIdxIn,
+		jobName:          ri.JobName,
+		instanceName:     ri.InstanceName,
+		dataSource:       ri.DataSource,
 		err:              ri.Err,
+		metricsCollector: ri.MetricsCollector,
 	}
 	p.works <- work
 }
@@ -93,11 +113,11 @@ func (w *workerT) start() {
 			select {
 			// Wait for a work request.
 			case work := <-w.works:
-				val, err := work.scrapper.GetMetric()
+				val, err := work.scrapper.GetMetric(work.metricsCollector)
 				if err == nil {
-					work.res <- ScrapResult{Val: val, ConstMetricIdxOut: work.constMetricIdxIn}
+					work.res <- ScrapResult{Val: val, ConstMetricIdxOut: work.constMetricIdxIn, JobName: work.jobName, InstanceName: work.instanceName, DataSource: work.dataSource}
 				} else {
-					work.err <- ScrapErrResult{Err: err, ConstMetricIdxOut: work.constMetricIdxIn}
+					work.err <- ScrapErrResult{Err: err, ConstMetricIdxOut: work.constMetricIdxIn, JobName: work.jobName, InstanceName: work.instanceName, DataSource: work.dataSource}
 				}
 				// wait for a quit msg
 			case <-w.quitChan:

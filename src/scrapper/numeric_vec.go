@@ -3,6 +3,7 @@ package scrapper
 import (
 	"fmt"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
@@ -10,18 +11,28 @@ import (
 
 // NumericVec implements the Client interface(is able to get numeric metrics through `GetMetric` like Gauge and Counter)
 type NumericVec struct {
-	baseScrapper
+	baseAPIScrapper
 	labels     []config.Label
 	labelsName []string
 	itemPath   string
 }
 
-func newNumericVec(cf client.Factory, p BodyParser, metric config.Metric) Scrapper {
+func newNumericVec(cf client.Factory, p BodyParser, metric config.Metric, jobName, instanceName, dataSource string) Scrapper {
 	return NumericVec{
-		baseScrapper: baseScrapper{clientFactory: cf, parser: p, jsonPath: metric.Path},
-		labels:       metric.Options.Labels,
-		labelsName:   metric.LabelNames(),
-		itemPath:     metric.Options.ItemPath}
+		baseAPIScrapper: baseAPIScrapper{
+			baseScrapper: baseScrapper{
+				jobName:      jobName,
+				instanceName: instanceName,
+			},
+			clientFactory: cf,
+			dataSource:    dataSource,
+			parser:        p,
+			jsonPath:      metric.Path,
+		},
+		labels:     metric.Options.Labels,
+		labelsName: metric.LabelNames(),
+		itemPath:   metric.Options.ItemPath,
+	}
 }
 
 // NumericVecItemVal can instances a numeric(Gauge or Counter) vec item with the required labels values
@@ -34,10 +45,10 @@ type NumericVecItemVal struct {
 type NumericVecVals []NumericVecItemVal
 
 // GetMetric returns a numeric(Gauge or Counter) vector metric by using remote data.
-func (nv NumericVec) GetMetric() (val interface{}, err error) {
+func (nv NumericVec) GetMetric(metricsCollector chan<- prometheus.Metric) (val interface{}, err error) {
 	const generalScopeErr = "error scrapping numeric vec(gauge|counter) metric vec"
 	var iBody interface{}
-	if iBody, err = getData(nv.clientFactory, nv.parser); err != nil {
+	if iBody, err = getData(nv.clientFactory, nv.parser, metricsCollector); err != nil {
 		errCause := "numeric vec client can not decode the body"
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/cache"
 )
 
@@ -27,7 +28,12 @@ type Catcher struct {
 }
 
 // GetData return the data, can be from local cache or making the original request
-func (cl Catcher) GetData() (body []byte, err error) {
+func (cl Catcher) GetData(metricsCollector chan<- prometheus.Metric) (body []byte, err error) {
+	if body, err = cl.cache.Get(cl.dataKey); err == nil {
+		return body, err
+	}
+	cl.cache.Lock()
+	defer cl.cache.Unlock()
 	if body, err = cl.cache.Get(cl.dataKey); err == nil {
 		return body, err
 	}
@@ -35,7 +41,7 @@ func (cl Catcher) GetData() (body []byte, err error) {
 	if ccl, err = cl.clientFactory.CreateClient(); err != nil {
 		return nil, err
 	}
-	if body, err = ccl.GetData(); err == nil {
+	if body, err = ccl.GetData(metricsCollector); err == nil {
 		cl.cache.Set(cl.dataKey, body)
 	}
 	return body, err

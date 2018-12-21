@@ -3,6 +3,7 @@ package scrapper
 import (
 	"fmt"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
@@ -13,22 +14,31 @@ type histogramClientOptions []float64
 
 // Histogram implements the Client interface(is able to get histogram metrics through `GetMetric`)
 type Histogram struct {
-	baseScrapper
+	baseAPIScrapper
 	buckets histogramClientOptions
 }
 
-func newHistogram(cf client.Factory, parser BodyParser, metric config.Metric) Scrapper {
+func newHistogram(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName, dataSource string) Scrapper {
 	return Histogram{
-		baseScrapper: baseScrapper{clientFactory: cf, parser: parser, jsonPath: metric.Path},
-		buckets:      histogramClientOptions(metric.HistogramOptions.Buckets),
+		baseAPIScrapper: baseAPIScrapper{
+			baseScrapper: baseScrapper{
+				jobName:      jobName,
+				instanceName: instanceName,
+			},
+			clientFactory: cf,
+			dataSource:    dataSource,
+			parser:        parser,
+			jsonPath:      metric.Path,
+		},
+		buckets: histogramClientOptions(metric.HistogramOptions.Buckets),
 	}
 }
 
 // GetMetric return a histogram metrics val
-func (h Histogram) GetMetric() (val interface{}, err error) {
+func (h Histogram) GetMetric(metricsCollector chan<- prometheus.Metric) (val interface{}, err error) {
 	const generalScopeErr = "error scrapping histogram metric"
 	var iBody interface{}
-	if iBody, err = getData(h.clientFactory, h.parser); err != nil {
+	if iBody, err = getData(h.clientFactory, h.parser, metricsCollector); err != nil {
 		errCause := "histogram client can not decode the body"
 		return val, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
@@ -82,7 +92,7 @@ func createHistogramValueWithFromData(buckets []float64, data interface{}) (hist
 		}
 		histogram.Sum += metricVal
 		for _, bucket := range buckets {
-			if bucket <= metricVal {
+			if metricVal <= bucket {
 				histogram.Buckets[bucket]++
 			}
 		}
