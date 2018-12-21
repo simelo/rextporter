@@ -2,6 +2,7 @@ package memconfig
 
 import (
 	"github.com/simelo/rextporter/src/core"
+	log "github.com/sirupsen/logrus"
 )
 
 // HTTPAuth implements the core.RextAuth interface
@@ -9,6 +10,17 @@ type HTTPAuth struct {
 	authType string
 	endpoint string
 	options  core.RextKeyValueStore
+}
+
+// Clone make a deep copy of NodeSolver or return an error if any
+func (auth HTTPAuth) Clone() (cAuth core.RextAuthDef, err error) {
+	var cOpts core.RextKeyValueStore
+	if cOpts, err = auth.options.Clone(); err != nil {
+		log.WithError(err).Errorln("Can not clone options in HTTPAuth")
+		return cAuth, err
+	}
+	cAuth = NewHTTPAuth(auth.authType, auth.endpoint, cOpts)
+	return cAuth, err
 }
 
 // SetAuthType return the auth type

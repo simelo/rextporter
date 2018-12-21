@@ -65,6 +65,7 @@ type RextServiceDef interface {
 	AddSources(sources ...RextResourceDef)
 	GetSources() []RextResourceDef
 	GetOptions() RextKeyValueStore
+	Clone() (RextServiceDef, error)
 }
 
 // RextResourceDef for retrieving raw data
@@ -103,6 +104,7 @@ type RextResourceDef interface {
 	SetType(string)  // TODO(denisacostaq@gmail.com): remove this
 	GetType() string // TODO(denisacostaq@gmail.com): remove this
 	GetOptions() RextKeyValueStore
+	Clone() (RextResourceDef, error)
 }
 
 // RextDecoderDef allow you to decode a resource from different formats
@@ -114,6 +116,7 @@ type RextDecoderDef interface {
 	// GetOptions return additional options for example if the retrieved content is encripted, get info
 	// about the algorithm, the key, and so on...
 	GetOptions() RextKeyValueStore
+	Clone() (RextDecoderDef, error)
 }
 
 const (
@@ -142,6 +145,7 @@ type RextNodeSolver interface {
 	// GetOptions return additional information for more complex data structures, like for example in the
 	// .rar example above
 	GetOptions() RextKeyValueStore
+	Clone() (RextNodeSolver, error)
 }
 
 // RextMetricDef contains the metadata associated to the metrics
@@ -162,6 +166,7 @@ type RextMetricDef interface {
 	SetMetricDescription(string)
 	AddLabel(RextLabelDef)
 	GetOptions() RextKeyValueStore
+	Clone() (RextMetricDef, error)
 }
 
 // RextLabelDef define a label name and the way to get the value for metrics vec
@@ -172,6 +177,7 @@ type RextLabelDef interface {
 	SetNodeSolver(RextNodeSolver)
 	// GetNodeSolver return the solver able to get the metric value
 	GetNodeSolver() RextNodeSolver
+	Clone() (RextLabelDef, error)
 }
 
 // RextAuthDef can store information about authentication requirements, how and where you can autenticate,
@@ -182,6 +188,7 @@ type RextAuthDef interface {
 	// GetAuthType return the auth type
 	GetAuthType() string
 	GetOptions() RextKeyValueStore
+	Clone() (RextAuthDef, error)
 }
 
 // RextKeyValueStore providing access to object settings, you give a key with a value(can be a string or

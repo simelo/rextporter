@@ -2,6 +2,7 @@ package memconfig
 
 import (
 	"github.com/simelo/rextporter/src/core"
+	log "github.com/sirupsen/logrus"
 )
 
 // NodeSolver implements the interface core.RextNodeSolver
@@ -10,6 +11,17 @@ type NodeSolver struct {
 	MType    string
 	nodePath string
 	options  core.RextKeyValueStore
+}
+
+// Clone make a deep copy of NodeSolver or return an error if any
+func (ns NodeSolver) Clone() (cNs core.RextNodeSolver, err error) {
+	var cOpts core.RextKeyValueStore
+	if cOpts, err = ns.GetOptions().Clone(); err != nil {
+		log.WithError(err).Errorln("can not clone options in node solver")
+		return cNs, err
+	}
+	cNs = NewNodeSolver(ns.MType, ns.nodePath, cOpts)
+	return cNs, err
 }
 
 // GetMetricName return solver type

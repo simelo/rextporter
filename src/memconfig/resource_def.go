@@ -2,6 +2,7 @@ package memconfig
 
 import (
 	"github.com/simelo/rextporter/src/core"
+	log "github.com/sirupsen/logrus"
 )
 
 // ResourceDef implements the interface core.RextResourceDef
@@ -12,6 +13,40 @@ type ResourceDef struct {
 	decoder     core.RextDecoderDef
 	metrics     []core.RextMetricDef
 	options     core.RextKeyValueStore
+}
+
+// Clone make a deep copy of ResourceDef or return an error if any
+func (rd ResourceDef) Clone() (cRd core.RextResourceDef, err error) {
+	var cAuth core.RextAuthDef
+	if rd.GetAuth(nil) != nil {
+		if cAuth, err = rd.GetAuth(nil).Clone(); err != nil {
+			log.WithError(err).Errorln("can not clone http auth in resource")
+			return cRd, err
+		}
+	}
+	var cDecoder core.RextDecoderDef
+	if rd.GetDecoder() != nil {
+		if cDecoder, err = rd.GetDecoder().Clone(); err != nil {
+			log.WithError(err).Errorln("can not clone decoder in resource")
+			return cRd, err
+		}
+	}
+	var cMetrics []core.RextMetricDef
+	for _, metric := range rd.metrics {
+		var cMetric core.RextMetricDef
+		if cMetric, err = metric.Clone(); err != nil {
+			log.WithError(err).Errorln("can nor clone metrics in resource")
+			return cRd, err
+		}
+		cMetrics = append(cMetrics, cMetric)
+	}
+	var cOpts core.RextKeyValueStore
+	if cOpts, err = rd.GetOptions().Clone(); err != nil {
+		log.WithError(err).Errorln("can not clone options in metric")
+		return cRd, err
+	}
+	cRd = NewResourceDef(rd.GetType(), rd.resourceURI, cAuth, cMetrics, cDecoder, cOpts)
+	return cRd, err
 }
 
 func (rd ResourceDef) GetResourcePATH(basePath string) string {

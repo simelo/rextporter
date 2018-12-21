@@ -2,6 +2,7 @@ package memconfig
 
 import (
 	"github.com/simelo/rextporter/src/core"
+	log "github.com/sirupsen/logrus"
 )
 
 // Service implements core.RextDataSource interface
@@ -12,6 +13,33 @@ type Service struct {
 	auth     core.RextAuthDef
 	sources  []core.RextResourceDef
 	options  core.RextKeyValueStore
+}
+
+// Clone make a deep copy of Service or return an error if any
+func (srv Service) Clone() (cSrv core.RextServiceDef, err error) {
+	var cAuth core.RextAuthDef
+	if srv.auth != nil {
+		if cAuth, err = srv.auth.Clone(); err != nil {
+			log.WithError(err).Errorln("can not clone auth in service")
+			return cSrv, err
+		}
+	}
+	var cOpts core.RextKeyValueStore
+	if cOpts, err = srv.GetOptions().Clone(); err != nil {
+		log.WithError(err).Errorln("can not clone options in service")
+		return cSrv, err
+	}
+	var cResources []core.RextResourceDef
+	for _, resource := range srv.sources {
+		var cResource core.RextResourceDef
+		if cResource, err = resource.Clone(); err != nil {
+			log.WithError(err).Errorln("can not clone resources in service")
+			return cSrv, err
+		}
+		cResources = append(cResources, cResource)
+	}
+	cSrv = NewServiceConf(srv.basePath, srv.protocol, cAuth, cResources, cOpts)
+	return cSrv, err
 }
 
 // SetBaseURL set the base path for the service

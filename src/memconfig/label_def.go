@@ -2,12 +2,26 @@ package memconfig
 
 import (
 	"github.com/simelo/rextporter/src/core"
+	log "github.com/sirupsen/logrus"
 )
 
 // LabelDef implements the interface core.RextLabelDef
 type LabelDef struct {
 	name       string
 	nodeSolver core.RextNodeSolver
+}
+
+// Clone make a deep copy of LabelDef or return an error if any
+func (l LabelDef) Clone() (cL core.RextLabelDef, err error) {
+	var cNs core.RextNodeSolver
+	if l.GetNodeSolver() != nil {
+		if cNs, err = l.GetNodeSolver().Clone(); err != nil {
+			log.WithError(err).Errorln("can not clone node solver in label")
+			return cL, err
+		}
+	}
+	cL = NewLabelDef(l.name, cNs)
+	return cL, err
 }
 
 // GetName return the label name

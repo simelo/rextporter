@@ -2,6 +2,7 @@ package memconfig
 
 import (
 	"github.com/simelo/rextporter/src/core"
+	log "github.com/sirupsen/logrus"
 )
 
 // MetricDef implements the interface core.RextMetricDef
@@ -12,6 +13,33 @@ type MetricDef struct {
 	description string
 	labels      []core.RextLabelDef
 	options     core.RextKeyValueStore
+}
+
+// Clone make a deep copy of MetricDef or return an error if any
+func (m MetricDef) Clone() (cM core.RextMetricDef, err error) {
+	var cNs core.RextNodeSolver
+	if m.GetNodeSolver() != nil {
+		if cNs, err = m.GetNodeSolver().Clone(); err != nil {
+			log.WithError(err).Errorln("can not clone node solver in metric")
+			return cM, err
+		}
+	}
+	var cLabels []core.RextLabelDef
+	for _, label := range m.labels {
+		var cLabel core.RextLabelDef
+		if cLabel, err = label.Clone(); err != nil {
+			log.WithError(err).Errorln("can not clone labels in metric")
+			return cM, err
+		}
+		cLabels = append(cLabels, cLabel)
+	}
+	var cOpts core.RextKeyValueStore
+	if cOpts, err = m.GetOptions().Clone(); err != nil {
+		log.WithError(err).Errorln("can not clone options in metric")
+		return cM, err
+	}
+	cM = NewMetricDef(m.GetMetricName(), m.GetMetricType(), m.GetMetricDescription(), cNs, cOpts, cLabels)
+	return cM, err
 }
 
 // GetMetricName return the metric name
