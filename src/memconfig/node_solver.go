@@ -44,6 +44,10 @@ func (ns NodeSolver) GetOptions() core.RextKeyValueStore {
 	return ns.options
 }
 
+func (ns NodeSolver) Validate() bool {
+	return core.ValidateNodeSolver(&ns)
+}
+
 // NewNodeSolver create a new node solver
 func NewNodeSolver(mType, nodePath string, options core.RextKeyValueStore) core.RextNodeSolver {
 	return &NodeSolver{

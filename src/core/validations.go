@@ -88,3 +88,11 @@ func ValidateService(srv RextServiceDef) (hasError bool) {
 	}
 	return hasError
 }
+
+func ValidateNodeSolver(ns RextNodeSolver) (hasError bool) {
+	if len(ns.GetNodePath()) == 0 {
+		hasError = true
+		log.Errorln("node path is required in node solver config")
+	}
+	return hasError
+}

@@ -64,3 +64,29 @@ func (suite *nodeSolverSuit) TestAbleToSetNodePath() {
 	suite.Equal(nodePath, nodePath2)
 	suite.NotEqual(orgNodePath, nodePath2)
 }
+
+func (suite *nodeSolverSuit) TestValidationClonedShouldBeValid() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	cNodeSolver, err := suite.nodeSolver.Clone()
+	suite.Nil(err)
+	suite.Equal(suite.nodeSolver, cNodeSolver)
+	hasError := cNodeSolver.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.False(hasError)
+}
+
+func (suite *nodeSolverSuit) TestValidationTypeShouldNotBeEmpty() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	nodeSolver, err := suite.nodeSolver.Clone()
+	suite.Nil(err)
+
+	// NOTE(denisacostaq@gmail.com): When
+	nodeSolver.SetNodePath("")
+	hasError := nodeSolver.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
