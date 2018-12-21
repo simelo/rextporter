@@ -26,3 +26,29 @@ func ValidateAuth(auth RextAuthDef) (hasError bool) {
 	}
 	return hasError
 }
+
+func ValidateResource(r RextResourceDef) (hasError bool) {
+	if len(r.GetType()) == 0 {
+		hasError = true
+		log.Errorln("type is required in metric config")
+	}
+	if len(r.GetResourcePATH("")) == 0 {
+		hasError = true
+		log.Errorln("resource path is required in metric config")
+	}
+	if r.GetDecoder() == nil {
+		hasError = true
+		log.Errorln("decoder is required in metric config")
+	} else if r.GetDecoder().Validate() {
+		hasError = true
+	}
+	if r.GetAuth(nil) != nil {
+		if r.GetAuth(nil).Validate() {
+			hasError = true
+		}
+	}
+	for _, mtrDef := range r.GetMetricDefs() {
+		mtrDef.Validate()
+	}
+	return hasError
+}

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/core/mocks"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -31,10 +32,12 @@ type resourceDefSuit struct {
 
 func (suite *resourceDefSuit) SetupTest() {
 	suite.auth = &HTTPAuth{}
+	suite.auth.GetOptions()
 	suite.mType = "tt"
 	suite.resourceURI = "ddrer"
 	suite.decoder = &Decoder{}
-	suite.metrics = []core.RextMetricDef{}
+	suite.decoder.GetOptions()
+	suite.metrics = nil
 	suite.options = NewOptionsMap()
 	suite.options.SetString("k1", "v1")
 	suite.options.SetString("k2", "v2")
@@ -128,4 +131,97 @@ func (suite *resourceDefSuit) TestInitializeEmptyOptionsInFly() {
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.NotNil(resDef.GetOptions())
+}
+
+func (suite *resourceDefSuit) TestValidationClonedShouldBeValid() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cResConf, err := suite.resourceDef.Clone()
+	suite.Nil(err)
+	suite.Equal(suite.resourceDef, cResConf)
+	setUpFakeValidationOn3rdPartyOverResource(cResConf)
+
+	// NOTE(denisacostaq@gmail.com): When
+	hasError := cResConf.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.False(hasError)
+}
+
+func (suite *resourceDefSuit) TestValidationEmptyType() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cResConf, err := suite.resourceDef.Clone()
+	suite.Nil(err)
+	setUpFakeValidationOn3rdPartyOverResource(cResConf)
+
+	// NOTE(denisacostaq@gmail.com): When
+	cResConf.SetType("")
+	hasError := cResConf.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *resourceDefSuit) TestValidationEmptyResourceURI() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cResConf, err := suite.resourceDef.Clone()
+	suite.Nil(err)
+	setUpFakeValidationOn3rdPartyOverResource(cResConf)
+
+	// NOTE(denisacostaq@gmail.com): When
+	cResConf.SetResourceURI("")
+	hasError := cResConf.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *resourceDefSuit) TestValidationNilDecoder() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cResConf, err := suite.resourceDef.Clone()
+	suite.Nil(err)
+	setUpFakeValidationOn3rdPartyOverResource(cResConf)
+
+	// NOTE(denisacostaq@gmail.com): When
+	cResConf.SetDecoder(nil)
+	hasError := cResConf.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *resourceDefSuit) TestValidationShouldGoDownTroughFields() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cResConf, err := suite.resourceDef.Clone()
+	suite.Nil(err)
+	mockAuth := new(mocks.RextAuthDef)
+	mockAuth.On("Validate").Return(false)
+	mockDecoder := new(mocks.RextDecoderDef)
+	mockDecoder.On("Validate").Return(false)
+	mockMetric1 := new(mocks.RextMetricDef)
+	mockMetric1.On("Validate").Return(false)
+	mockMetric2 := new(mocks.RextMetricDef)
+	mockMetric2.On("Validate").Return(false)
+	cResConf.SetAuth(mockAuth)
+	cResConf.SetDecoder(mockDecoder)
+	cResConf.AddMetricDef(mockMetric1)
+	cResConf.AddMetricDef(mockMetric2)
+
+	// NOTE(denisacostaq@gmail.com): When
+	cResConf.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	mockDecoder.AssertCalled(suite.T(), "Validate")
+	mockAuth.AssertCalled(suite.T(), "Validate")
+	suite.Len(cResConf.GetMetricDefs(), 2)
+	mockMetric1.AssertCalled(suite.T(), "Validate")
+	mockMetric2.AssertCalled(suite.T(), "Validate")
+}
+
+func setUpFakeValidationOn3rdPartyOverResource(res core.RextResourceDef) {
+	authStub := new(mocks.RextAuthDef)
+	authStub.On("Validate").Return(false)
+	decoderStub := new(mocks.RextDecoderDef)
+	decoderStub.On("Validate").Return(false)
+	res.SetAuth(authStub)
+	res.SetDecoder(decoderStub)
 }

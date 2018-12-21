@@ -102,6 +102,10 @@ func (m *ResourceDef) GetOptions() core.RextKeyValueStore {
 	return m.options
 }
 
+func (m ResourceDef) Validate() bool {
+	return core.ValidateResource(&m)
+}
+
 // NewResourceDef create a new metric definition
 func NewResourceDef(mType, resourceURI string, auth core.RextAuthDef, metrics []core.RextMetricDef, decoder core.RextDecoderDef, options core.RextKeyValueStore) core.RextResourceDef {
 	return &ResourceDef{
