@@ -96,3 +96,17 @@ func ValidateNodeSolver(ns RextNodeSolver) (hasError bool) {
 	}
 	return hasError
 }
+
+func ValidateLabel(l RextLabelDef) (hasError bool) {
+	if len(l.GetName()) == 0 {
+		hasError = true
+		log.Errorln("name is required in label config")
+	}
+	if l.GetNodeSolver() == nil {
+		hasError = true
+		log.Errorln("node solver is required in label config")
+	} else if l.GetNodeSolver().Validate() {
+		hasError = true
+	}
+	return hasError
+}
