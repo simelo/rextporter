@@ -52,3 +52,39 @@ func ValidateResource(r RextResourceDef) (hasError bool) {
 	}
 	return hasError
 }
+
+func ValidateService(srv RextServiceDef) (hasError bool) {
+	srvOpts := srv.GetOptions()
+	jobName, err := srvOpts.GetString(OptKeyRextServiceDefJobName)
+	if err != nil {
+		hasError = true
+		log.WithError(err).Errorln("key for job name not present service config")
+	}
+	if len(jobName) == 0 {
+		hasError = true
+		log.Errorln("job name is required in service config")
+	}
+	var instanceName string
+	instanceName, err = srvOpts.GetString(OptKeyRextServiceDefInstanceName)
+	if err != nil {
+		hasError = true
+		log.WithError(err).Errorln("key for job name not present service config")
+	}
+	if len(instanceName) == 0 {
+		hasError = true
+		log.Errorln("instance name is required in service config")
+	}
+	if len(srv.GetProtocol()) == 0 {
+		hasError = true
+		log.Errorln("protocol should not be null in service config")
+	}
+	if srv.GetAuthForBaseURL() != nil {
+		if srv.GetAuthForBaseURL().Validate() {
+			hasError = true
+		}
+	}
+	for _, source := range srv.GetSources() {
+		source.Validate()
+	}
+	return hasError
+}

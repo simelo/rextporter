@@ -1,18 +1,30 @@
 package memconfig
 
 import (
+	"github.com/denisacostaq/rextporter/src/util"
 	"github.com/simelo/rextporter/src/core"
 	log "github.com/sirupsen/logrus"
 )
 
-// Service implements core.RextDataSource interface
+// Service implements core.RextServiceDef interface
 type Service struct {
 	basePath string
 	// FIXME(denisacostaq@gmail.com): how to use base path, what about protocol, port, url
 	protocol string
 	auth     core.RextAuthDef
-	sources  []core.RextResourceDef
-	options  core.RextKeyValueStore
+	// TODO(denisacostaq@gmail.com): rename to resources
+	resources []core.RextResourceDef
+	options   core.RextKeyValueStore
+}
+
+func (srv Service) Validate() (hasError bool) {
+	if srv.GetProtocol() == "http" {
+		for _, res := range srv.GetSources() {
+			resPath := res.GetResourcePATH(srv.GetBasePath())
+			util.IsValidURL(resPath)
+		}
+	}
+	return core.ValidateService(&srv)
 }
 
 // Clone make a deep copy of Service or return an error if any
@@ -30,7 +42,7 @@ func (srv Service) Clone() (cSrv core.RextServiceDef, err error) {
 		return cSrv, err
 	}
 	var cResources []core.RextResourceDef
-	for _, resource := range srv.sources {
+	for _, resource := range srv.resources {
 		var cResource core.RextResourceDef
 		if cResource, err = resource.Clone(); err != nil {
 			log.WithError(err).Errorln("can not clone resources in service")
@@ -71,16 +83,16 @@ func (srv Service) GetAuthForBaseURL() core.RextAuthDef {
 	return srv.auth
 }
 
-func (srv *Service) AddSource(source core.RextResourceDef) {
-	srv.sources = append(srv.sources, source)
+func (srv *Service) AddResource(source core.RextResourceDef) {
+	srv.resources = append(srv.resources, source)
 }
 
-func (srv *Service) AddSources(sources ...core.RextResourceDef) {
-	srv.sources = append(srv.sources, sources...)
+func (srv *Service) AddResources(sources ...core.RextResourceDef) {
+	srv.resources = append(srv.resources, sources...)
 }
 
 func (srv Service) GetSources() []core.RextResourceDef {
-	return srv.sources
+	return srv.resources
 }
 
 // GetOptions return key/value pairs for extra options
@@ -92,12 +104,12 @@ func (srv *Service) GetOptions() core.RextKeyValueStore {
 }
 
 // NewServiceConf create a new service
-func NewServiceConf(basePath, protocol string, auth core.RextAuthDef, sources []core.RextResourceDef, options core.RextKeyValueStore) core.RextServiceDef {
+func NewServiceConf(basePath, protocol string, auth core.RextAuthDef, resources []core.RextResourceDef, options core.RextKeyValueStore) core.RextServiceDef {
 	return &Service{
-		basePath: basePath,
-		protocol: protocol,
-		auth:     auth,
-		sources:  sources,
-		options:  options,
+		basePath:  basePath,
+		protocol:  protocol,
+		auth:      auth,
+		resources: resources,
+		options:   options,
 	}
 }

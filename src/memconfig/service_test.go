@@ -4,31 +4,34 @@ import (
 	"testing"
 
 	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/core/mocks"
 	"github.com/stretchr/testify/suite"
 )
 
 type serviceConfSuit struct {
 	suite.Suite
-	srvConf  core.RextServiceDef
-	basePath string
-	protocol string
-	auth     core.RextAuthDef
-	sources  []core.RextResourceDef
-	options  core.RextKeyValueStore
+	srvConf   core.RextServiceDef
+	basePath  string
+	protocol  string
+	auth      core.RextAuthDef
+	resources []core.RextResourceDef
+	options   core.RextKeyValueStore
 }
 
 func newService(suite *serviceConfSuit) core.RextServiceDef {
-	return NewServiceConf(suite.basePath, suite.protocol, suite.auth, suite.sources, suite.options)
+	return NewServiceConf(suite.basePath, suite.protocol, suite.auth, suite.resources, suite.options)
 }
 
 func (suite *serviceConfSuit) SetupTest() {
 	suite.basePath = "/hosted_in/root"
 	suite.protocol = "file"
 	suite.auth = &HTTPAuth{}
-	suite.sources = []core.RextResourceDef{&ResourceDef{}}
+	suite.auth.GetOptions()
+	suite.resources = []core.RextResourceDef{&ResourceDef{}}
+	suite.resources[0].GetOptions()
 	suite.options = NewOptionsMap()
-	suite.options.SetString("k1", "v1")
-	suite.options.SetString("k2", "v2")
+	suite.options.SetString(core.OptKeyRextServiceDefJobName, "v1")
+	suite.options.SetString(core.OptKeyRextServiceDefInstanceName, "v2")
 	suite.srvConf = newService(suite)
 }
 
@@ -91,23 +94,112 @@ func (suite *serviceConfSuit) TestAbleToSetBaseAuth() {
 
 func (suite *serviceConfSuit) TestAbleToAddSource() {
 	// NOTE(denisacostaq@gmail.com): Giving
-	orgSources := suite.srvConf.GetSources()
-	source := &ResourceDef{}
-	suite.srvConf.AddSource(source)
+	orgResource := suite.srvConf.GetSources()
+	resource := &ResourceDef{}
+	suite.srvConf.AddResource(resource)
 
 	// NOTE(denisacostaq@gmail.com): When
-	sources2 := suite.srvConf.GetSources()
+	resource2 := suite.srvConf.GetSources()
 
 	// NOTE(denisacostaq@gmail.com): Assert
-	suite.Equal(len(orgSources)+1, len(sources2))
+	suite.Equal(len(orgResource)+1, len(resource2))
 }
 
 func (suite *serviceConfSuit) TestInitializeEmptyOptionsInFly() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
-	resDef := Service{}
+	srvConf := Service{}
 
 	// NOTE(denisacostaq@gmail.com): Assert
-	suite.NotNil(resDef.GetOptions())
+	suite.NotNil(srvConf.GetOptions())
+}
+
+func (suite *serviceConfSuit) TestValidationClonedShouldBeValid() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cSrvConf, err := suite.srvConf.Clone()
+	suite.Nil(err)
+	suite.Equal(suite.srvConf, cSrvConf)
+	setUpFakeValidationOn3rdPartyOverService(cSrvConf)
+
+	// NOTE(denisacostaq@gmail.com): When
+	hasError := cSrvConf.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.False(hasError)
+}
+
+func (suite *serviceConfSuit) TestValidationJobNameShouldNotBeEmpty() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	srvConf, err := suite.srvConf.Clone()
+
+	// NOTE(denisacostaq@gmail.com): When
+	opts := srvConf.GetOptions()
+	pe, err := opts.SetString(core.OptKeyRextServiceDefJobName, "")
+	suite.True(pe)
+	suite.Nil(err)
+	hasError := srvConf.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *serviceConfSuit) TestValidationInstanceNameShouldNotBeEmpty() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	srvConf, err := suite.srvConf.Clone()
+
+	// NOTE(denisacostaq@gmail.com): When
+	opts := srvConf.GetOptions()
+	pe, err := opts.SetString(core.OptKeyRextServiceDefInstanceName, "")
+	suite.True(pe)
+	suite.Nil(err)
+	hasError := srvConf.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *serviceConfSuit) TestValidationEmptyProtocol() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	cSrvConf, err := suite.srvConf.Clone()
+	suite.Nil(err)
+	cSrvConf.SetProtocol("")
+	hasError := cSrvConf.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *serviceConfSuit) TestValidationShouldGoDownTroughFields() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cSrvConf, err := suite.srvConf.Clone()
+	suite.Nil(err)
+	mockAuth := new(mocks.RextAuthDef)
+	mockAuth.On("Validate").Return(false)
+	mockResource1 := new(mocks.RextResourceDef)
+	mockResource1.On("Validate").Return(false)
+	mockResource2 := new(mocks.RextResourceDef)
+	mockResource2.On("Validate").Return(false)
+	cSrvConf.SetAuthForBaseURL(mockAuth)
+	cSrvConf.AddResources(mockResource1, mockResource2)
+
+	// NOTE(denisacostaq@gmail.com): When
+	cSrvConf.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	mockAuth.AssertCalled(suite.T(), "Validate")
+	suite.Len(cSrvConf.GetSources(), 3)
+	mockResource1.AssertCalled(suite.T(), "Validate")
+	mockResource2.AssertCalled(suite.T(), "Validate")
+}
+
+func setUpFakeValidationOn3rdPartyOverService(srv core.RextServiceDef) {
+	authStub := new(mocks.RextAuthDef)
+	authStub.On("Validate").Return(false)
+	sourceStub := new(mocks.RextResourceDef)
+	sourceStub.On("Validate").Return(false)
+	srv.SetAuthForBaseURL(authStub)
+	srv.AddResource(sourceStub)
 }
