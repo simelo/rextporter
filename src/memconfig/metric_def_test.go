@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/core/mocks"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -32,8 +33,8 @@ func (suite *metricDefConfSuit) SetupTest() {
 	suite.metricType = core.KeyMetricTypeCounter
 	suite.metricDescription = "This is all about ..."
 	suite.nodeSolver = &NodeSolver{nodePath: "sds"}
-	suite.metricLabels = make([]core.RextLabelDef, 1)
-	suite.metricLabels[0] = &LabelDef{name: "ip"}
+	suite.nodeSolver.GetOptions()
+	suite.metricLabels = nil
 	suite.metricOptions = NewOptionsMap()
 	suite.metricOptions.SetString("k1", "v1")
 	suite.metricOptions.SetString("k2", "v2")
@@ -138,4 +139,109 @@ func (suite *metricDefConfSuit) TestInitializeEmptyOptionsInFly() {
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.NotNil(metricDef.GetOptions())
+}
+
+func (suite *metricDefConfSuit) TestValidationClonedShouldBeValid() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	cMetricDef, err := suite.metricDef.Clone()
+	suite.Nil(err)
+	suite.Equal(suite.metricDef, cMetricDef)
+	setUpFakeValidationOn3rdPartyOverMetric(cMetricDef)
+	hasError := cMetricDef.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.False(hasError)
+}
+
+func (suite *metricDefConfSuit) TestValidationNameShouldNotBeEmpty() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cMetricDef, err := suite.metricDef.Clone()
+	suite.Nil(err)
+	setUpFakeValidationOn3rdPartyOverMetric(cMetricDef)
+
+	// NOTE(denisacostaq@gmail.com): When
+	cMetricDef.SetMetricName("")
+	hasError := cMetricDef.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *metricDefConfSuit) TestValidationTypeShouldNotBeEmpty() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cMetricDef, err := suite.metricDef.Clone()
+	suite.Nil(err)
+	setUpFakeValidationOn3rdPartyOverMetric(cMetricDef)
+
+	// NOTE(denisacostaq@gmail.com): When
+	cMetricDef.SetMetricType("")
+	hasError := cMetricDef.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *metricDefConfSuit) TestValidationTypeShouldBeValid() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cMetricDef, err := suite.metricDef.Clone()
+	suite.Nil(err)
+	setUpFakeValidationOn3rdPartyOverMetric(cMetricDef)
+
+	// NOTE(denisacostaq@gmail.com): When
+	cMetricDef.SetMetricType("fgfgfg")
+	hasError := cMetricDef.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *metricDefConfSuit) TestValidationNodeSolverShouldNotBeNil() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cMetricDef, err := suite.metricDef.Clone()
+	suite.Nil(err)
+	setUpFakeValidationOn3rdPartyOverMetric(cMetricDef)
+
+	// NOTE(denisacostaq@gmail.com): When
+	cMetricDef.SetNodeSolver(nil)
+	hasError := cMetricDef.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.True(hasError)
+}
+
+func (suite *metricDefConfSuit) TestValidationShouldGoDownTroughFields() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cMetricDef, err := suite.metricDef.Clone()
+	suite.Nil(err)
+	mockNodeSolver := new(mocks.RextNodeSolver)
+	mockNodeSolver.On("Validate").Return(false)
+	cMetricDef.SetNodeSolver(mockNodeSolver)
+	mockLabel1 := new(mocks.RextLabelDef)
+	mockLabel1.On("Validate").Return(false)
+	cMetricDef.AddLabel(mockLabel1)
+	mockLabel2 := new(mocks.RextLabelDef)
+	mockLabel2.On("Validate").Return(false)
+	cMetricDef.AddLabel(mockLabel2)
+
+	// NOTE(denisacostaq@gmail.com): When
+	cMetricDef.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	mockNodeSolver.AssertCalled(suite.T(), "Validate")
+	mockLabel1.AssertCalled(suite.T(), "Validate")
+	mockLabel2.AssertCalled(suite.T(), "Validate")
+}
+
+func setUpFakeValidationOn3rdPartyOverMetric(metricDef core.RextMetricDef) {
+	nodeSolverStub := new(mocks.RextNodeSolver)
+	nodeSolverStub.On("Validate").Return(false)
+	labelStub1 := new(mocks.RextLabelDef)
+	labelStub1.On("Validate").Return(false)
+	labelStub2 := new(mocks.RextLabelDef)
+	labelStub2.On("Validate").Return(false)
+	metricDef.SetNodeSolver(nodeSolverStub)
+	metricDef.AddLabel(labelStub1)
+	metricDef.AddLabel(labelStub2)
 }

@@ -100,6 +100,10 @@ func (m *MetricDef) GetOptions() core.RextKeyValueStore {
 	return m.options
 }
 
+func (md MetricDef) Validate() bool {
+	return core.ValidateMetric(&md)
+}
+
 // NewMetricDef create a new metric definition
 func NewMetricDef(name, mType, description string, nodeSolver core.RextNodeSolver, options core.RextKeyValueStore, labels []core.RextLabelDef) *MetricDef {
 	return &MetricDef{

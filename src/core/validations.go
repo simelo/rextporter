@@ -118,3 +118,35 @@ func ValidateDecoder(d RextDecoderDef) (hasError bool) {
 	}
 	return hasError
 }
+
+func ValidateMetric(m RextMetricDef) (hasError bool) {
+	if len(m.GetMetricName()) == 0 {
+		hasError = true
+		log.Errorln("name is required in metric config")
+	}
+	if len(m.GetMetricType()) == 0 {
+		hasError = true
+		log.Errorln("type is required in metric config")
+	}
+	switch m.GetMetricType() {
+	case KeyMetricTypeCounter, KeyMetricTypeGauge, KeyMetricTypeHistogram:
+	case KeyMetricTypeSummary:
+		hasError = true
+		log.Errorf("type %s is not supported yet\n", KeyMetricTypeSummary)
+	default:
+		hasError = true
+		log.Errorf("type should be one of %s, %s, %s or %s", KeyMetricTypeCounter, KeyMetricTypeGauge, KeyMetricTypeSummary, KeyMetricTypeHistogram)
+	}
+	if m.GetNodeSolver() == nil {
+		hasError = true
+		log.Errorln("node solver is required in metric config")
+	} else if m.GetNodeSolver().Validate() {
+		hasError = true
+	}
+	for _, label := range m.GetLabels() {
+		if label.Validate() {
+			hasError = true
+		}
+	}
+	return hasError
+}
