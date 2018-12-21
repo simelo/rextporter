@@ -94,12 +94,12 @@ func (suite *serviceConfSuit) TestAbleToSetBaseAuth() {
 
 func (suite *serviceConfSuit) TestAbleToAddSource() {
 	// NOTE(denisacostaq@gmail.com): Giving
-	orgResource := suite.srvConf.GetSources()
+	orgResource := suite.srvConf.GetResources()
 	resource := &ResourceDef{}
 	suite.srvConf.AddResource(resource)
 
 	// NOTE(denisacostaq@gmail.com): When
-	resource2 := suite.srvConf.GetSources()
+	resource2 := suite.srvConf.GetResources()
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Equal(len(orgResource)+1, len(resource2))
@@ -190,7 +190,7 @@ func (suite *serviceConfSuit) TestValidationShouldGoDownTroughFields() {
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	mockAuth.AssertCalled(suite.T(), "Validate")
-	suite.Len(cSrvConf.GetSources(), 3)
+	suite.Len(cSrvConf.GetResources(), 3)
 	mockResource1.AssertCalled(suite.T(), "Validate")
 	mockResource2.AssertCalled(suite.T(), "Validate")
 }

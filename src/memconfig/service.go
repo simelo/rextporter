@@ -19,7 +19,7 @@ type Service struct {
 
 func (srv Service) Validate() (hasError bool) {
 	if srv.GetProtocol() == "http" {
-		for _, res := range srv.GetSources() {
+		for _, res := range srv.GetResources() {
 			resPath := res.GetResourcePATH(srv.GetBasePath())
 			util.IsValidURL(resPath)
 		}
@@ -42,7 +42,7 @@ func (srv Service) Clone() (cSrv core.RextServiceDef, err error) {
 		return cSrv, err
 	}
 	var cResources []core.RextResourceDef
-	for _, resource := range srv.GetSources {
+	for _, resource := range srv.GetResources() {
 		var cResource core.RextResourceDef
 		if cResource, err = resource.Clone(); err != nil {
 			log.WithError(err).Errorln("can not clone resources in service")
