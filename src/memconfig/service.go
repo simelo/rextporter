@@ -42,7 +42,7 @@ func (srv Service) Clone() (cSrv core.RextServiceDef, err error) {
 		return cSrv, err
 	}
 	var cResources []core.RextResourceDef
-	for _, resource := range srv.resources {
+	for _, resource := range srv.GetSources {
 		var cResource core.RextResourceDef
 		if cResource, err = resource.Clone(); err != nil {
 			log.WithError(err).Errorln("can not clone resources in service")
@@ -91,7 +91,7 @@ func (srv *Service) AddResources(sources ...core.RextResourceDef) {
 	srv.resources = append(srv.resources, sources...)
 }
 
-func (srv Service) GetSources() []core.RextResourceDef {
+func (srv Service) GetResources() []core.RextResourceDef {
 	return srv.resources
 }
 
