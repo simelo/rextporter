@@ -9,14 +9,12 @@ type RootConfig struct {
 // where is it http://localhost:1234 (Protocol + Location + : + Port + BasePath)
 // what is the filesystem path(in case of file protocol)?
 type Service struct {
-	Name  string
-	Modes []string
+	Name string
 	// Protocol is file, http, https
 	Protocol string
 	Port     uint16
 	// FIXME(denisacostaq@gmial.com): use this base path?
 	BasePath             string
-	MetricsToForwardPath string
 	AuthType             string
 	TokenHeaderKey       string
 	GenTokenEndpoint     string

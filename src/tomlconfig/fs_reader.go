@@ -161,14 +161,12 @@ func readRootStructure(mainConf mainConfig) (rootConf RootConfig, err error) {
 	}
 	resPaths4ServicesReader := configFromFile{filePath: mainConf.ResourcePathsForServicesConfPath}
 	var resPath4Service, mtrPath4Service map[string]string
-	resPath4Service, err = resPaths4ServicesReader.readResourcePathsForServicesConf()
-	if err != nil {
+	if resPath4Service, err = resPaths4ServicesReader.readResourcePathsForServicesConf(); err != nil {
 		log.WithError(err).Errorln("error reading resource paths for services config")
 		return rootConf, ErrKeyReadingFile
 	}
 	mtrPaths4ServicesReader := configFromFile{filePath: mainConf.MetricsForServicesConfigPath}
-	mtrPath4Service, err = mtrPaths4ServicesReader.readMetricsPathsForServicesConf()
-	if err != nil {
+	if mtrPath4Service, err = mtrPaths4ServicesReader.readMetricsPathsForServicesConf(); err != nil {
 		log.WithError(err).Errorln("error reading metric paths for services config")
 		return rootConf, ErrKeyReadingFile
 	}

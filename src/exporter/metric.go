@@ -18,7 +18,7 @@ func createMetricsForwaders(conf core.RextRoot, fDefMetrics *metrics.DefaultFord
 	services := conf.GetServices()
 	for _, srvConf := range services {
 		var metricFordwaderCreator client.ProxyMetricClientCreator
-		resources := srvConf.GetSources()
+		resources := srvConf.GetResources()
 		for _, resConf := range resources {
 			if resConf.GetType() == "metrics_fordwader" {
 				if metricFordwaderCreator, err = client.CreateProxyMetricClientCreator(resConf, srvConf, fDefMetrics); err != nil {
@@ -45,7 +45,7 @@ func createMetrics(cache cache.Cache, conf core.RextRoot, dataSourceResponseDura
 	generalScopeErr := "can not create metrics"
 	metrics = make(endpointData2MetricsConsumer)
 	for _, srvConf := range conf.GetServices() {
-		for _, resConf := range srvConf.GetSources() {
+		for _, resConf := range srvConf.GetResources() {
 			k := resConf.GetResourcePATH(srvConf.GetBasePath())
 			var m constMetric
 			for _, mtrConf := range resConf.GetMetricDefs() {

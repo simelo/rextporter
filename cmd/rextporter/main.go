@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"os"
 
+	"github.com/simelo/rextporter/src/core"
 	"github.com/simelo/rextporter/src/exporter"
 	"github.com/simelo/rextporter/src/toml2config"
 	"github.com/simelo/rextporter/src/tomlconfig"
@@ -20,8 +22,15 @@ func main() {
 	conf, err := tomlconfig.ReadConfigFromFileSystem(*mainConfigFile)
 	if err != nil {
 		log.WithError(err).Errorln("error reading config from file system")
+		os.Exit(1)
 	}
-	exporter.MustExportMetrics(*handlerEndpoint, uint16(*listenPort), toml2config.Fill(conf))
+	var rootConf core.RextRoot
+	rootConf, err = toml2config.Fill(conf)
+	if err != nil {
+		log.WithError(err).Errorln("error filling config info")
+		os.Exit(1)
+	}
+	exporter.MustExportMetrics(*handlerEndpoint, uint16(*listenPort), rootConf)
 	waitForEver := make(chan bool)
 	<-waitForEver
 }
