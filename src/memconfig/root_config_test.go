@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/core/mocks"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -18,7 +19,7 @@ type rootConfigSuite struct {
 }
 
 func (suite *rootConfigSuite) SetupTest() {
-	suite.services = []core.RextServiceDef{}
+	suite.services = nil
 	suite.rootConfig = newRootConfig(suite)
 }
 
@@ -48,4 +49,44 @@ func (suite *rootConfigSuite) TestAbleToAddService() {
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Equal(len(orgServices)+1, len(services2))
+}
+
+func (suite *rootConfigSuite) TestValidationClonedShouldBeValid() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cRootConfig, err := suite.rootConfig.Clone()
+	suite.Nil(err)
+	suite.Equal(suite.rootConfig, cRootConfig)
+	setUpFakeValidationOn3rdPartyOverRootConfig(cRootConfig)
+
+	// NOTE(denisacostaq@gmail.com): When
+	hasError := cRootConfig.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.False(hasError)
+}
+
+func (suite *rootConfigSuite) TestValidationShouldGoDownTroughFields() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	cRootConfig, err := suite.rootConfig.Clone()
+	suite.Nil(err)
+	mockService1 := new(mocks.RextServiceDef)
+	mockService1.On("Validate").Return(false)
+	mockService2 := new(mocks.RextServiceDef)
+	mockService2.On("Validate").Return(false)
+	cRootConfig.AddService(mockService1)
+	cRootConfig.AddService(mockService2)
+
+	// NOTE(denisacostaq@gmail.com): When
+	cRootConfig.Validate()
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Len(cRootConfig.GetServices(), 2)
+	mockService2.AssertCalled(suite.T(), "Validate")
+	mockService2.AssertCalled(suite.T(), "Validate")
+}
+
+func setUpFakeValidationOn3rdPartyOverRootConfig(root core.RextRoot) {
+	serviceStub := new(mocks.RextServiceDef)
+	serviceStub.On("Validate").Return(false)
+	root.AddService(serviceStub)
 }

@@ -150,3 +150,12 @@ func ValidateMetric(m RextMetricDef) (hasError bool) {
 	}
 	return hasError
 }
+
+func ValidateRoot(r RextRoot) (hasError bool) {
+	for _, srv := range r.GetServices() {
+		if srv.Validate() {
+			hasError = true
+		}
+	}
+	return hasError
+}

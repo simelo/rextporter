@@ -37,6 +37,10 @@ func (root *RootConfig) AddService(srv core.RextServiceDef) {
 	root.services = append(root.services, srv)
 }
 
+func (root RootConfig) Validate() bool {
+	return core.ValidateRoot(&root)
+}
+
 func NewRootConfig(services []core.RextServiceDef) core.RextRoot {
 	return &RootConfig{services: services}
 }
