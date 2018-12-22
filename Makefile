@@ -4,11 +4,15 @@
 build-grammar: ## Generate source code for REXT grammar
 	nex -s src/rxt/grammar/lexer.nex
 
+mocks: ## Create all mock files for unit tests
+	echo "Generating mock files"
+	cd src/core/ ; mockery -all ; cd ../../
+
 test-grammar: build-grammar ## Test cases for REXT lexer and parser
 	go run cmd/rxtc/lexer.go < src/rxt/testdata/skyexample.rxt 2> src/rxt/testdata/skyexample.golden.orig
 	diff -u src/rxt/testdata/skyexample.golden src/rxt/testdata/skyexample.golden.orig
 
-test: ## Run test with GOARCH=Default
+test: mocks ## Run test with GOARCH=Default
 	go test -count=1 github.com/simelo/rextporter/src/config
 	go test -count=1 github.com/simelo/rextporter/src/scrapper
 	go test -count=1 github.com/simelo/rextporter/src/memconfig
@@ -21,7 +25,7 @@ test: ## Run test with GOARCH=Default
 	cat screenlog.0
 
 
-test-386: ## Run tests  with GOARCH=386
+test-386: mocks ## Run tests  with GOARCH=386
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/config
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/scrapper
 	GOARCH=386 go test -count=1 github.com/simelo/rextporter/src/memconfig
@@ -33,7 +37,7 @@ test-386: ## Run tests  with GOARCH=386
 	screen -S fakeSkycoinForIntegrationTest -X quit
 	cat screenlog.0
 
-test-amd64: ## Run tests with GOARCH=amd64
+test-amd64: mocks ## Run tests with GOARCH=amd64
 	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/src/config
 	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/src/scrapper
 	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/src/memconfig
