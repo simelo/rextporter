@@ -74,6 +74,7 @@ func (suite *authConfSuit) TestValidationClonedShouldBeValid() {
 	// NOTE(denisacostaq@gmail.com): When
 	cAuthConf, err := suite.authConf.Clone()
 	suite.Nil(err)
+	suite.Equal(suite.authConf, cAuthConf)
 	hasError := cAuthConf.Validate()
 
 	// NOTE(denisacostaq@gmail.com): Assert

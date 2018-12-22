@@ -75,10 +75,10 @@ func (suite *labelDefConfSuit) TestValidationClonedShouldBeValid() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
-	labelDef, err := suite.labelDef.Clone()
+	cLabelDef, err := suite.labelDef.Clone()
 	suite.Nil(err)
-	suite.Equal(suite.labelDef, labelDef)
-	hasError := labelDef.Validate()
+	suite.Equal(suite.labelDef, cLabelDef)
+	hasError := cLabelDef.Validate()
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.False(hasError)
@@ -86,13 +86,13 @@ func (suite *labelDefConfSuit) TestValidationClonedShouldBeValid() {
 
 func (suite *labelDefConfSuit) TestValidationNameShouldNotBeEmpty() {
 	// NOTE(denisacostaq@gmail.com): Giving
-	labelDef, err := suite.labelDef.Clone()
+	cLabelDef, err := suite.labelDef.Clone()
 	suite.Nil(err)
-	setUpFakeValidationOn3rdPartyOverLabel(labelDef)
+	setUpFakeValidationOn3rdPartyOverLabel(cLabelDef)
 
 	// NOTE(denisacostaq@gmail.com): When
-	labelDef.SetName("")
-	hasError := labelDef.Validate()
+	cLabelDef.SetName("")
+	hasError := cLabelDef.Validate()
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.True(hasError)
@@ -100,12 +100,12 @@ func (suite *labelDefConfSuit) TestValidationNameShouldNotBeEmpty() {
 
 func (suite *labelDefConfSuit) TestValidationNodeSolverShouldNotBeEmpty() {
 	// NOTE(denisacostaq@gmail.com): Giving
-	labelDef, err := suite.labelDef.Clone()
+	cLabelDef, err := suite.labelDef.Clone()
 	suite.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
-	labelDef.SetNodeSolver(nil)
-	hasError := labelDef.Validate()
+	cLabelDef.SetNodeSolver(nil)
+	hasError := cLabelDef.Validate()
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.True(hasError)

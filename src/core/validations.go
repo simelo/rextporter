@@ -4,6 +4,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// ValidateAuth check if the auth instance in parameter fill the required constraints
+// to be considered as a valid RextAuthDef.
+// Return true if any error is found
 func ValidateAuth(auth RextAuthDef) (hasError bool) {
 	if len(auth.GetAuthType()) == 0 {
 		hasError = true
@@ -27,6 +30,9 @@ func ValidateAuth(auth RextAuthDef) (hasError bool) {
 	return hasError
 }
 
+// ValidateResource check if the resource instance in parameter fill the required constraints
+// to be considered as a valid RextResourceDef.
+// Return true if any error is found
 func ValidateResource(r RextResourceDef) (hasError bool) {
 	if len(r.GetType()) == 0 {
 		hasError = true
@@ -53,6 +59,9 @@ func ValidateResource(r RextResourceDef) (hasError bool) {
 	return hasError
 }
 
+// ValidateService check if the resource instance in parameter fill the required constraints
+// to be considered as a valid RextServiceDef.
+// Return true if any error is found
 func ValidateService(srv RextServiceDef) (hasError bool) {
 	srvOpts := srv.GetOptions()
 	jobName, err := srvOpts.GetString(OptKeyRextServiceDefJobName)
@@ -89,6 +98,9 @@ func ValidateService(srv RextServiceDef) (hasError bool) {
 	return hasError
 }
 
+// ValidateNodeSolver check if the node solver instance in parameter fill the required constraints
+// to be considered as a valid RextNodeSolver.
+// Return true if any error is found
 func ValidateNodeSolver(ns RextNodeSolver) (hasError bool) {
 	if len(ns.GetNodePath()) == 0 {
 		hasError = true
@@ -97,6 +109,9 @@ func ValidateNodeSolver(ns RextNodeSolver) (hasError bool) {
 	return hasError
 }
 
+// ValidateLabel check if the label instance in parameter fill the required constraints
+// to be considered as a valid RextLabelDef.
+// Return true if any error is found
 func ValidateLabel(l RextLabelDef) (hasError bool) {
 	if len(l.GetName()) == 0 {
 		hasError = true
@@ -111,6 +126,9 @@ func ValidateLabel(l RextLabelDef) (hasError bool) {
 	return hasError
 }
 
+// ValidateDecoder check if the decoder instance in parameter fill the required constraints
+// to be considered as a valid RextDecoderDef.
+// Return true if any error is found
 func ValidateDecoder(d RextDecoderDef) (hasError bool) {
 	if len(d.GetType()) == 0 {
 		hasError = true
@@ -119,6 +137,9 @@ func ValidateDecoder(d RextDecoderDef) (hasError bool) {
 	return hasError
 }
 
+// ValidateMetric check if the metric instance in parameter fill the required constraints
+// to be considered as a valid RextMetricDef.
+// Return true if any error is found
 func ValidateMetric(m RextMetricDef) (hasError bool) {
 	if len(m.GetMetricName()) == 0 {
 		hasError = true
@@ -151,6 +172,9 @@ func ValidateMetric(m RextMetricDef) (hasError bool) {
 	return hasError
 }
 
+// ValidateRoot check if the root instance in parameter fill the required constraints
+// to be considered as a valid RextRoot.
+// Return true if any error is found
 func ValidateRoot(r RextRoot) (hasError bool) {
 	for _, srv := range r.GetServices() {
 		if srv.Validate() {

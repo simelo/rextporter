@@ -43,6 +43,7 @@ func (l *LabelDef) SetNodeSolver(nodeSolver core.RextNodeSolver) {
 	l.nodeSolver = nodeSolver
 }
 
+// Validate the label, return true if any error is found
 func (l LabelDef) Validate() bool {
 	return core.ValidateLabel(&l)
 }

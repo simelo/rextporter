@@ -53,12 +53,12 @@ func (suite *rootConfigSuite) TestAbleToAddService() {
 
 func (suite *rootConfigSuite) TestValidationClonedShouldBeValid() {
 	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
 	cRootConfig, err := suite.rootConfig.Clone()
 	suite.Nil(err)
 	suite.Equal(suite.rootConfig, cRootConfig)
 	setUpFakeValidationOn3rdPartyOverRootConfig(cRootConfig)
-
-	// NOTE(denisacostaq@gmail.com): When
 	hasError := cRootConfig.Validate()
 
 	// NOTE(denisacostaq@gmail.com): Assert

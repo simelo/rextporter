@@ -50,6 +50,8 @@ const (
 type RextRoot interface {
 	GetServices() []RextServiceDef
 	AddService(RextServiceDef)
+	Clone() (RextRoot, error)
+	Validate() (hasError bool)
 }
 
 // RextServiceDef encapsulates all data for services
@@ -61,11 +63,12 @@ type RextServiceDef interface {
 	SetProtocol(string) // TODO(denisacostaq@gmail.com): move this to set base path, and add a port too
 	SetAuthForBaseURL(RextAuthDef)
 	GetAuthForBaseURL() RextAuthDef
-	AddSource(source RextResourceDef)
-	AddSources(sources ...RextResourceDef)
-	GetSources() []RextResourceDef
+	AddResource(source RextResourceDef)
+	AddResources(sources ...RextResourceDef)
+	GetResources() []RextResourceDef
 	GetOptions() RextKeyValueStore
 	Clone() (RextServiceDef, error)
+	Validate() (hasError bool)
 }
 
 // RextResourceDef for retrieving raw data
@@ -105,6 +108,7 @@ type RextResourceDef interface {
 	GetType() string // TODO(denisacostaq@gmail.com): remove this
 	GetOptions() RextKeyValueStore
 	Clone() (RextResourceDef, error)
+	Validate() (hasError bool)
 }
 
 // RextDecoderDef allow you to decode a resource from different formats
@@ -117,6 +121,7 @@ type RextDecoderDef interface {
 	// about the algorithm, the key, and so on...
 	GetOptions() RextKeyValueStore
 	Clone() (RextDecoderDef, error)
+	Validate() (hasError bool)
 }
 
 const (
@@ -146,6 +151,7 @@ type RextNodeSolver interface {
 	// .rar example above
 	GetOptions() RextKeyValueStore
 	Clone() (RextNodeSolver, error)
+	Validate() (hasError bool)
 }
 
 // RextMetricDef contains the metadata associated to the metrics
@@ -167,6 +173,7 @@ type RextMetricDef interface {
 	AddLabel(RextLabelDef)
 	GetOptions() RextKeyValueStore
 	Clone() (RextMetricDef, error)
+	Validate() (hasError bool)
 }
 
 // RextLabelDef define a label name and the way to get the value for metrics vec
@@ -178,7 +185,10 @@ type RextLabelDef interface {
 	// GetNodeSolver return the solver able to get the metric value
 	GetNodeSolver() RextNodeSolver
 	Clone() (RextLabelDef, error)
+	Validate() (hasError bool)
 }
+
+const AuthTypeCSRF = "CSRF"
 
 // RextAuthDef can store information about authentication requirements, how and where you can autenticate,
 // using what values, all this info is stored inside a RextAuthDef
@@ -189,6 +199,7 @@ type RextAuthDef interface {
 	GetAuthType() string
 	GetOptions() RextKeyValueStore
 	Clone() (RextAuthDef, error)
+	Validate() (hasError bool)
 }
 
 // RextKeyValueStore providing access to object settings, you give a key with a value(can be a string or

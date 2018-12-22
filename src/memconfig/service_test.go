@@ -117,12 +117,12 @@ func (suite *serviceConfSuit) TestInitializeEmptyOptionsInFly() {
 
 func (suite *serviceConfSuit) TestValidationClonedShouldBeValid() {
 	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
 	cSrvConf, err := suite.srvConf.Clone()
 	suite.Nil(err)
 	suite.Equal(suite.srvConf, cSrvConf)
 	setUpFakeValidationOn3rdPartyOverService(cSrvConf)
-
-	// NOTE(denisacostaq@gmail.com): When
 	hasError := cSrvConf.Validate()
 
 	// NOTE(denisacostaq@gmail.com): Assert

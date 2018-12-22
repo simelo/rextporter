@@ -41,6 +41,7 @@ func (auth *HTTPAuth) GetOptions() core.RextKeyValueStore {
 	return auth.options
 }
 
+// Validate the auth, return true if any error is found
 func (auth HTTPAuth) Validate() (haveError bool) {
 	return core.ValidateAuth(&auth)
 }

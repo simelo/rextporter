@@ -35,6 +35,7 @@ func (d *Decoder) GetOptions() core.RextKeyValueStore {
 	return d.options
 }
 
+// Validate the decoder, return true if any error is found
 func (d Decoder) Validate() bool {
 	return core.ValidateDecoder(&d)
 }

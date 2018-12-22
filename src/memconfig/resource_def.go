@@ -32,7 +32,7 @@ func (rd ResourceDef) Clone() (cRd core.RextResourceDef, err error) {
 		}
 	}
 	var cMetrics []core.RextMetricDef
-	for _, metric := range rd.metrics {
+	for _, metric := range rd.GetMetricDefs() {
 		var cMetric core.RextMetricDef
 		if cMetric, err = metric.Clone(); err != nil {
 			log.WithError(err).Errorln("can nor clone metrics in resource")
@@ -102,6 +102,7 @@ func (m *ResourceDef) GetOptions() core.RextKeyValueStore {
 	return m.options
 }
 
+// Validate the resource, return true if any error is found
 func (m ResourceDef) Validate() bool {
 	return core.ValidateResource(&m)
 }

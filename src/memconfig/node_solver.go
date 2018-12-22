@@ -40,10 +40,14 @@ func (ns NodeSolver) GetNodePath() string {
 }
 
 // GetOptions return key/value pairs for extra options
-func (ns NodeSolver) GetOptions() core.RextKeyValueStore {
+func (ns *NodeSolver) GetOptions() core.RextKeyValueStore {
+	if ns.options == nil {
+		ns.options = NewOptionsMap()
+	}
 	return ns.options
 }
 
+// Validate the node solver, return true if any error is found
 func (ns NodeSolver) Validate() bool {
 	return core.ValidateNodeSolver(&ns)
 }

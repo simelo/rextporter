@@ -17,6 +17,7 @@ type Service struct {
 	options   core.RextKeyValueStore
 }
 
+// Validate the service, return true if any error is found
 func (srv Service) Validate() (hasError bool) {
 	if srv.GetProtocol() == "http" {
 		for _, res := range srv.GetResources() {

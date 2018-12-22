@@ -37,6 +37,7 @@ func (root *RootConfig) AddService(srv core.RextServiceDef) {
 	root.services = append(root.services, srv)
 }
 
+// Validate the root, return true if any error is found
 func (root RootConfig) Validate() bool {
 	return core.ValidateRoot(&root)
 }

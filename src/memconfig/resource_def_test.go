@@ -135,12 +135,12 @@ func (suite *resourceDefSuit) TestInitializeEmptyOptionsInFly() {
 
 func (suite *resourceDefSuit) TestValidationClonedShouldBeValid() {
 	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
 	cResConf, err := suite.resourceDef.Clone()
 	suite.Nil(err)
 	suite.Equal(suite.resourceDef, cResConf)
 	setUpFakeValidationOn3rdPartyOverResource(cResConf)
-
-	// NOTE(denisacostaq@gmail.com): When
 	hasError := cResConf.Validate()
 
 	// NOTE(denisacostaq@gmail.com): Assert
@@ -222,6 +222,9 @@ func setUpFakeValidationOn3rdPartyOverResource(res core.RextResourceDef) {
 	authStub.On("Validate").Return(false)
 	decoderStub := new(mocks.RextDecoderDef)
 	decoderStub.On("Validate").Return(false)
+	metricStub := new(mocks.RextMetricDef)
+	metricStub.On("Validate").Return(false)
 	res.SetAuth(authStub)
 	res.SetDecoder(decoderStub)
+	res.AddMetricDef(metricStub)
 }

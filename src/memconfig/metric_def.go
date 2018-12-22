@@ -100,6 +100,7 @@ func (m *MetricDef) GetOptions() core.RextKeyValueStore {
 	return m.options
 }
 
+// Validate the metric, return true if any error is found
 func (md MetricDef) Validate() bool {
 	return core.ValidateMetric(&md)
 }
