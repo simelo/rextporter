@@ -54,7 +54,9 @@ func ValidateResource(r RextResourceDef) (hasError bool) {
 		}
 	}
 	for _, mtrDef := range r.GetMetricDefs() {
-		mtrDef.Validate()
+		if mtrDef.Validate() {
+			hasError = true
+		}
 	}
 	return hasError
 }
@@ -93,7 +95,9 @@ func ValidateService(srv RextServiceDef) (hasError bool) {
 		}
 	}
 	for _, source := range srv.GetResources() {
-		source.Validate()
+		if source.Validate() {
+			hasError = true
+		}
 	}
 	return hasError
 }
