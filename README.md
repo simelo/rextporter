@@ -1,4 +1,8 @@
+
 # Rextporter
+
+[![Build Status](https://travis-ci.org/simelo/rextporter.svg?branch=develop)](https://travis-ci.org/simelo/rextporter)
+
 This is the executable entry point for the server.
 - [Install](#install)
 - [Run](#run)
