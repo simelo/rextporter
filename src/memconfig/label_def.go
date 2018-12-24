@@ -29,6 +29,7 @@ func (l LabelDef) GetName() string {
 	return l.name
 }
 
+// SetName set the name for the label
 func (l *LabelDef) SetName(name string) {
 	l.name = name
 }

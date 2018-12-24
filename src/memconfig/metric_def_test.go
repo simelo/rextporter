@@ -36,8 +36,10 @@ func (suite *metricDefConfSuit) SetupTest() {
 	suite.nodeSolver.GetOptions()
 	suite.metricLabels = nil
 	suite.metricOptions = NewOptionsMap()
-	suite.metricOptions.SetString("k1", "v1")
-	suite.metricOptions.SetString("k2", "v2")
+	_, err := suite.metricOptions.SetString("k1", "v1")
+	suite.Nil(err)
+	_, err = suite.metricOptions.SetString("k2", "v2")
+	suite.Nil(err)
 	suite.metricDef = newMetricDef(suite)
 }
 
@@ -52,15 +54,16 @@ func (suite *metricDefConfSuit) TestNewMetricDef() {
 	metricDef := newMetricDef(suite)
 	opts, err := suite.metricOptions.Clone()
 	suite.Nil(err)
-	suite.metricOptions.SetString("k1", "v2")
+	_, err = suite.metricOptions.SetString("k1", "v2")
+	suite.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Equal(suite.metricName, metricDef.GetMetricName())
 	suite.Equal(suite.metricType, metricDef.GetMetricType())
 	suite.Equal(suite.metricDescription, metricDef.GetMetricDescription())
 	suite.Equal(suite.nodeSolver, metricDef.GetNodeSolver())
-	suite.True(eqKvs(suite.Assert(), suite.metricOptions, metricDef.GetOptions()))
-	suite.False(eqKvs(nil, opts, metricDef.GetOptions()))
+	suite.Equal(suite.metricOptions, metricDef.GetOptions())
+	suite.NotEqual(opts, metricDef.GetOptions())
 	suite.Equal(suite.metricLabels, metricDef.GetLabels())
 }
 

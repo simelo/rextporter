@@ -20,9 +20,12 @@ type authConfSuit struct {
 
 func (suite *authConfSuit) SetupTest() {
 	suite.options = NewOptionsMap()
-	suite.options.SetString(core.OptKeyRextAuthDefTokenHeaderKey, "v1")
-	suite.options.SetString(core.OptKeyRextAuthDefTokenGenEndpoint, "v2")
-	suite.options.SetString(core.OptKeyRextAuthDefTokenKeyFromEndpoint, "v3")
+	_, err := suite.options.SetString(core.OptKeyRextAuthDefTokenHeaderKey, "v1")
+	suite.Nil(err)
+	_, err = suite.options.SetString(core.OptKeyRextAuthDefTokenGenEndpoint, "v2")
+	suite.Nil(err)
+	_, err = suite.options.SetString(core.OptKeyRextAuthDefTokenKeyFromEndpoint, "v3")
+	suite.Nil(err)
 	suite.authType = "CSRF"
 	suite.authURL = "http://localhost:9000/hosted_in/auth"
 	suite.authConf = newAuth(suite)
@@ -37,11 +40,14 @@ func (suite *authConfSuit) TestNewHTTPAuth() {
 
 	// NOTE(denisacostaq@gmail.com): When
 	authConf := newAuth(suite)
+	opts, err := suite.options.Clone()
+	suite.Nil(err)
+	_, err = suite.options.SetString("k1", "v2")
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Equal(suite.authType, authConf.GetAuthType())
-	// TODO(denisacostaq@gmail.com):
-	suite.True(eqKvs(suite.Assert(), suite.options, authConf.GetOptions()))
+	suite.Equal(suite.options, authConf.GetOptions())
+	suite.NotEqual(opts, authConf.GetOptions())
 }
 
 func (suite *authConfSuit) TestAbleToSetType() {

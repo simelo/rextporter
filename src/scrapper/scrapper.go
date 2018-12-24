@@ -71,26 +71,20 @@ func NewScrapper(cf client.Factory, parser BodyParser, resConf core.RextResource
 	jobName, err := srvOpts.GetString(core.OptKeyRextServiceDefJobName)
 	if err != nil {
 		log.WithError(err).Errorln("Can not find jobName")
-	  return scrapper, err
+		return scrapper, err
 	}
 	instanceName, err := srvOpts.GetString(core.OptKeyRextServiceDefInstanceName)
 	if err != nil {
 		log.WithError(err).Errorln("Can not find instanceName")
-	  return scrapper, err
+		return scrapper, err
 	}
 	if len(mtrConf.GetLabels()) > 0 {
-		mtrOpts := mtrConf.GetOptions()
-		itemPath, err := mtrOpts.GetString(core.OptKeyRextMetricDefVecItemPath)
-		if err != nil {
-			log.WithError(err).Errorln("can not get item path")
-			return scrapper, err
-		}
-		return createVecScrapper(cf, parser, jobName, instanceName, dataSource, nSolver, mtrConf, itemPath)
+		return createVecScrapper(cf, parser, jobName, instanceName, dataSource, nSolver, mtrConf)
 	}
 	return createAtomicScrapper(cf, parser, jobName, instanceName, dataSource, mtrConf, nSolver)
 }
 
-func createVecScrapper(cf client.Factory, parser BodyParser, jobName, instanceName, dataSource string, nSolver core.RextNodeSolver, mtrConf core.RextMetricDef, itemPath string) (scrapper Scrapper, err error) {
+func createVecScrapper(cf client.Factory, parser BodyParser, jobName, instanceName, dataSource string, nSolver core.RextNodeSolver, mtrConf core.RextMetricDef) (scrapper Scrapper, err error) {
 	if mtrConf.GetMetricType() == core.KeyMetricTypeCounter || mtrConf.GetMetricType() == core.KeyMetricTypeGauge {
 		mtrOptions := mtrConf.GetOptions()
 		itemPath, err := mtrOptions.GetString(core.OptKeyRextMetricDefVecItemPath)

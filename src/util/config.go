@@ -22,7 +22,7 @@ func MergeStoresInplace(dst, src core.RextKeyValueStore) (err error) {
 	return
 }
 
-// IsValidUrl tests a string to determine if it is a valid URL or not.
+// IsValidURL tests a string to determine if it is a valid URL or not.
 func IsValidURL(toTest string) bool {
 	if _, err := url.ParseRequestURI(toTest); err != nil {
 		return false

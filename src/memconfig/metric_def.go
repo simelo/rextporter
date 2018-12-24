@@ -53,13 +53,13 @@ func (m MetricDef) GetMetricType() string {
 }
 
 // GetNodeSolver return solver type
-func (dp MetricDef) GetNodeSolver() core.RextNodeSolver {
-	return dp.nodeSolver
+func (m MetricDef) GetNodeSolver() core.RextNodeSolver {
+	return m.nodeSolver
 }
 
 // SetNodeSolver set the node solver
-func (dp *MetricDef) SetNodeSolver(nodeSolver core.RextNodeSolver) {
-	dp.nodeSolver = nodeSolver
+func (m *MetricDef) SetNodeSolver(nodeSolver core.RextNodeSolver) {
+	m.nodeSolver = nodeSolver
 }
 
 // GetMetricDescription return the metric description
@@ -101,8 +101,8 @@ func (m *MetricDef) GetOptions() core.RextKeyValueStore {
 }
 
 // Validate the metric, return true if any error is found
-func (md MetricDef) Validate() bool {
-	return core.ValidateMetric(&md)
+func (m MetricDef) Validate() bool {
+	return core.ValidateMetric(&m)
 }
 
 // NewMetricDef create a new metric definition

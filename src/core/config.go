@@ -194,6 +194,7 @@ type RextLabelDef interface {
 	Validate() (hasError bool)
 }
 
+// AuthTypeCSRF define a const name for auth of type CSRF
 const AuthTypeCSRF = "CSRF"
 
 // RextAuthDef can store information about authentication requirements, how and where you can autenticate,

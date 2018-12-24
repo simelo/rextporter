@@ -31,14 +31,29 @@ func createService(srv tomlconfig.Service, metricsMapping serviceName2MetricName
 	basePath := fmt.Sprintf("%s://%s:%d", service.GetProtocol(), srv.Location.Location, srv.Port)
 	service.SetBasePath(basePath)
 	srvOpts := service.GetOptions()
-	srvOpts.SetString(core.OptKeyRextServiceDefJobName, srv.Name)
-	srvOpts.SetString(core.OptKeyRextServiceDefInstanceName, fmt.Sprintf("%s:%d", srv.Location.Location, srv.Port))
+	if _, err = srvOpts.SetString(core.OptKeyRextServiceDefJobName, srv.Name); err != nil {
+		log.WithFields(log.Fields{"key": core.OptKeyRextServiceDefJobName, "val": srv.Name}).Errorln("error saving job name")
+		return service, err
+	}
+	if _, err = srvOpts.SetString(core.OptKeyRextServiceDefInstanceName, fmt.Sprintf("%s:%d", srv.Location.Location, srv.Port)); err != nil {
+		log.WithFields(log.Fields{"key": core.OptKeyRextServiceDefInstanceName, "val": fmt.Sprintf("%s:%d", srv.Location.Location, srv.Port)}).Errorln("error saving instance name")
+		return service, err
+	}
 	auth := &memconfig.HTTPAuth{}
 	auth.SetAuthType(srv.AuthType)
 	authOpts := auth.GetOptions()
-	authOpts.SetString(core.OptKeyRextAuthDefTokenHeaderKey, srv.TokenHeaderKey)
-	authOpts.SetString(core.OptKeyRextAuthDefTokenKeyFromEndpoint, srv.TokenKeyFromEndpoint)
-	authOpts.SetString(core.OptKeyRextAuthDefTokenGenEndpoint, srv.GenTokenEndpoint)
+	if _, err = authOpts.SetString(core.OptKeyRextAuthDefTokenHeaderKey, srv.TokenHeaderKey); err != nil {
+		log.WithFields(log.Fields{"key": core.OptKeyRextAuthDefTokenHeaderKey, "val": srv.TokenHeaderKey}).Errorln("error saving token header key")
+		return service, err
+	}
+	if _, err = authOpts.SetString(core.OptKeyRextAuthDefTokenKeyFromEndpoint, srv.TokenKeyFromEndpoint); err != nil {
+		log.WithFields(log.Fields{"key": core.OptKeyRextAuthDefTokenKeyFromEndpoint, "val": srv.TokenKeyFromEndpoint}).Errorln("error saving token key from endpoint")
+		return service, err
+	}
+	if _, err = authOpts.SetString(core.OptKeyRextAuthDefTokenGenEndpoint, srv.GenTokenEndpoint); err != nil {
+		log.WithFields(log.Fields{"key": core.OptKeyRextAuthDefTokenGenEndpoint, "val": srv.GenTokenEndpoint}).Errorln("error saving token endpoint")
+		return service, err
+	}
 	service.SetAuthForBaseURL(auth)
 	for _, resPath := range srv.ResourcePaths {
 		var resDef core.RextResourceDef
@@ -50,7 +65,11 @@ func createService(srv tomlconfig.Service, metricsMapping serviceName2MetricName
 			decoder := memconfig.NewDecoder(resPath.PathType, nil)
 			resDef.SetDecoder(decoder)
 			resOpts := resDef.GetOptions()
-			resOpts.SetString(core.OptKeyRextResourceDefHTTPMethod, resPath.HttpMethod)
+			// FIXME(denisacostaq@gmail.com): OptKeyRextResourceDefHTTPMethod should be inside the service or the resource
+			if _, err = resOpts.SetString(core.OptKeyRextResourceDefHTTPMethod, resPath.HTTPMethod); err != nil {
+				log.WithFields(log.Fields{"key": core.OptKeyRextResourceDefHTTPMethod, "val": resPath.HTTPMethod}).Errorln("error saving http method")
+				return service, err
+			}
 		case "metrics_fordwader":
 			resDef = createResourceFrom4ExposedMetrics(resPath)
 			decoder := memconfig.NewDecoder(resPath.PathType, nil)
@@ -69,7 +88,10 @@ func createResourceFrom4API(mtrN2Metric map[string]tomlconfig.Metric, resPath to
 	resDef.SetType(resPath.PathType)
 	resDef.SetResourceURI(resPath.Path)
 	resOpts := resDef.GetOptions()
-	resOpts.SetString(core.OptKeyRextResourceDefHTTPMethod, resPath.HttpMethod)
+	if _, err := resOpts.SetString(core.OptKeyRextResourceDefHTTPMethod, resPath.HTTPMethod); err != nil {
+		log.WithFields(log.Fields{"key": core.OptKeyRextResourceDefHTTPMethod, "val": resPath.HTTPMethod}).Errorln("error saving http method")
+		return resDef
+	}
 	for _, mtrName := range resPath.MetricNames {
 		mtr /*, foundMetric*/ := mtrN2Metric[mtrName]
 		// if !foundMetric {
@@ -91,10 +113,16 @@ func createResourceFrom4API(mtrN2Metric map[string]tomlconfig.Metric, resPath to
 			metric.AddLabel(label)
 		}
 		if mtr.Options.Type == core.KeyMetricTypeHistogram {
-			mtrOpts.SetObject(core.OptKeyRextMetricDefHMetricBuckets, mtr.HistogramOptions.Buckets)
+			if _, err := mtrOpts.SetObject(core.OptKeyRextMetricDefHMetricBuckets, mtr.HistogramOptions.Buckets); err != nil {
+				log.WithFields(log.Fields{"key": core.OptKeyRextMetricDefHMetricBuckets, "value": mtr.HistogramOptions.Buckets}).Errorln("error saving buckets for histogram")
+				return resDef
+			}
 		}
 		if mtr.Options.Labels != nil && len(mtr.Options.Labels) > 0 {
-			mtrOpts.SetString(core.OptKeyRextMetricDefVecItemPath, mtr.Options.ItemPath)
+			if _, err := mtrOpts.SetString(core.OptKeyRextMetricDefVecItemPath, mtr.Options.ItemPath); err != nil {
+				log.WithFields(log.Fields{"key": core.OptKeyRextMetricDefVecItemPath, "value": mtr.Options.ItemPath}).Errorln("error saving item path")
+				return resDef
+			}
 		}
 		metric.SetNodeSolver(nodeSolver)
 		resDef.AddMetricDef(metric)
@@ -109,6 +137,7 @@ func createResourceFrom4ExposedMetrics(resPath tomlconfig.ResourcePath) (resDef 
 	return resDef
 }
 
+// Fill receive a tomlconfig.RootConfig and return an equivalent core.RextRoot
 func Fill(conf tomlconfig.RootConfig) (root core.RextRoot, err error) {
 	root = &memconfig.RootConfig{}
 	metricsMapping := buildMetricsMapping(conf)

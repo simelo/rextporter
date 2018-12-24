@@ -15,15 +15,16 @@ func NewOptionsMap() (m OptionsMap) {
 
 // GetString return the string value for key
 func (m OptionsMap) GetString(key string) (string, error) {
-	if val, err := m.GetObject(key); err == nil {
+	var err error
+	var val interface{}
+	if val, err = m.GetObject(key); err == nil {
 		strVal, okStrVal := val.(string)
 		if okStrVal {
 			return strVal, nil
 		}
 		return "", core.ErrKeyInvalidType
-	} else {
-		return "", err
 	}
+	return "", err
 }
 
 // SetString set a string value for key

@@ -49,6 +49,7 @@ func (rd ResourceDef) Clone() (cRd core.RextResourceDef, err error) {
 	return cRd, err
 }
 
+// GetResourcePATH return the resource pat against the service base path
 func (rd ResourceDef) GetResourcePATH(basePath string) string {
 	return basePath + rd.resourceURI
 }
@@ -63,10 +64,12 @@ func (rd *ResourceDef) SetType(t string) {
 	rd.mType = t
 }
 
+// SetResourceURI set the resource path inside the service
 func (rd *ResourceDef) SetResourceURI(uri string) {
 	rd.resourceURI = uri
 }
 
+// GetAuth return the defAuth if not have a specific one for this resource
 func (rd ResourceDef) GetAuth(defAuth core.RextAuthDef) core.RextAuthDef {
 	if rd.auth == nil {
 		return defAuth
@@ -74,37 +77,42 @@ func (rd ResourceDef) GetAuth(defAuth core.RextAuthDef) core.RextAuthDef {
 	return rd.auth
 }
 
+// SetAuth set an specific auth for this resource
 func (rd *ResourceDef) SetAuth(auth core.RextAuthDef) {
 	rd.auth = auth
 }
 
+// SetDecoder set a decoder for the service
 func (rd *ResourceDef) SetDecoder(decoder core.RextDecoderDef) {
 	rd.decoder = decoder
 }
 
+// GetDecoder return thedecoder for this service
 func (rd ResourceDef) GetDecoder() core.RextDecoderDef {
 	return rd.decoder
 }
 
+// AddMetricDef add a metric definition inside the resource
 func (rd *ResourceDef) AddMetricDef(mtrDef core.RextMetricDef) {
 	rd.metrics = append(rd.metrics, mtrDef)
 }
 
+// GetMetricDefs return the metrics definitions associated with this resource
 func (rd ResourceDef) GetMetricDefs() []core.RextMetricDef {
 	return rd.metrics
 }
 
 // GetOptions return key/value pairs for extra options
-func (m *ResourceDef) GetOptions() core.RextKeyValueStore {
-	if m.options == nil {
-		m.options = NewOptionsMap()
+func (rd *ResourceDef) GetOptions() core.RextKeyValueStore {
+	if rd.options == nil {
+		rd.options = NewOptionsMap()
 	}
-	return m.options
+	return rd.options
 }
 
 // Validate the resource, return true if any error is found
-func (m ResourceDef) Validate() bool {
-	return core.ValidateResource(&m)
+func (rd ResourceDef) Validate() bool {
+	return core.ValidateResource(&rd)
 }
 
 // NewResourceDef create a new metric definition

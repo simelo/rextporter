@@ -24,8 +24,10 @@ type decoderSuit struct {
 func (suite *decoderSuit) SetupTest() {
 	suite.decoderType = "dfdf"
 	suite.options = NewOptionsMap()
-	suite.options.SetString("k1", "v1")
-	suite.options.SetString("k2", "v2")
+	_, err := suite.options.SetString("k1", "v1")
+	suite.Nil(err)
+	_, err = suite.options.SetString("k2", "v2")
+	suite.Nil(err)
 	suite.decoder = newDecoder(suite)
 }
 
@@ -40,12 +42,13 @@ func (suite *decoderSuit) TestNewDecoderDef() {
 	decoderDef := newDecoder(suite)
 	opts, err := suite.options.Clone()
 	suite.Nil(err)
-	suite.options.SetString("k1", "v2")
+	_, err = suite.options.SetString("k1", "v2")
+	suite.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Equal(suite.decoderType, decoderDef.GetType())
-	suite.True(eqKvs(suite.Assert(), suite.options, decoderDef.GetOptions()))
-	suite.False(eqKvs(nil, opts, decoderDef.GetOptions()))
+	suite.Equal(suite.options, decoderDef.GetOptions())
+	suite.NotEqual(opts, decoderDef.GetOptions())
 }
 
 func (suite *decoderSuit) TestInitializeEmptyOptionsInFly() {

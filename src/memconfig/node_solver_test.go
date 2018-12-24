@@ -26,8 +26,10 @@ func (suite *nodeSolverSuit) SetupTest() {
 	suite.nodeSolverType = core.RextNodeSolverTypeJSONPath
 	suite.nodePath = "/tmp/a"
 	suite.options = NewOptionsMap()
-	suite.options.SetString("k1", "v1")
-	suite.options.SetString("k2", "v2")
+	_, err := suite.options.SetString("k1", "v1")
+	suite.Nil(err)
+	_, err = suite.options.SetString("k2", "v2")
+	suite.Nil(err)
 	suite.nodeSolver = newNodeSolver(suite)
 }
 
@@ -42,13 +44,14 @@ func (suite *nodeSolverSuit) TestNewNodeSolver() {
 	nodeSolver := newNodeSolver(suite)
 	opts, err := suite.options.Clone()
 	suite.Nil(err)
-	suite.options.SetString("k1", "v2")
+	_, err = suite.options.SetString("k1", "v2")
+	suite.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Equal(suite.nodeSolverType, nodeSolver.GetType())
 	suite.Equal(suite.nodePath, nodeSolver.GetNodePath())
-	suite.True(eqKvs(suite.Assert(), suite.options, nodeSolver.GetOptions()))
-	suite.False(eqKvs(nil, opts, nodeSolver.GetOptions()))
+	suite.Equal(suite.options, nodeSolver.GetOptions())
+	suite.NotEqual(opts, nodeSolver.GetOptions())
 }
 
 func (suite *nodeSolverSuit) TestAbleToSetNodePath() {

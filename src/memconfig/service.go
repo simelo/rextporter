@@ -60,7 +60,7 @@ func (srv Service) Clone() (cSrv core.RextServiceDef, err error) {
 	return cSrv, err
 }
 
-// SetBaseURL set the base path for the service
+// SetBasePath set the base path for the service
 func (srv *Service) SetBasePath(path string) {
 	srv.basePath = path
 }
@@ -75,11 +75,12 @@ func (srv Service) GetBasePath() string {
 	return srv.basePath
 }
 
-// SetMethod set the protocol for the scrapper
+// SetProtocol set the protocol for the service
 func (srv *Service) SetProtocol(protocol string) {
 	srv.protocol = protocol
 }
 
+// SetAuthForBaseURL set an auth for the service
 func (srv *Service) SetAuthForBaseURL(auth core.RextAuthDef) {
 	srv.auth = auth
 }
@@ -89,14 +90,17 @@ func (srv Service) GetAuthForBaseURL() core.RextAuthDef {
 	return srv.auth
 }
 
+// AddResource add a resource
 func (srv *Service) AddResource(source core.RextResourceDef) {
 	srv.resources = append(srv.resources, source)
 }
 
+// AddResources add multiple resources
 func (srv *Service) AddResources(sources ...core.RextResourceDef) {
 	srv.resources = append(srv.resources, sources...)
 }
 
+// GetResources return the resources inside this service
 func (srv Service) GetResources() []core.RextResourceDef {
 	return srv.resources
 }

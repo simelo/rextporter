@@ -24,7 +24,7 @@ func (ns NodeSolver) Clone() (cNs core.RextNodeSolver, err error) {
 	return cNs, err
 }
 
-// GetMetricName return solver type
+// GetType return solver type
 func (ns NodeSolver) GetType() string {
 	return ns.MType
 }
@@ -34,7 +34,7 @@ func (ns *NodeSolver) SetNodePath(nodePath string) {
 	ns.nodePath = nodePath
 }
 
-// GetMetricType return the node path
+// GetNodePath return the node path
 func (ns NodeSolver) GetNodePath() string {
 	return ns.nodePath
 }

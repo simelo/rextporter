@@ -29,8 +29,10 @@ func (suite *serviceConfSuit) SetupTest() {
 	suite.auth.GetOptions()
 	suite.resources = nil
 	suite.options = NewOptionsMap()
-	suite.options.SetString(core.OptKeyRextServiceDefJobName, "v1")
-	suite.options.SetString(core.OptKeyRextServiceDefInstanceName, "v2")
+	_, err := suite.options.SetString(core.OptKeyRextServiceDefJobName, "v1")
+	suite.Nil(err)
+	_, err = suite.options.SetString(core.OptKeyRextServiceDefInstanceName, "v2")
+	suite.Nil(err)
 	suite.srvConf = newService(suite)
 }
 
@@ -45,12 +47,13 @@ func (suite *serviceConfSuit) TestNewServiceDef() {
 	serviceDef := newService(suite)
 	opts, err := suite.options.Clone()
 	suite.Nil(err)
-	suite.options.SetString("k1", "v2")
+	_, err = suite.options.SetString("k1", "v2")
+	suite.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Equal(suite.protocol, serviceDef.GetProtocol())
-	suite.True(eqKvs(suite.Assert(), suite.options, serviceDef.GetOptions()))
-	suite.False(eqKvs(nil, opts, serviceDef.GetOptions()))
+	suite.Equal(suite.options, serviceDef.GetOptions())
+	suite.NotEqual(opts, serviceDef.GetOptions())
 }
 
 func (suite *serviceConfSuit) TestAbleToSetProtocol() {
@@ -131,10 +134,12 @@ func (suite *serviceConfSuit) TestValidationClonedShouldBeValid() {
 func (suite *serviceConfSuit) TestValidationJobNameShouldNotBeEmpty() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	srvConf, err := suite.srvConf.Clone()
+	suite.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
 	opts := srvConf.GetOptions()
-	pe, err := opts.SetString(core.OptKeyRextServiceDefJobName, "")
+	var pe bool
+	pe, err = opts.SetString(core.OptKeyRextServiceDefJobName, "")
 	suite.True(pe)
 	suite.Nil(err)
 	hasError := srvConf.Validate()
@@ -146,6 +151,7 @@ func (suite *serviceConfSuit) TestValidationJobNameShouldNotBeEmpty() {
 func (suite *serviceConfSuit) TestValidationInstanceNameShouldNotBeEmpty() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	srvConf, err := suite.srvConf.Clone()
+	suite.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): When
 	opts := srvConf.GetOptions()

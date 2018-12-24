@@ -11,9 +11,9 @@ type RootConfig struct {
 }
 
 // Clone make a deep copy of RootConfig or return an error if any
-func (rc RootConfig) Clone() (cRc core.RextRoot, err error) {
+func (root RootConfig) Clone() (cRc core.RextRoot, err error) {
 	var cSrvs []core.RextServiceDef
-	for _, srv := range rc.GetServices() {
+	for _, srv := range root.GetServices() {
 		var cSrv core.RextServiceDef
 		if cSrv, err = srv.Clone(); err != nil {
 			log.WithError(err).Errorln("can not clone services in root config")
@@ -25,6 +25,7 @@ func (rc RootConfig) Clone() (cRc core.RextRoot, err error) {
 	return cRc, err
 }
 
+// GetServices return the services
 func (root RootConfig) GetServices() []core.RextServiceDef {
 	services := make([]core.RextServiceDef, len(root.services))
 	for idxSrv := range root.services {
@@ -33,6 +34,7 @@ func (root RootConfig) GetServices() []core.RextServiceDef {
 	return services
 }
 
+// AddService add a service
 func (root *RootConfig) AddService(srv core.RextServiceDef) {
 	root.services = append(root.services, srv)
 }
@@ -42,6 +44,7 @@ func (root RootConfig) Validate() bool {
 	return core.ValidateRoot(&root)
 }
 
+// NewRootConfig return a new root config instance
 func NewRootConfig(services []core.RextServiceDef) core.RextRoot {
 	return &RootConfig{services: services}
 }

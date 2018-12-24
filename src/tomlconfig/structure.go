@@ -75,7 +75,7 @@ type ResourcePath struct {
 	PathType       string
 	Path           string
 	NodeSolverType string
-	HttpMethod     string
+	HTTPMethod     string
 	// MetricNames TODO(denisacostaq@gmail.com): trying to define filtered metric can introduce
 	// some redundancy because the other fields
 	MetricNames []string

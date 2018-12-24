@@ -39,8 +39,10 @@ func (suite *resourceDefSuit) SetupTest() {
 	suite.decoder.GetOptions()
 	suite.metrics = nil
 	suite.options = NewOptionsMap()
-	suite.options.SetString("k1", "v1")
-	suite.options.SetString("k2", "v2")
+	_, err := suite.options.SetString("k1", "v1")
+	suite.Nil(err)
+	_, err = suite.options.SetString("k2", "v2")
+	suite.Nil(err)
 	suite.resourceDef = newResourceDef(suite)
 }
 
@@ -55,7 +57,8 @@ func (suite *resourceDefSuit) TestNewResourceDefSuit() {
 	resourceDef := newResourceDef(suite)
 	opts, err := suite.options.Clone()
 	suite.Nil(err)
-	suite.options.SetString("k1", "v2")
+	_, err = suite.options.SetString("k1", "v2")
+	suite.Nil(err)
 	basePath := "dssds"
 
 	// NOTE(denisacostaq@gmail.com): Assert
@@ -63,8 +66,8 @@ func (suite *resourceDefSuit) TestNewResourceDefSuit() {
 	suite.Equal(suite.auth, resourceDef.GetAuth(nil))
 	suite.Equal(basePath+suite.resourceURI, resourceDef.GetResourcePATH(basePath))
 	suite.Equal(suite.decoder, resourceDef.GetDecoder())
-	suite.True(eqKvs(suite.Assert(), suite.options, resourceDef.GetOptions()))
-	suite.False(eqKvs(nil, opts, resourceDef.GetOptions()))
+	suite.Equal(suite.options, resourceDef.GetOptions())
+	suite.NotEqual(opts, resourceDef.GetOptions())
 }
 
 func (suite *resourceDefSuit) TestAbleToSetDecoder() {

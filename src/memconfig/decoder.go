@@ -5,7 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// MetricDef implements the interface core.RextMetricDef
+// Decoder implements the interface core.RextMetricDef
 type Decoder struct {
 	mType   string
 	options core.RextKeyValueStore
