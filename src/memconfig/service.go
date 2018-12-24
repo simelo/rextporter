@@ -1,8 +1,8 @@
 package memconfig
 
 import (
-	"github.com/simelo/rextporter/src/util"
 	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -22,10 +22,15 @@ func (srv Service) Validate() (hasError bool) {
 	if srv.GetProtocol() == "http" {
 		for _, res := range srv.GetResources() {
 			resPath := res.GetResourcePATH(srv.GetBasePath())
-			util.IsValidURL(resPath)
+			if !util.IsValidURL(resPath) {
+				hasError = true
+			}
 		}
 	}
-	return core.ValidateService(&srv)
+	if core.ValidateService(&srv) {
+		hasError = true
+	}
+	return hasError
 }
 
 // Clone make a deep copy of Service or return an error if any
