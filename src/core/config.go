@@ -11,6 +11,12 @@ var (
 	ErrKeyNotFound = errors.New("Missing key")
 	// ErrKeyNotClonable in key value store
 	ErrKeyNotClonable = errors.New("Impossible to obtain a copy of object")
+	// ErrKeyConfigHaveSomeErrors for config validation
+	ErrKeyConfigHaveSomeErrors = errors.New("Config have some errors")
+	// ErrKeyEmptyValue values not allowed
+	ErrKeyEmptyValue = errors.New("A required value is missed (empty or nil)")
+	// ErrKeyDecodingFile can not parse or decode content
+	ErrKeyDecodingFile = errors.New("Error decoding/parsing read content")
 )
 
 const (

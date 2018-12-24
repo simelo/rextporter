@@ -27,7 +27,8 @@ func buildMetricsMapping(conf tomlconfig.RootConfig) (metricsMapping serviceName
 func createService(srv tomlconfig.Service, metricsMapping serviceName2MetricName2Metric) (service core.RextServiceDef, err error) {
 	mtrN2Metric := metricsMapping[srv.Name]
 	service = &memconfig.Service{}
-	basePath := fmt.Sprintf("%s://%s:%d", srv.Protocol, srv.Location.Location, srv.Port)
+	service.SetProtocol(srv.Protocol)
+	basePath := fmt.Sprintf("%s://%s:%d", service.GetProtocol(), srv.Location.Location, srv.Port)
 	service.SetBasePath(basePath)
 	srvOpts := service.GetOptions()
 	srvOpts.SetString(core.OptKeyRextServiceDefJobName, srv.Name)
@@ -46,10 +47,14 @@ func createService(srv tomlconfig.Service, metricsMapping serviceName2MetricName
 			resDef = createResourceFrom4API(mtrN2Metric, resPath)
 			resDef.SetType(resPath.PathType)
 			resDef.SetResourceURI(resPath.Path)
+			decoder := memconfig.NewDecoder(resPath.PathType, nil)
+			resDef.SetDecoder(decoder)
 			resOpts := resDef.GetOptions()
 			resOpts.SetString(core.OptKeyRextResourceDefHTTPMethod, resPath.HttpMethod)
 		case "metrics_fordwader":
 			resDef = createResourceFrom4ExposedMetrics(resPath)
+			decoder := memconfig.NewDecoder(resPath.PathType, nil)
+			resDef.SetDecoder(decoder)
 		default:
 			log.WithField("resource_path_type", resPath.PathType).Errorln("valid types are rest_api or metrics_fordwader")
 			return service, core.ErrKeyInvalidType
@@ -114,6 +119,10 @@ func Fill(conf tomlconfig.RootConfig) (root core.RextRoot, err error) {
 			return root, err
 		}
 		root.AddService(service)
+	}
+	if root.Validate() {
+		err = core.ErrKeyConfigHaveSomeErrors
+		return root, err
 	}
 	return root, err
 }

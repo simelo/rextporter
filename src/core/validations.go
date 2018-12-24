@@ -94,8 +94,8 @@ func ValidateService(srv RextServiceDef) (hasError bool) {
 			hasError = true
 		}
 	}
-	for _, source := range srv.GetResources() {
-		if source.Validate() {
+	for _, resource := range srv.GetResources() {
+		if resource.Validate() {
 			hasError = true
 		}
 	}

@@ -27,8 +27,7 @@ func (suite *serviceConfSuit) SetupTest() {
 	suite.protocol = "file"
 	suite.auth = &HTTPAuth{}
 	suite.auth.GetOptions()
-	suite.resources = []core.RextResourceDef{&ResourceDef{}}
-	suite.resources[0].GetOptions()
+	suite.resources = nil
 	suite.options = NewOptionsMap()
 	suite.options.SetString(core.OptKeyRextServiceDefJobName, "v1")
 	suite.options.SetString(core.OptKeyRextServiceDefInstanceName, "v2")
@@ -190,7 +189,7 @@ func (suite *serviceConfSuit) TestValidationShouldGoDownTroughFields() {
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	mockAuth.AssertCalled(suite.T(), "Validate")
-	suite.Len(cSrvConf.GetResources(), 3)
+	suite.Len(cSrvConf.GetResources(), 2)
 	mockResource1.AssertCalled(suite.T(), "Validate")
 	mockResource2.AssertCalled(suite.T(), "Validate")
 }
@@ -198,8 +197,8 @@ func (suite *serviceConfSuit) TestValidationShouldGoDownTroughFields() {
 func setUpFakeValidationOn3rdPartyOverService(srv core.RextServiceDef) {
 	authStub := new(mocks.RextAuthDef)
 	authStub.On("Validate").Return(false)
-	sourceStub := new(mocks.RextResourceDef)
-	sourceStub.On("Validate").Return(false)
+	resourceStub := new(mocks.RextResourceDef)
+	resourceStub.On("Validate").Return(false)
 	srv.SetAuthForBaseURL(authStub)
-	srv.AddResource(sourceStub)
+	srv.AddResource(resourceStub)
 }

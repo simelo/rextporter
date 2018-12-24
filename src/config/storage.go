@@ -39,7 +39,7 @@ func (m OptionsMap) SetObject(key string, value interface{}) (bool, error) {
 	if s, isStr := value.(string); isStr {
 		return m.SetString(key, s)
 	}
-	return false, core.ErrInvalidType
+	return false, core.ErrKeyInvalidType
 }
 
 func (m OptionsMap) GetKeys() (keys []string) {

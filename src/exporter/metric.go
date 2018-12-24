@@ -51,7 +51,6 @@ func createMetrics(cache cache.Cache, conf core.RextRoot, dataSourceResponseDura
 			for _, mtrConf := range resConf.GetMetricDefs() {
 				nSolver := mtrConf.GetNodeSolver()
 				if m, err = createConstMetric(cache, resConf, srvConf, mtrConf, nSolver, dataSourceResponseDurationDesc); err != nil {
-					log.Println("if m, err = createConstMetric(cache, resConf, srvConf, mtrConf, nSolver, dataSourceResponseDurationDesc); err != nil {", err)
 					errCause := fmt.Sprintln(fmt.Sprintf("error creating metric client for %s metric of kind %s. ", mtrConf.GetMetricName(), mtrConf.GetMetricType()), err.Error())
 					return metrics, util.ErrorFromThisScope(errCause, generalScopeErr)
 				}
@@ -64,6 +63,10 @@ func createMetrics(cache cache.Cache, conf core.RextRoot, dataSourceResponseDura
 
 func createConstMetric(cache cache.Cache, resConf core.RextResourceDef, srvConf core.RextServiceDef, mtrConf core.RextMetricDef, nSolver core.RextNodeSolver, dataSourceResponseDurationDesc *prometheus.Desc) (metric constMetric, err error) {
 	generalScopeErr := "can not create metric " + mtrConf.GetMetricName()
+	if len(mtrConf.GetMetricName()) == 0 {
+		log.Errorln("metric name is required")
+		return metric, core.ErrKeyEmptyValue
+	}
 	var ccf client.CacheableFactory
 	if ccf, err = client.CreateAPIRestCreator(resConf, srvConf, dataSourceResponseDurationDesc); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
@@ -85,9 +88,6 @@ func createConstMetric(cache cache.Cache, resConf core.RextResourceDef, srvConf 
 		scrapper: numScrapper,
 		// FIXME(denisacostaq@gmail.com): if you use a duplicated name can panic?
 		metricDesc: prometheus.NewDesc(mtrConf.GetMetricName(), mtrConf.GetMetricDescription(), labels, nil),
-	}
-	if mtrConf.GetMetricName() == "" {
-		panic("no nil")
 	}
 	return metric, err
 }

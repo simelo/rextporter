@@ -4,17 +4,14 @@ import (
 	"errors"
 
 	"github.com/simelo/rextporter/src/configlocator"
+	"github.com/simelo/rextporter/src/core"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 var (
-	// ErrKeyEmptyValue check for empty and/or null
-	ErrKeyEmptyValue = errors.New("A required value is missed")
 	// ErrKeyReadingFile check for empty and/or null
 	ErrKeyReadingFile = errors.New("Error reading file")
-	// ErrKeyDecodingFile check for empty and/or null
-	ErrKeyDecodingFile = errors.New("Error decoding read content")
 )
 
 type configFromFile struct {
@@ -28,125 +25,89 @@ type mainConfig struct {
 	ResourcePathsForServicesConfPath string
 }
 
-func (cf configFromFile) readMainConf() (mainConf mainConfig, err error) {
+func (cf configFromFile) readTomlFile(data interface{}) error {
 	if len(cf.filePath) == 0 {
-		log.WithError(ErrKeyEmptyValue).Errorln("file path is required to read main config")
-		return mainConf, ErrKeyEmptyValue
+		log.Errorln("file path is required to read toml config")
+		return core.ErrKeyEmptyValue
 	}
+	viper.SetConfigType("toml")
 	viper.SetConfigFile(cf.filePath)
 	if err := viper.ReadInConfig(); err != nil {
-		log.WithError(err).Errorln("error reading main toml config")
-		return mainConf, ErrKeyReadingFile
+		log.WithFields(log.Fields{"err": err, "path": cf.filePath}).Errorln("error reading toml config file")
+		return ErrKeyReadingFile
 	}
-	if err = viper.Unmarshal(&mainConf); err != nil {
-		log.WithFields(log.Fields{"err": err, "path": cf.filePath}).Errorln("Error decoding main config file content")
-		return mainConf, ErrKeyReadingFile
+	if err := viper.Unmarshal(data); err != nil {
+		log.WithFields(log.Fields{"err": err, "path": cf.filePath}).Errorln("Error decoding toml config file content")
+		return ErrKeyReadingFile
 	}
-	return mainConf, nil
+	return nil
+}
+
+func (cf configFromFile) readMainConf() (mainConf mainConfig, err error) {
+	if err = cf.readTomlFile(&mainConf); err != nil {
+		log.Errorln("error reading main config")
+		return mainConf, err
+	}
+	return mainConf, err
 }
 
 func (cf configFromFile) readServicesConf() (services []Service, err error) {
-	if len(cf.filePath) == 0 {
-		log.WithError(ErrKeyEmptyValue).Errorln("file path is required to read services config")
-		return services, ErrKeyEmptyValue
-	}
-	viper.SetConfigFile(cf.filePath)
-	if err := viper.ReadInConfig(); err != nil {
-		log.WithError(err).Errorln("error reading toml services toml config")
-		return services, ErrKeyReadingFile
-	}
 	var root RootConfig
-	if err := viper.Unmarshal(&root); err != nil {
-		log.WithFields(log.Fields{"err": err, "path": cf.filePath}).Errorln("Error decoding services config file content")
-		return services, ErrKeyReadingFile
+	if err = cf.readTomlFile(&root); err != nil {
+		log.Errorln("error reading services config")
+		return services, err
 	}
 	services = root.Services
 	return services, err
 }
 
 func (cf configFromFile) readMetricsForServiceConf() (metricsConf MetricsTemplate, err error) {
-	if len(cf.filePath) == 0 {
-		log.WithError(ErrKeyEmptyValue).Errorln("file path is required to read metrics for service config")
-		return metricsConf, ErrKeyEmptyValue
-	}
-	viper.SetConfigFile(cf.filePath)
-	if err := viper.ReadInConfig(); err != nil {
-		log.WithError(err).Errorln("error reading metrics for service toml config")
-		return metricsConf, ErrKeyReadingFile
-	}
 	type metricsForServiceConfig struct {
 		Metrics MetricsTemplate
 	}
 	var metricsForServiceConf metricsForServiceConfig
-	if err := viper.Unmarshal(&metricsForServiceConf); err != nil {
-		log.WithFields(log.Fields{"err": err, "path": cf.filePath}).Errorln("Error decoding metrics for service config file content")
-		return metricsConf, ErrKeyReadingFile
+	if err = cf.readTomlFile(&metricsForServiceConf); err != nil {
+		log.Errorln("error reading metrics config")
+		return metricsConf, err
 	}
 	metricsConf = metricsForServiceConf.Metrics
 	return metricsConf, err
 }
 
 func (cf configFromFile) readResourcePathsForServiceConf() (resPaths4Service ResourcePathTemplate, err error) {
-	if len(cf.filePath) == 0 {
-		log.WithError(ErrKeyEmptyValue).Errorln("file path is required to read resources paths for service config")
-		return resPaths4Service, ErrKeyEmptyValue
-	}
-	viper.SetConfigFile(cf.filePath)
-	if err := viper.ReadInConfig(); err != nil {
-		log.WithError(err).Errorln("error reading resources paths for service toml config")
-		return resPaths4Service, ErrKeyReadingFile
-	}
 	type resourcePathsForServiceConfig struct {
 		ResourcePaths ResourcePathTemplate
 	}
 	var resourcePathsForServiceConf resourcePathsForServiceConfig
-	if err := viper.Unmarshal(&resourcePathsForServiceConf); err != nil {
-		log.WithFields(log.Fields{"err": err, "path": cf.filePath}).Errorln("Error decoding resources paths for service config file content")
-		return resPaths4Service, ErrKeyReadingFile
+	if err = cf.readTomlFile(&resourcePathsForServiceConf); err != nil {
+		log.Errorln("error reading resource path for services config")
+		return resPaths4Service, err
 	}
 	resPaths4Service = resourcePathsForServiceConf.ResourcePaths
 	return resPaths4Service, err
 }
 
 func (cf configFromFile) readResourcePathsForServicesConf() (resPaths4Services map[string]string, err error) {
-	if len(cf.filePath) == 0 {
-		log.WithError(ErrKeyEmptyValue).Errorln("file path is required to read resources paths for services config")
-		return resPaths4Services, ErrKeyEmptyValue
-	}
-	viper.SetConfigFile(cf.filePath)
-	if err := viper.ReadInConfig(); err != nil {
-		log.WithError(err).Errorln("error reading resources paths for services toml config")
-		return resPaths4Services, ErrKeyReadingFile
-	}
 	type resourcePathsForServicesConfig struct {
 		ResourcePathsForServicesConfig map[string]string
 	}
 	var resourcePathsForServicesConf resourcePathsForServicesConfig
-	if err := viper.Unmarshal(&resourcePathsForServicesConf); err != nil {
-		log.WithFields(log.Fields{"err": err, "path": cf.filePath}).Errorln("Error decoding resources paths for services config file content")
-		return resPaths4Services, ErrKeyReadingFile
+	if err = cf.readTomlFile(&resourcePathsForServicesConf); err != nil {
+		log.Errorln("error reading main config")
+		return resPaths4Services, err
 	}
 	resPaths4Services = resourcePathsForServicesConf.ResourcePathsForServicesConfig
 	return resPaths4Services, err
 }
 
 func (cf configFromFile) readMetricsPathsForServicesConf() (mtrPaths4Services map[string]string, err error) {
-	if len(cf.filePath) == 0 {
-		log.WithError(ErrKeyEmptyValue).Errorln("file path is required to read metric paths for services config")
-		return mtrPaths4Services, ErrKeyEmptyValue
-	}
-	viper.SetConfigFile(cf.filePath)
-	if err := viper.ReadInConfig(); err != nil {
-		log.WithError(err).Errorln("error reading resources paths for services toml config")
-		return mtrPaths4Services, ErrKeyReadingFile
-	}
 	type metricPathsForServicesConfig struct {
 		MetricPathsForServicesConfig map[string]string
 	}
 	var metricPathsForServicesConf metricPathsForServicesConfig
-	if err := viper.Unmarshal(&metricPathsForServicesConf); err != nil {
-		log.WithFields(log.Fields{"err": err, "path": cf.filePath}).Errorln("Error decoding resources paths for services config file content")
-		return mtrPaths4Services, ErrKeyReadingFile
+	if err = cf.readTomlFile(&metricPathsForServicesConf); err != nil {
+		log.Errorln("error reading metric for services config")
+		return mtrPaths4Services, err
 	}
 	mtrPaths4Services = metricPathsForServicesConf.MetricPathsForServicesConfig
 	return mtrPaths4Services, err
@@ -198,8 +159,7 @@ func ReadConfigFromFileSystem(filePath string) (rootConf RootConfig, err error) 
 		log.WithError(err).Errorln("error reading main config file")
 		return rootConf, ErrKeyReadingFile
 	}
-	rootConf, err = readRootStructure(mainConf)
-	if err != nil {
+	if rootConf, err = readRootStructure(mainConf); err != nil {
 		log.WithError(err).Errorln("error reading root structure conf")
 		return rootConf, err
 	}

@@ -1,7 +1,7 @@
 package memconfig
 
 import (
-	"github.com/denisacostaq/rextporter/src/util"
+	"github.com/simelo/rextporter/src/util"
 	"github.com/simelo/rextporter/src/core"
 	log "github.com/sirupsen/logrus"
 )
