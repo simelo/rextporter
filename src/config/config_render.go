@@ -58,10 +58,9 @@ const serviceConfigFileContentTemplate = `
 # Services configuration.
 [[services]]
   name = "skycoin"
-  mode = "rest_api"
+  modes = ["rest_api"]
   scheme = "http"
   port = 8080
-  basePath = ""
   authType = "CSRF"
   tokenHeaderKey = "X-CSRF-Token"
   genTokenEndpoint = "/api/v1/csrf"
@@ -82,24 +81,53 @@ const skycoinMetricsConfigFileContentTemplate = `
     type = "Counter"
     description = "I am running since"
 
-# [[metrics]]
-#   name = "openConnections"
-#   url = "/api/v1/network/connections"
-#   httpMethod = "GET"
-#   path = "/"
+[[metrics]]
+	name = "openConnections"
+	url = "/api/v1/network/connections"
+	httpMethod = "GET"
+	path = "/connections/unconfirmed_verify_transaction/burn_factor"
 
-#   [metrics.options]
-#     type = "Histogram"
-#     description = "Connections ammount"
+	[metrics.options]
+		type = "Histogram"
+		description = "Connections amount"
 
-#   [metrics.histogramOptions]
-#     buckets = [
-#       1,
-#       2, 
-#       3
-#     ]
+	[metrics.histogramOptions]
+		buckets = [1, 2, 3]
 
 
+[[metrics]]
+	name = "burn_factor_by_service"
+	url = "/api/v1/network/connections"
+	httpMethod = "GET"
+	path = "/connections"
+
+	[metrics.options]
+		type = "Gauge"
+		itemPath = "/unconfirmed_verify_transaction/burn_factor"
+		description = "I am running since"
+		
+	[[metrics.options.labels]]
+		name = "ip_port"
+		path = "/address"
+
+[[metrics]]
+	name = "connectedAtBySocketAndByBurnFactor"
+	url = "/api/v1/network/connections"
+	httpMethod = "GET"
+	path = "/connections"
+
+	[metrics.options]
+		type = "Gauge"
+		itemPath = "/unconfirmed_verify_transaction/burn_factor"
+		description = "Connections amount"
+		
+		[[metrics.options.labels]]
+		  name = "ip:port"
+			path = "/address"
+
+		[[metrics.options.labels]]
+		  name = "ip:port"
+			path = "/address"
 
 
 # TODO(denisacostaq@gmail.com):
@@ -117,9 +145,10 @@ serviceNameToMetricsConfPath = [{{range $key, $value := .}}
 ]
 `
 
-var (
-	systemVendorName                 = "simelo"
-	systemProgramName                = "rextporter"
+const (
+	systemVendorName = "simelo"
+	// SystemProgramName is the program's name
+	SystemProgramName                = "rextporter"
 	mainConfigFileName               = "main.toml"
 	servicesConfigFileName           = "services.toml"
 	metricsForServicesConfigFileName = "metricsForServices.toml"
@@ -198,6 +227,7 @@ func (confData mainConfigData) existMetricsForServicesConfigFile() bool {
 func (confData mainConfigData) createMetricsForServicesConfFile() (err error) {
 	generalScopeErr := "error creating metrics for services config file"
 	if confData.existMetricsForServicesConfigFile() {
+		// FIXME(denisacostaq@gmail.com): check each metric file and create one of not exist
 		return nil
 	}
 	tmpl := template.New("metricsForServiceConfig")
@@ -261,7 +291,7 @@ func (confData mainConfigData) createMainConfigFile() (err error) {
 	return err
 }
 
-func serviceDefaultConfigPath(conf *configdir.Config) (path string) {
+func servicesDefaultConfigPath(conf *configdir.Config) (path string) {
 	return file.DefaultConfigPath(servicesConfigFileName, conf)
 }
 
@@ -283,7 +313,7 @@ func walletMetricsConfigPath(conf *configdir.Config) (path string) {
 
 func defaultTmplData(conf *configdir.Config) (tmplData templateData) {
 	tmplData = templateData{
-		ServicesConfigPath:     serviceDefaultConfigPath(conf),
+		ServicesConfigPath:     servicesDefaultConfigPath(conf),
 		MetricsForServicesPath: metricsForServicesDefaultConfigPath(conf),
 	}
 	return tmplData
@@ -347,7 +377,7 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 	if len(path) == 0 || !file.ExistFile(path) {
 		// TODO(denisacostaq@gmail.com): move homeConf to fn defaultTmplData
 		var homeConf *configdir.Config
-		if homeConf, err = file.HomeConfigFolder(systemVendorName, systemProgramName); err != nil {
+		if homeConf, err = file.HomeConfigFolder(systemVendorName, SystemProgramName); err != nil {
 			errCause := "error looking for config folder under home: " + err.Error()
 			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
@@ -359,6 +389,7 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 			errCause := "error reading template data from file: " + err.Error()
 			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
+		// BUG(denisacostaq@gmail.com): if file not exist, metricsForServicesTmplDataFromFile panics
 		if metricsForServiceTmplData, err = tmplData.metricsForServicesTmplDataFromFile(); err != nil {
 			errCause := "error reading template data from file: " + err.Error()
 			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
@@ -366,7 +397,7 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 	}
 	if len(tmplData.ServicesConfigPath) == 0 || len(tmplData.MetricsForServicesPath) == 0 {
 		var homeConf *configdir.Config
-		if homeConf, err = file.HomeConfigFolder(systemVendorName, systemProgramName); err != nil {
+		if homeConf, err = file.HomeConfigFolder(systemVendorName, SystemProgramName); err != nil {
 			errCause := "error looking for config folder under home: " + err.Error()
 			return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
@@ -396,6 +427,5 @@ func newMainConfigData(path string) (mainConf mainConfigData, err error) {
 		errCause := "error creating metrics for services config file: " + err.Error()
 		return mainConf, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-
 	return mainConf, err
 }

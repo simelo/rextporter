@@ -4,8 +4,6 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -20,12 +18,13 @@ const (
 // where is it http://localhost:1234 (Location + : + Port), what auth kind you need to use?
 // what is the header key you in which you need to send the token, and so on.
 type Service struct {
-	Name string `json:"name"`
-	Mode string `json:"mode"`
+	Name  string   `json:"name"`
+	Modes []string `json:"modes"`
 	// Scheme is http or https
 	Scheme               string   `json:"scheme"`
 	Port                 uint16   `json:"port"`
 	BasePath             string   `json:"basePath"`
+	MetricsToForwardPath string   `json:"metrics_to_forward"`
 	AuthType             string   `json:"authType"`
 	TokenHeaderKey       string   `json:"tokenHeaderKey"`
 	GenTokenEndpoint     string   `json:"genTokenEndpoint"`
@@ -34,9 +33,14 @@ type Service struct {
 	Metrics              []Metric `json:"metrics"`
 }
 
-// MetricName returns a promehteus style name for the giving metric name.
-func (srv Service) MetricName(metricName string) string {
-	return prometheus.BuildFQName("skycoin", srv.Name, metricName)
+// JobName returns the default label value for job
+func (srv Service) JobName() string {
+	return srv.Name
+}
+
+// InstanceName returns the default label value for instance
+func (srv Service) InstanceName() string {
+	return fmt.Sprintf("%s:%d", srv.Location.Location, srv.Port)
 }
 
 // URIToGetMetric build the URI from where you will to get metric information
@@ -46,7 +50,7 @@ func (srv Service) URIToGetMetric(metric Metric) string {
 
 // URIToGetExposedMetric build the URI from where you will to get the exposed metrics.
 func (srv Service) URIToGetExposedMetric() string {
-	return fmt.Sprintf("%s://%s:%d%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath)
+	return fmt.Sprintf("%s://%s:%d%s%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath, srv.MetricsToForwardPath)
 }
 
 // URIToGetToken build the URI from where you will to get the token
@@ -54,7 +58,7 @@ func (srv Service) URIToGetToken() string {
 	return fmt.Sprintf("%s://%s:%d%s%s", srv.Scheme, srv.Location.Location, srv.Port, srv.BasePath, srv.GenTokenEndpoint)
 }
 
-// FilterMetricsByType will return all the metrics who match whit the 't' parameter in this service.
+// FilterMetricsByType will return all the metrics who match with the 't' parameter in this service.
 func (srv Service) FilterMetricsByType(t string) (metrics []Metric) {
 	tmpMetrics := list.New()
 	for _, metric := range srv.Metrics {
@@ -71,7 +75,7 @@ func (srv Service) FilterMetricsByType(t string) (metrics []Metric) {
 	return metrics
 }
 
-// CountMetricsByType will return the number of metrics who match whit the 't' parameter in this service.
+// CountMetricsByType will return the number of metrics who match with the 't' parameter in this service.
 func (srv Service) CountMetricsByType(t string) (amount int) {
 	for _, metric := range srv.Metrics {
 		if metric.Options.Type == t {
@@ -84,6 +88,9 @@ func (srv Service) CountMetricsByType(t string) (amount int) {
 func (srv Service) validateProxy() (errs []error) {
 	if !isValidURL(srv.URIToGetExposedMetric()) {
 		errs = append(errs, errors.New("can not create a valid url to get the exposed metric"))
+	}
+	if len(srv.MetricsToForwardPath) == 0 {
+		errs = append(errs, errors.New("you need to define metricsToForwardPath if you enable proxy(forward_metrics) mode"))
 	}
 	return errs
 }
@@ -119,19 +126,21 @@ func (srv Service) validate() (errs []error) {
 	if srv.Port < 1 || srv.Port > 65535 {
 		errs = append(errs, errors.New("port must be betwen 1 and 65535"))
 	}
-	// if len(srv.BasePath) == 0 {
-	// 	// TODO(denisacosta): What make sense in this?
-	// }
-	switch srv.Mode {
-	case ServiceTypeProxy:
-		errs = append(errs, srv.validateProxy()...)
-	case ServiceTypeAPIRest:
-		errs = append(errs, srv.validateAPIRest()...)
-	default:
-		if len(srv.Mode) == 0 {
-			errs = append(errs, fmt.Errorf("mode is required in service"))
-		} else {
-			errs = append(errs, fmt.Errorf("mode should be %s or %s", ServiceTypeProxy, ServiceTypeAPIRest))
+	if len(srv.Modes) == 0 {
+		errs = append(errs, fmt.Errorf("you you have to define at least a service mode, possibles are: %s or %s", ServiceTypeAPIRest, ServiceTypeProxy))
+	}
+	for _, mode := range srv.Modes {
+		switch mode {
+		case ServiceTypeProxy:
+			errs = append(errs, srv.validateProxy()...)
+		case ServiceTypeAPIRest:
+			errs = append(errs, srv.validateAPIRest()...)
+		default:
+			if len(mode) == 0 {
+				errs = append(errs, fmt.Errorf("mode is required in service"))
+			} else {
+				errs = append(errs, fmt.Errorf("mode allow instances of %s or %s only", ServiceTypeAPIRest, ServiceTypeProxy))
+			}
 		}
 	}
 	for _, metric := range srv.Metrics {
