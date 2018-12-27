@@ -1,16 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 
-	"github.com/prometheus/common/expfmt"
-	"github.com/simelo/rextporter/src/core"
 	"github.com/simelo/rextporter/src/util/file"
-	"github.com/simelo/rextporter/test/integration/testrand"
+	"github.com/simelo/rextporter/test/util/testrand"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -153,39 +149,4 @@ func main() {
 	http.HandleFunc("/metrics2", exposedMetricHandler)
 	http.HandleFunc("/a_few_metrics", exposedAFewMetrics)
 	log.WithError(http.ListenAndServe(fmt.Sprintf(":%d", fakeNodePort), nil)).Fatalln("server fail")
-}
-
-func findMetric(metrics []byte, mtrName string) (bool, error) {
-	var parser expfmt.TextParser
-	in := bytes.NewReader(metrics)
-	metricFamilies, err := parser.TextToMetricFamilies(in)
-	if err != nil {
-		log.WithError(err).Errorln("error, reading text format failed")
-		return false, core.ErrKeyDecodingFile
-	}
-	for _, mf := range metricFamilies {
-		if mtrName == *mf.Name {
-			return true, nil
-		}
-	}
-	return false, err
-}
-
-func getGaugeValue(metrics []byte, mtrName string) (float64, error) {
-	var parser expfmt.TextParser
-	in := bytes.NewReader(metrics)
-	metricFamilies, err := parser.TextToMetricFamilies(in)
-	if err != nil {
-		log.WithError(err).Errorln("error, reading text format failed")
-		return -1, core.ErrKeyDecodingFile
-	}
-	for _, mf := range metricFamilies {
-		if mtrName == *mf.Name {
-			if (*mf.Type).String() != strings.ToUpper(core.KeyMetricTypeGauge) {
-				return -1, core.ErrKeyInvalidType
-			}
-			return *mf.Metric[0].Gauge.Value, nil
-		}
-	}
-	return -1, core.ErrKeyNotFound
 }

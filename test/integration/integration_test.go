@@ -9,9 +9,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/denisacostaq/rextporter/test/util"
 	"github.com/simelo/rextporter/src/exporter"
 	"github.com/simelo/rextporter/src/tomlconfig"
-	"github.com/simelo/rextporter/test/integration/testrand"
+	"github.com/simelo/rextporter/test/util/testrand"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -131,12 +132,12 @@ func (suite *HealthSuit) TestDefaultMetricsArePresent() {
 		"fordwader_scrape_duration_seconds"}
 	for _, mtr := range mtrs {
 		var found bool
-		found, err = findMetric(respBody, mtr)
+		found, err = util.FindMetric(respBody, mtr)
 		suite.Nil(err)
 		suite.True(found)
 	}
 	var found bool
-	found, err = findMetric(respBody, "fordwader_scrape_duration_secondss")
+	found, err = util.FindMetric(respBody, "fordwader_scrape_duration_secondss")
 	suite.Nil(err)
 	suite.False(found)
 }
@@ -156,7 +157,7 @@ func (suite *HealthSuit) TestFordwadedMetricIsPresent() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = findMetric(respBody, "go_memstats_mallocs_total1a18ac9b29c6")
+	found, err = util.FindMetric(respBody, "go_memstats_mallocs_total1a18ac9b29c6")
 	suite.Nil(err)
 	suite.True(found)
 }
@@ -176,7 +177,7 @@ func (suite *HealthSuit) TestConfiguredMetricIsPresent() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = findMetric(respBody, "seq")
+	found, err = util.FindMetric(respBody, "seq")
 	suite.Nil(err)
 	suite.True(found)
 }
@@ -196,7 +197,7 @@ func (suite *HealthSuit) TestConfiguredMetricValue() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var val float64
-	val, err = getGaugeValue(respBody, "seq")
+	val, err = util.GetGaugeValue(respBody, "seq")
 	suite.Nil(err)
 	suite.Equal(float64(58894), val)
 }
@@ -216,7 +217,7 @@ func (suite *HealthSuit) TestConfiguredMetricIsNotPresentBecauseServerEndpointIn
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = findMetric(respBody, "burnFactor")
+	found, err = util.FindMetric(respBody, "burnFactor")
 	suite.Nil(err)
 	suite.False(found)
 }
