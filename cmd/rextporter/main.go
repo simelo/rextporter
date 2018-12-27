@@ -18,6 +18,8 @@ func main() {
 	listenPort := flag.Uint("port", uint(defaultListenPort), "Listen port.")
 	defaultHandlerEndpoint := "/metrics"
 	handlerEndpoint := flag.String("handler", defaultHandlerEndpoint, "Handler endpoint.")
+	defaultListenAddr := ""
+	listenAddr := flag.String("listen-addr", defaultListenAddr, "Listen address, eg: 127.0.0.1")
 	flag.Parse()
 	conf, err := tomlconfig.ReadConfigFromFileSystem(*mainConfigFile)
 	if err != nil {
@@ -30,7 +32,7 @@ func main() {
 		log.WithError(err).Errorln("error filling config info")
 		os.Exit(1)
 	}
-	exporter.MustExportMetrics(*handlerEndpoint, uint16(*listenPort), rootConf)
+	exporter.MustExportMetrics(*listenAddr, *handlerEndpoint, uint16(*listenPort), rootConf)
 	waitForEver := make(chan bool)
 	<-waitForEver
 }

@@ -85,15 +85,12 @@ func (suite *HealthSuit) SetupSuite() {
 	suite.Nil(err)
 	err = createFullConfig(mainConfFilePath, suite.rootConf(fakeNodePort))
 	suite.require.Nil(err)
-
-	// NOTE(denisacostaq@gmail.com): Giving
-
 	conf, err := getConfig(mainConfFilePath)
 	suite.require.Nil(err)
 	suite.require.False(conf.Validate())
 	listenPort := testrand.RandomPort()
 	suite.rextporterEndpoint = fmt.Sprintf("http://localhost:%d%s", listenPort, "/metdddrics2")
-	suite.rextporterServer = exporter.MustExportMetrics("/metdddrics2", listenPort, conf)
+	suite.rextporterServer = exporter.MustExportMetrics("", "/metdddrics2", listenPort, conf)
 	suite.require.NotNil(suite.rextporterServer)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)

@@ -22,6 +22,9 @@ import (
 
 func exposedMetricsMiddleware(scrappers []scrapper.FordwaderScrapper, promHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if len(listenAddr) == 0 {
+			listenAddr = r.Host
+		}
 		getDefaultData := func() (data []byte, err error) {
 			generalScopeErr := "error reding default data"
 			recorder := httptest.NewRecorder()
@@ -95,11 +98,17 @@ func MustExportMetrics(handlerEndpoint string, listenPort uint16, conf core.Rext
 	if err != nil {
 		log.WithError(err).Panicln("Can not create forward_metrics metrics")
 	}
-	port := fmt.Sprintf(":%d", listenPort)
-	srv = &http.Server{Addr: port}
+	var listenAddrPort string
+	if len(listenAddr) == 0 {
+		listenAddrPort = fmt.Sprintf(":%d", listenPort)
+	} else {
+		listenAddrPort = fmt.Sprintf("%s:%d", listenAddr, listenPort)
+		listenAddr = listenAddrPort
+	}
+	srv = &http.Server{Addr: listenAddrPort}
 	http.Handle(
 		handlerEndpoint,
-		gziphandler.GzipHandler(exposedMetricsMiddleware(metricsForwaders, promhttp.Handler())))
+		gziphandler.GzipHandler(exposedMetricsMiddleware(listenAddr, metricsForwaders, promhttp.Handler())))
 	go func() {
 		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpoint))
 		log.WithError(srv.ListenAndServe()).Errorln("unable to start the server")
