@@ -16,3 +16,13 @@
 	[metrics.options]
 		type = "Gauge"
 		description = "Fee value from endpoint /api/v1/health, json node blockchain -> head -> fee"
+
+
+[[metrics]]
+	name = "Unspents"
+	path = "/blockchain/unspents"
+	nodeSolver = "health"
+
+	[metrics.options]
+		type = "Gauge"
+		description = "Unspents value from endpoint /api/v1/health, json node blockchain -> unspents"
