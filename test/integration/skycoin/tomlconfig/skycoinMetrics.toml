@@ -56,3 +56,13 @@
 	[metrics.options]
 		type = "Gauge"
 		description = "Unconfirmed value from endpoint /api/v1/health, json node outgoing_connections"
+
+
+[[metrics]]
+	name = "IncomingConnections"
+	path = "/incoming_connections"
+	nodeSolver = "health"
+
+	[metrics.options]
+		type = "Gauge"
+		description = "Unconfirmed value from endpoint /api/v1/health, json node incoming_connections"
