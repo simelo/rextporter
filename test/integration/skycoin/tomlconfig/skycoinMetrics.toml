@@ -66,3 +66,13 @@
 	[metrics.options]
 		type = "Gauge"
 		description = "Unconfirmed value from endpoint /api/v1/health, json node incoming_connections"
+
+
+[[metrics]]
+	name = "BurnFactor"
+	path = "/user_verify_transaction/burn_factor"
+	nodeSolver = "health"
+
+	[metrics.options]
+		type = "Gauge"
+		description = "Unconfirmed value from endpoint /api/v1/health, json node user_verify_transaction -> burn_factor"
