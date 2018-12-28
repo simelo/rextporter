@@ -1,18 +1,17 @@
 package scrapper
 
 import (
-	"bufio"
-	"bytes"
 	"errors"
 	"io/ioutil"
 	"net/http/httptest"
 	"time"
 
 	io_prometheus_client "github.com/prometheus/client_model/go"
-	"github.com/prometheus/common/expfmt"
 	"github.com/simelo/rextporter/src/client"
+	"github.com/simelo/rextporter/src/core"
 	"github.com/simelo/rextporter/src/util"
 	"github.com/simelo/rextporter/src/util/metrics"
+	mutil "github.com/simelo/rextporter/src/util/metrics"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,30 +45,6 @@ func NewMetricsForwader(pmcls client.ProxyMetricClientCreator, fDefMetrics *metr
 	}
 }
 
-func appendLables(metrics []byte, labels []*io_prometheus_client.LabelPair) ([]byte, error) {
-	var parser expfmt.TextParser
-	in := bytes.NewReader(metrics)
-	metricFamilies, err := parser.TextToMetricFamilies(in)
-	if err != nil {
-		log.WithError(err).Errorln("error, reading text format failed")
-		return metrics, err
-	}
-	var buff bytes.Buffer
-	writer := bufio.NewWriter(&buff)
-	encoder := expfmt.NewEncoder(writer, expfmt.FmtText)
-	for _, mf := range metricFamilies {
-		for idxMetric := range mf.Metric {
-			mf.Metric[idxMetric].Label = append(mf.Metric[idxMetric].Label, labels...)
-		}
-		if err := encoder.Encode(mf); err != nil {
-			log.WithFields(log.Fields{"err": err, "metric_family": mf}).Errorln("can not encode metric family")
-			return metrics, err
-		}
-	}
-	writer.Flush()
-	return buff.Bytes(), nil
-}
-
 // GetMetric return the original metrics but with a service name as prefix in his names
 func (scrapper MetricsForwader) GetMetric() (val interface{}, err error) {
 	getCustomData := func() (data []byte, err error) {
@@ -94,10 +69,10 @@ func (scrapper MetricsForwader) GetMetric() (val interface{}, err error) {
 			errCause := "can not get the data"
 			return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		// TODO(denisacostaq@gmail.com): use a global variable name for job and instance
-		job := "job"
-		instance := "instance"
-		prefixed, err := appendLables(
+		job := core.KeyLabelJob
+		instance := core.KeyLabelInstance
+		prefixed, err := mutil.AppendLables(
+			nil,
 			exposedMetricsData,
 			[]*io_prometheus_client.LabelPair{
 				&io_prometheus_client.LabelPair{
@@ -111,7 +86,8 @@ func (scrapper MetricsForwader) GetMetric() (val interface{}, err error) {
 			},
 		)
 		if err != nil {
-			return nil, err
+			log.WithError(err).Errorln("Can not append default labels for self metric inside rextporter")
+			return nil, core.ErrKeyDecodingFile
 		}
 		if count, err := recorder.Write(prefixed); err != nil || count != len(prefixed) {
 			if err != nil {

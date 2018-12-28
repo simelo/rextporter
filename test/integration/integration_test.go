@@ -159,6 +159,30 @@ func (suite *HealthSuit) TestFordwadedMetricIsPresent() {
 	suite.True(found)
 }
 
+func (suite *HealthSuit) TestFordwadedDuplicateMetricInLabeling() {
+	// NOTE(denisacostaq@gmail.com): Giving
+	// NOTE(denisacostaq@gmail.com): go_goroutines is very usefull, this allow automatically check
+	// if labeling is working ok, because making go_goroutines exist two times(one with labels, fordwader
+	// and other without labels, rextporter) make the parser(expfmt.TextParser) fail
+
+	// NOTE(denisacostaq@gmail.com): When
+	resp, err := http.Get(suite.rextporterEndpoint)
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Nil(err)
+	suite.Equal(http.StatusOK, resp.StatusCode)
+	suite.NotNil(resp.Body)
+	var respBody []byte
+	respBody, err = ioutil.ReadAll(resp.Body)
+	suite.Nil(err)
+	suite.NotNil(respBody)
+	var found bool
+	log.Errorln(string(respBody))
+	found, err = util.FindMetric(respBody, "go_goroutines")
+	suite.Nil(err)
+	suite.True(found)
+}
+
 func (suite *HealthSuit) TestConfiguredMetricIsPresent() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
