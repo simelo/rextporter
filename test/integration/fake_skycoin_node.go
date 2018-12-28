@@ -73,6 +73,9 @@ go_memstats_mallocs_total1a18ac9b29c6 9049
 promhttp_metric_handler_requests_total1a18ac9b29c6{code="200"} 0
 promhttp_metric_handler_requests_total1a18ac9b29c6{code="500"} 0
 promhttp_metric_handler_requests_total1a18ac9b29c6{code="503"} 0
+# HELP go_goroutines Number of goroutines that currently exist.
+# TYPE go_goroutines gauge
+go_goroutines 17
 `
 	if _, err := w.Write([]byte(exposedMetricsResponse)); err != nil {
 		log.WithError(err).Errorln("unable to write response")

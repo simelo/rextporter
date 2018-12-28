@@ -52,6 +52,15 @@ const (
 	OptKeyRextMetricDefVecItemPath = "ca49882d-893f-4707-b195-2ab885e0f67f"
 )
 
+const (
+	// KeyLabelJob the label to map the job name for this system, can be a cluster
+	KeyLabelJob = "job"
+	// KeyLabelInstance is the label to map the instace in which this program is runing as part of the job cluster
+	KeyLabelInstance = "instance"
+	// SystemProgramName is the name of this program
+	SystemProgramName = "rextporter"
+)
+
 // RextRoot hold a service list whit their configurations info
 type RextRoot interface {
 	GetServices() []RextServiceDef
