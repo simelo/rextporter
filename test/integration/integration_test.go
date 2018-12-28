@@ -129,12 +129,12 @@ func (suite *HealthSuit) TestDefaultMetricsArePresent() {
 		"fordwader_scrape_duration_seconds"}
 	for _, mtr := range mtrs {
 		var found bool
-		found, err = util.FindMetric(respBody, mtr)
+		found, err = util.FoundMetric(respBody, mtr)
 		suite.Nil(err)
 		suite.True(found)
 	}
 	var found bool
-	found, err = util.FindMetric(respBody, "fordwader_scrape_duration_secondss")
+	found, err = util.FoundMetric(respBody, "fordwader_scrape_duration_secondss")
 	suite.Nil(err)
 	suite.False(found)
 }
@@ -154,7 +154,7 @@ func (suite *HealthSuit) TestFordwadedMetricIsPresent() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FindMetric(respBody, "go_memstats_mallocs_total1a18ac9b29c6")
+	found, err = util.FoundMetric(respBody, "go_memstats_mallocs_total1a18ac9b29c6")
 	suite.Nil(err)
 	suite.True(found)
 }
@@ -178,7 +178,7 @@ func (suite *HealthSuit) TestFordwadedDuplicateMetricInLabeling() {
 	suite.NotNil(respBody)
 	var found bool
 	log.Errorln(string(respBody))
-	found, err = util.FindMetric(respBody, "go_goroutines")
+	found, err = util.FoundMetric(respBody, "go_goroutines")
 	suite.Nil(err)
 	suite.True(found)
 }
@@ -198,7 +198,7 @@ func (suite *HealthSuit) TestConfiguredMetricIsPresent() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FindMetric(respBody, "seq")
+	found, err = util.FoundMetric(respBody, "seq")
 	suite.Nil(err)
 	suite.True(found)
 }
@@ -238,7 +238,7 @@ func (suite *HealthSuit) TestConfiguredMetricIsNotPresentBecauseServerEndpointIn
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FindMetric(respBody, "burnFactor")
+	found, err = util.FoundMetric(respBody, "burnFactor")
 	suite.Nil(err)
 	suite.False(found)
 }

@@ -9,8 +9,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// FindMetric return true if found a metric with mtrName inside a metrics endpoint response as plain text.
-func FindMetric(metrics []byte, mtrName string) (bool, error) {
+// FoundMetric return true if found a metric with mtrName inside a metrics endpoint response as plain text.
+func FoundMetric(metrics []byte, mtrName string) (bool, error) {
 	var parser expfmt.TextParser
 	in := bytes.NewReader(metrics)
 	metricFamilies, err := parser.TextToMetricFamilies(in)
