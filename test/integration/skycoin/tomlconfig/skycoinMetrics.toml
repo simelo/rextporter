@@ -26,3 +26,13 @@
 	[metrics.options]
 		type = "Gauge"
 		description = "Unspents value from endpoint /api/v1/health, json node blockchain -> unspents"
+
+
+[[metrics]]
+	name = "Unconfirmed"
+	path = "/blockchain/unconfirmed"
+	nodeSolver = "health"
+
+	[metrics.options]
+		type = "Gauge"
+		description = "Unconfirmed value from endpoint /api/v1/health, json node blockchain -> unconfirmed"

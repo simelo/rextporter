@@ -197,3 +197,27 @@ func (suite *SkycoinSuit) TestHealthUnspents() {
 	suite.Nil(err)
 	suite.Equal(float64(218), val)
 }
+
+func (suite *SkycoinSuit) TestHealthUnconfirmed() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	resp, err := http.Get(suite.rextporterEndpoint)
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Nil(err)
+	suite.Equal(http.StatusOK, resp.StatusCode)
+	suite.NotNil(resp.Body)
+	var respBody []byte
+	respBody, err = ioutil.ReadAll(resp.Body)
+	suite.Nil(err)
+	suite.NotNil(respBody)
+	var found bool
+	found, err = util.FoundMetric(respBody, "Unconfirmed")
+	suite.Nil(err)
+	suite.True(found)
+	var val float64
+	val, err = util.GetGaugeValue(respBody, "Unconfirmed")
+	suite.Nil(err)
+	suite.Equal(float64(1), val)
+}
