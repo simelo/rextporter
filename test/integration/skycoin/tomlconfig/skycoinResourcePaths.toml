@@ -1,0 +1,12 @@
+[[ResourcePaths]]
+	Name = "health"
+	Path = "/api/v1/health"
+	PathType = "rest_api"
+	nodeSolverType = "jsonPath"
+	MetricNames = ["seq"]
+
+[[ResourcePaths]]
+	Name = "metricsFordwader"
+	Path = "/api/v2/metrics"
+	PathType = "metrics_fordwader"
+	httpMethod = "GET"

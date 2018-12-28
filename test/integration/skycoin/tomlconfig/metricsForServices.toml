@@ -1,0 +1,3 @@
+metricPathsForServicesConfig = [
+	{ skycoin = "/usr/share/gocode/src/github.com/simelo/rextporter/test/integration/skycoin/tomlconfig/skycoinMetrics.toml" },
+]

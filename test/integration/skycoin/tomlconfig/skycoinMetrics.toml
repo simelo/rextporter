@@ -1,0 +1,8 @@
+[[metrics]]
+	name = "seq"
+	path = "/blockchain/head/seq"
+	nodeSolver = "health"
+
+	[metrics.options]
+		type = "Counter"
+		description = "I am running since"
