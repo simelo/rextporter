@@ -3,7 +3,7 @@
 	Path = "/api/v1/health"
 	PathType = "rest_api"
 	nodeSolverType = "jsonPath"
-	MetricNames = ["seq", "fee", "Unspents", "Unconfirmed"]
+	MetricNames = ["seq", "fee", "Unspents", "Unconfirmed", "OpenConnections"]
 
 [[ResourcePaths]]
 	Name = "metricsFordwader"
