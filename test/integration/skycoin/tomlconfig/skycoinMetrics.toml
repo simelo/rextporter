@@ -5,4 +5,14 @@
 
 	[metrics.options]
 		type = "Counter"
-		description = "I am running since"
+		description = "Seq value from endpoint /api/v1/health, json node blockchain -> head -> seq"
+
+
+[[metrics]]
+	name = "fee"
+	path = "/blockchain/head/fee"
+	nodeSolver = "health"
+
+	[metrics.options]
+		type = "Gauge"
+		description = "Fee value from endpoint /api/v1/health, json node blockchain -> head -> fee"
