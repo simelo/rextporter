@@ -3,7 +3,7 @@
 	Path = "/api/v1/health"
 	PathType = "rest_api"
 	nodeSolverType = "jsonPath"
-	MetricNames = ["seq", "fee", "Unspents", "Unconfirmed", "OpenConnections", "OutgoingConnections", "IncomingConnections", "UserVerifyBurnFactor", "UserVerifyMaxTransactionSize", "UserVerifyMaxDecimals", "UnconfirmedVerifyBurnFactor", "UnconfirmedVerifyMaxTransactionSize"]
+	MetricNames = ["seq", "fee", "Unspents", "Unconfirmed", "OpenConnections", "OutgoingConnections", "IncomingConnections", "UserVerifyBurnFactor", "UserVerifyMaxTransactionSize", "UserVerifyMaxDecimals", "UnconfirmedVerifyBurnFactor", "UnconfirmedVerifyMaxTransactionSize", "UnconfirmedVerifyMaxDecimals"]
 
 [[ResourcePaths]]
 	Name = "metricsFordwader"
