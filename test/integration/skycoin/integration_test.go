@@ -294,7 +294,7 @@ func (suite *SkycoinSuit) TestHealthIncomingConnections() {
 	suite.Equal(float64(0), val)
 }
 
-func (suite *SkycoinSuit) TestHealthIncomingBurnFactor() {
+func (suite *SkycoinSuit) TestHealthBurnFactor() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -316,4 +316,28 @@ func (suite *SkycoinSuit) TestHealthIncomingBurnFactor() {
 	val, err = util.GetGaugeValue(respBody, "BurnFactor")
 	suite.Nil(err)
 	suite.Equal(float64(2), val)
+}
+
+func (suite *SkycoinSuit) TestHealthMaxTransactionSize() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	resp, err := http.Get(suite.rextporterEndpoint)
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Nil(err)
+	suite.Equal(http.StatusOK, resp.StatusCode)
+	suite.NotNil(resp.Body)
+	var respBody []byte
+	respBody, err = ioutil.ReadAll(resp.Body)
+	suite.Nil(err)
+	suite.NotNil(respBody)
+	var found bool
+	found, err = util.FoundMetric(respBody, "MaxTransactionSize")
+	suite.Nil(err)
+	suite.True(found)
+	var val float64
+	val, err = util.GetGaugeValue(respBody, "MaxTransactionSize")
+	suite.Nil(err)
+	suite.Equal(float64(32768), val)
 }
