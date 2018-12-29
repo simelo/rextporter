@@ -294,7 +294,7 @@ func (suite *SkycoinSuit) TestHealthIncomingConnections() {
 	suite.Equal(float64(0), val)
 }
 
-func (suite *SkycoinSuit) TestHealthBurnFactor() {
+func (suite *SkycoinSuit) TestHealthUserVerifyBurnFactor() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -309,16 +309,16 @@ func (suite *SkycoinSuit) TestHealthBurnFactor() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "BurnFactor")
+	found, err = util.FoundMetric(respBody, "UserVerifyBurnFactor")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "BurnFactor")
+	val, err = util.GetGaugeValue(respBody, "UserVerifyBurnFactor")
 	suite.Nil(err)
 	suite.Equal(float64(2), val)
 }
 
-func (suite *SkycoinSuit) TestHealthMaxTransactionSize() {
+func (suite *SkycoinSuit) TestHealthUserVerifyMaxTransactionSize() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -333,16 +333,16 @@ func (suite *SkycoinSuit) TestHealthMaxTransactionSize() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "MaxTransactionSize")
+	found, err = util.FoundMetric(respBody, "UserVerifyMaxTransactionSize")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "MaxTransactionSize")
+	val, err = util.GetGaugeValue(respBody, "UserVerifyMaxTransactionSize")
 	suite.Nil(err)
 	suite.Equal(float64(32768), val)
 }
 
-func (suite *SkycoinSuit) TestHealthMaxDecimals() {
+func (suite *SkycoinSuit) TestHealthUserVerifyMaxDecimals() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -357,11 +357,35 @@ func (suite *SkycoinSuit) TestHealthMaxDecimals() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "MaxDecimals")
+	found, err = util.FoundMetric(respBody, "UserVerifyMaxDecimals")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "MaxDecimals")
+	val, err = util.GetGaugeValue(respBody, "UserVerifyMaxDecimals")
 	suite.Nil(err)
 	suite.Equal(float64(3), val)
+}
+
+func (suite *SkycoinSuit) TestHealthUnconfirmedVerifyBurnFactor() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	resp, err := http.Get(suite.rextporterEndpoint)
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Nil(err)
+	suite.Equal(http.StatusOK, resp.StatusCode)
+	suite.NotNil(resp.Body)
+	var respBody []byte
+	respBody, err = ioutil.ReadAll(resp.Body)
+	suite.Nil(err)
+	suite.NotNil(respBody)
+	var found bool
+	found, err = util.FoundMetric(respBody, "UnconfirmedVerifyBurnFactor")
+	suite.Nil(err)
+	suite.True(found)
+	var val float64
+	val, err = util.GetGaugeValue(respBody, "UnconfirmedVerifyBurnFactor")
+	suite.Nil(err)
+	suite.Equal(float64(2), val)
 }
