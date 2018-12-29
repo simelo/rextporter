@@ -5,6 +5,15 @@
 	nodeSolverType = "jsonPath"
 	MetricNames = ["seq", "fee", "Unspents", "Unconfirmed", "OpenConnections", "OutgoingConnections", "IncomingConnections", "UserVerifyBurnFactor", "UserVerifyMaxTransactionSize", "UserVerifyMaxDecimals", "UnconfirmedVerifyBurnFactor", "UnconfirmedVerifyMaxTransactionSize", "UnconfirmedVerifyMaxDecimals"]
 
+
+[[ResourcePaths]]
+	Name = "connections"
+	Path = "/api/v1/network/connections"
+	PathType = "rest_api"
+	nodeSolverType = "jsonPath"
+	MetricNames = []
+
+
 [[ResourcePaths]]
 	Name = "metricsFordwader"
 	Path = "/api/v2/metrics"
