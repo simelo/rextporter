@@ -106,3 +106,13 @@
 	[metrics.options]
 		type = "Gauge"
 		description = "Unconfirmed value from endpoint /api/v1/health, json node unconfirmed_verify_transaction -> burn_factor"
+
+
+[[metrics]]
+	name = "UnconfirmedVerifyMaxTransactionSize"
+	path = "/unconfirmed_verify_transaction/max_transaction_size"
+	nodeSolver = "health"
+
+	[metrics.options]
+		type = "Gauge"
+		description = "Unconfirmed value from endpoint /api/v1/health, json node unconfirmed_verify_transaction -> max_transaction_size"
