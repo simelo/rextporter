@@ -1,0 +1,4 @@
+metricPathsForServicesConfig = [
+	{ skycoin = "/home/adacosta/.config/simelo/rextporter/skycoinMetrics.toml" },
+	{ wallet = "/home/adacosta/.config/simelo/rextporter/walletMetrics.toml" },
+]

@@ -5,19 +5,18 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
-	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/core"
 	"github.com/simelo/rextporter/src/util"
 )
 
 // NumericVec implements the Client interface(is able to get numeric metrics through `GetMetric` like Gauge and Counter)
 type NumericVec struct {
 	baseAPIScrapper
-	labels     []config.Label
-	labelsName []string
-	itemPath   string
+	labels   []core.RextLabelDef
+	itemPath string
 }
 
-func newNumericVec(cf client.Factory, p BodyParser, metric config.Metric, jobName, instanceName, dataSource string) Scrapper {
+func newNumericVec(cf client.Factory, p BodyParser, jobName, instanceName, dataSource string, nSolver core.RextNodeSolver, mtrConf core.RextMetricDef, itemPath string) Scrapper {
 	return NumericVec{
 		baseAPIScrapper: baseAPIScrapper{
 			baseScrapper: baseScrapper{
@@ -27,11 +26,10 @@ func newNumericVec(cf client.Factory, p BodyParser, metric config.Metric, jobNam
 			clientFactory: cf,
 			dataSource:    dataSource,
 			parser:        p,
-			jsonPath:      metric.Path,
+			jsonPath:      nSolver.GetNodePath(),
 		},
-		labels:     metric.Options.Labels,
-		labelsName: metric.LabelNames(),
-		itemPath:   metric.Options.ItemPath,
+		labels:   mtrConf.GetLabels(),
+		itemPath: itemPath,
 	}
 }
 
@@ -78,13 +76,14 @@ func (nv NumericVec) GetMetric(metricsCollector chan<- prometheus.Metric) (val i
 		metricsVal[idxMetric].Labels = make([]string, len(nv.labels))
 		for idxLabel, label := range nv.labels {
 			var iLabelVal interface{}
-			if iLabelVal, err = nv.parser.pathLookup(label.Path, metricItem); err != nil {
+			ns := label.GetNodeSolver()
+			if iLabelVal, err = nv.parser.pathLookup(ns.GetNodePath(), metricItem); err != nil {
 				errCause := fmt.Sprintln("can not locate the path for label: ", err.Error())
 				return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
 			labelVal, okLabelVal := iLabelVal.(string)
 			if !okLabelVal {
-				errCause := fmt.Sprintf("can not assert metric label %s %+v as string", label.Name, iLabelVal)
+				errCause := fmt.Sprintf("can not assert metric label %s %+v as string", label.GetName(), iLabelVal)
 				return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
 			metricsVal[idxMetric].Labels[idxLabel] = labelVal

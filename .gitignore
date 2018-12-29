@@ -24,3 +24,7 @@ screenlog.*
 *.swp
 *.orig
 
+
+**/mocks/*
+!**/mocks/.gitkeep
+

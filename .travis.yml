@@ -18,6 +18,7 @@ install:
   - if [[ ! -d $GOPATH/src/github.com/simelo/rextporter ]]; then mkdir -p $GOPATH/src/github.com/simelo; ln -s $TRAVIS_BUILD_DIR $GOPATH/src/github.com/simelo/rextporter; fi
   - cd $GOPATH/src/github.com/simelo/rextporter
   - go get -t ./...
+  - go get github.com/vektra/mockery/.../
   - make install-linters
 
 

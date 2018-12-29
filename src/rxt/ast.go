@@ -16,7 +16,6 @@ func NewASTDefEnv() *ASTDefEnv {
 		Options: config.NewOptionsMap(),
 	}
 }
-
 // NewServiceScraper ...
 func (env *ASTDefEnv) NewServiceScraper() (core.RextServiceScraper, error) {
 	return &ASTDefScraperDataset{

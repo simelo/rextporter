@@ -10,7 +10,7 @@ import (
 
 	"github.com/oliveagle/jsonpath"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/core"
 	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 )
@@ -26,19 +26,59 @@ type APIRestCreator struct {
 }
 
 // CreateAPIRestCreator create an APIRestCreator
-func CreateAPIRestCreator(metric config.Metric, service config.Service, dataSourceResponseDurationDesc *prometheus.Desc) (cf CacheableFactory, err error) {
+func CreateAPIRestCreator(resConf core.RextResourceDef, srvConf core.RextServiceDef, dataSourceResponseDurationDesc *prometheus.Desc) (cf CacheableFactory, err error) {
+	resOptions := resConf.GetOptions()
+	httpMethod, err := resOptions.GetString(core.OptKeyRextResourceDefHTTPMethod)
+	if err != nil {
+		log.WithError(err).Errorln("Can not find httpMethod")
+		return cf, err
+	}
+	resURI := strings.TrimPrefix(resConf.GetResourcePATH(srvConf.GetBasePath()), srvConf.GetBasePath())
+	auth := resConf.GetAuth(srvConf.GetAuthForBaseURL())
+	var tkHeaderKey, tkKeyFromEndpoint, tkKeyGenEndpoint string
+	if auth != nil {
+		authOpts := auth.GetOptions()
+		tkHeaderKey, err = authOpts.GetString(core.OptKeyRextAuthDefTokenHeaderKey)
+		if err != nil {
+			log.WithError(err).Errorln("Can not find tokenHeaderKey")
+			return cf, err
+		}
+		tkKeyFromEndpoint, err = authOpts.GetString(core.OptKeyRextAuthDefTokenKeyFromEndpoint)
+		if err != nil {
+			log.WithError(err).Errorln("Can not find tokenKeyFromEndpoint")
+			return cf, err
+		}
+		tkKeyGenEndpoint, err = authOpts.GetString(core.OptKeyRextAuthDefTokenGenEndpoint)
+		if err != nil {
+			log.WithError(err).Errorln("Can not find tkKeyGenEndpoint")
+			return cf, err
+		}
+	} else {
+		log.Warnln("you have an empty auth")
+	}
+	srvOpts := srvConf.GetOptions()
+	jobName, err := srvOpts.GetString(core.OptKeyRextServiceDefJobName)
+	if err != nil {
+		log.WithError(err).Errorln("Can not find jobName")
+		return cf, err
+	}
+	instanceName, err := srvOpts.GetString(core.OptKeyRextServiceDefInstanceName)
+	if err != nil {
+		log.WithError(err).Errorln("Can not find instanceName")
+		return cf, err
+	}
 	cf = APIRestCreator{
 		baseFactory: baseFactory{
-			jobName:                        service.JobName(),
-			instanceName:                   service.InstanceName(),
-			dataSource:                     metric.URL,
+			jobName:                        jobName,
+			instanceName:                   instanceName,
+			dataSource:                     resURI,
 			dataSourceResponseDurationDesc: dataSourceResponseDurationDesc,
 		},
-		httpMethod:           metric.HTTPMethod,
-		dataPath:             service.URIToGetMetric(metric),
-		tokenPath:            service.URIToGetToken(),
-		tokenHeaderKey:       service.TokenHeaderKey,
-		tokenKeyFromEndpoint: service.TokenKeyFromEndpoint,
+		httpMethod:           httpMethod,
+		dataPath:             resConf.GetResourcePATH(srvConf.GetBasePath()),
+		tokenPath:            tkKeyGenEndpoint,
+		tokenHeaderKey:       tkHeaderKey,
+		tokenKeyFromEndpoint: tkKeyFromEndpoint,
 	}
 	return cf, err
 }

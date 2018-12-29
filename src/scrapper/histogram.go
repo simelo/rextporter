@@ -5,7 +5,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
-	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
 )
 
@@ -18,7 +17,7 @@ type Histogram struct {
 	buckets histogramClientOptions
 }
 
-func newHistogram(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName, dataSource string) Scrapper {
+func newHistogram(cf client.Factory, parser BodyParser, datasource, jobName, instanceName, nodePath string, buckets histogramClientOptions) Scrapper {
 	return Histogram{
 		baseAPIScrapper: baseAPIScrapper{
 			baseScrapper: baseScrapper{
@@ -26,11 +25,11 @@ func newHistogram(cf client.Factory, parser BodyParser, metric config.Metric, jo
 				instanceName: instanceName,
 			},
 			clientFactory: cf,
-			dataSource:    dataSource,
+			dataSource:    datasource,
 			parser:        parser,
-			jsonPath:      metric.Path,
+			jsonPath:      nodePath,
 		},
-		buckets: histogramClientOptions(metric.HistogramOptions.Buckets),
+		buckets: buckets,
 	}
 }
 

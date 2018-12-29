@@ -58,12 +58,11 @@ func appendLables(metrics []byte, labels []*io_prometheus_client.LabelPair) ([]b
 	writer := bufio.NewWriter(&buff)
 	encoder := expfmt.NewEncoder(writer, expfmt.FmtText)
 	for _, mf := range metricFamilies {
-		for idxMetrics := range mf.Metric {
-			mf.Metric[idxMetrics].Label = append(mf.Metric[idxMetrics].Label, labels...)
+		for idxMetric := range mf.Metric {
+			mf.Metric[idxMetric].Label = append(mf.Metric[idxMetric].Label, labels...)
 		}
-		err := encoder.Encode(mf)
-		if err != nil {
-			log.WithFields(log.Fields{"err": err, "metric family": mf}).Errorln("can not encode metric family")
+		if err := encoder.Encode(mf); err != nil {
+			log.WithFields(log.Fields{"err": err, "metric_family": mf}).Errorln("can not encode metric family")
 			return metrics, err
 		}
 	}
@@ -95,6 +94,7 @@ func (scrapper MetricsForwader) GetMetric() (val interface{}, err error) {
 			errCause := "can not get the data"
 			return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
+		// TODO(denisacostaq@gmail.com): use a global variable name for job and instance
 		job := "job"
 		instance := "instance"
 		prefixed, err := appendLables(

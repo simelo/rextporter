@@ -56,7 +56,3 @@
 [[constraint]]
   branch = "master"
   name = "github.com/cznic/goyacc"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/cznic/goyacc"

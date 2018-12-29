@@ -2,11 +2,13 @@ package scrapper
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
-	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/core"
 	"github.com/simelo/rextporter/src/util"
+	log "github.com/sirupsen/logrus"
 )
 
 // Scrapper get metrics from raw data
@@ -63,31 +65,56 @@ type BodyParser interface {
 }
 
 // NewScrapper will put all the required info to scrap metrics from the body returned by the client.
-func NewScrapper(cf client.Factory, parser BodyParser, metric config.Metric, srvConf config.Service) (Scrapper, error) {
-	jobName := srvConf.JobName()
-	instanceName := srvConf.InstanceName()
-	dataSource := metric.URL
-	if len(metric.LabelNames()) > 0 {
-		return createVecScrapper(cf, parser, metric, jobName, instanceName, dataSource)
+func NewScrapper(cf client.Factory, parser BodyParser, resConf core.RextResourceDef, srvConf core.RextServiceDef, mtrConf core.RextMetricDef, nSolver core.RextNodeSolver) (scrapper Scrapper, err error) {
+	dataSource := strings.TrimPrefix(resConf.GetResourcePATH(srvConf.GetBasePath()), srvConf.GetBasePath())
+	srvOpts := srvConf.GetOptions()
+	jobName, err := srvOpts.GetString(core.OptKeyRextServiceDefJobName)
+	if err != nil {
+		log.WithError(err).Errorln("Can not find jobName")
+		return scrapper, err
 	}
-	return createAtomicScrapper(cf, parser, metric, jobName, instanceName, dataSource)
+	instanceName, err := srvOpts.GetString(core.OptKeyRextServiceDefInstanceName)
+	if err != nil {
+		log.WithError(err).Errorln("Can not find instanceName")
+		return scrapper, err
+	}
+	if len(mtrConf.GetLabels()) > 0 {
+		return createVecScrapper(cf, parser, jobName, instanceName, dataSource, nSolver, mtrConf)
+	}
+	return createAtomicScrapper(cf, parser, jobName, instanceName, dataSource, mtrConf, nSolver)
 }
 
-func createVecScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName, dataSource string) (Scrapper, error) {
-	if metric.Options.Type == config.KeyTypeCounter || metric.Options.Type == config.KeyTypeGauge {
-		return newNumericVec(cf, parser, metric, jobName, instanceName, dataSource), nil
+func createVecScrapper(cf client.Factory, parser BodyParser, jobName, instanceName, dataSource string, nSolver core.RextNodeSolver, mtrConf core.RextMetricDef) (scrapper Scrapper, err error) {
+	if mtrConf.GetMetricType() == core.KeyMetricTypeCounter || mtrConf.GetMetricType() == core.KeyMetricTypeGauge {
+		mtrOptions := mtrConf.GetOptions()
+		itemPath, err := mtrOptions.GetString(core.OptKeyRextMetricDefVecItemPath)
+		if err != nil {
+			log.WithError(err).Errorln("unable to get item path for metric vec")
+			return scrapper, err
+		}
+		return newNumericVec(cf, parser, jobName, instanceName, dataSource, nSolver, mtrConf, itemPath), nil
 	}
 	return NumericVec{}, errors.New("histogram vec and summary vec are not supported yet")
 }
 
-func createAtomicScrapper(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName, dataSource string) (Scrapper, error) {
-	if metric.Options.Type == config.KeyTypeSummary {
+func createAtomicScrapper(cf client.Factory, parser BodyParser, jobName, instanceName, dataSource string, mtrConf core.RextMetricDef, nSolver core.RextNodeSolver) (scrapper Scrapper, err error) {
+	if mtrConf.GetMetricType() == core.KeyMetricTypeSummary {
 		return Histogram{}, errors.New("summary scrapper is not supported yet")
 	}
-	if metric.Options.Type == config.KeyTypeHistogram {
-		return newHistogram(cf, parser, metric, jobName, instanceName, dataSource), nil
+	if mtrConf.GetMetricType() == core.KeyMetricTypeHistogram {
+		bObj, err := mtrConf.GetOptions().GetObject(core.OptKeyRextMetricDefHMetricBuckets)
+		if err != nil {
+			log.WithError(err).Errorln("no buckets definitions found")
+			return scrapper, err
+		}
+		buckets, okBuckets := bObj.([]float64)
+		if !okBuckets {
+			log.WithField("val", bObj).Errorln("value is not a float64 array(buckets)")
+			return scrapper, core.ErrKeyInvalidType
+		}
+		return newHistogram(cf, parser, jobName, instanceName, dataSource, nSolver.GetNodePath(), buckets), nil
 	}
-	return newNumeric(cf, parser, metric.Path, jobName, instanceName, dataSource), nil
+	return newNumeric(cf, parser, nSolver.GetNodePath(), jobName, instanceName, dataSource), nil
 }
 
 func getData(cf client.Factory, p BodyParser, metricsCollector chan<- prometheus.Metric) (data interface{}, err error) {

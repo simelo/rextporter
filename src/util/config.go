@@ -1,6 +1,8 @@
 package util
 
 import (
+	"net/url"
+
 	"github.com/simelo/rextporter/src/core"
 )
 
@@ -18,4 +20,12 @@ func MergeStoresInplace(dst, src core.RextKeyValueStore) (err error) {
 		}
 	}
 	return
+}
+
+// IsValidURL tests a string to determine if it is a valid URL or not.
+func IsValidURL(toTest string) bool {
+	if _, err := url.ParseRequestURI(toTest); err != nil {
+		return false
+	}
+	return true
 }
