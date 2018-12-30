@@ -86,10 +86,12 @@ func (client ProxyMetricClient) GetData() (data []byte, err error) {
 			}
 		}(time.Now().UTC())
 		if resp, err = httpClient.Do(client.req); err != nil {
+			log.WithFields(log.Fields{"err": err, "req": client.req}).Errorln("no success response")
 			errCause := fmt.Sprintln("can not do the request: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		if resp.StatusCode != http.StatusOK {
+			log.WithFields(log.Fields{"status": resp.Status, "req": client.req}).Errorln("no success response")
 			errCause := fmt.Sprintf("no success response, status %s", resp.Status)
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}

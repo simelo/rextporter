@@ -154,7 +154,24 @@ func ValidateMetric(m RextMetricDef) (hasError bool) {
 		log.Errorln("type is required in metric config")
 	}
 	switch m.GetMetricType() {
-	case KeyMetricTypeCounter, KeyMetricTypeGauge, KeyMetricTypeHistogram:
+	case KeyMetricTypeHistogram:
+		opts := m.GetOptions()
+		var err error
+		var iVal interface{}
+		if iVal, err = opts.GetObject(OptKeyRextMetricDefHMetricBuckets); err != nil || iVal == nil {
+			hasError = true
+			log.Errorln("histogram metric should have some buckets defined")
+		}
+		buckets, okBuckets := iVal.([]float64)
+		if !okBuckets {
+			hasError = true
+			log.WithFields(log.Fields{"key": OptKeyRextMetricDefHMetricBuckets, "val": iVal}).Errorln("error getting buckets values, histogram should have buckets defined")
+		}
+		if len(buckets) == 0 {
+			hasError = true
+			log.Errorln("histogram should have buckets defined")
+		}
+	case KeyMetricTypeCounter, KeyMetricTypeGauge:
 	case KeyMetricTypeSummary:
 		hasError = true
 		log.Errorf("type %s is not supported yet\n", KeyMetricTypeSummary)

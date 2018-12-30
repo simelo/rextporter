@@ -47,7 +47,7 @@ func NewMetricsForwader(pmcls client.ProxyMetricClientCreator, fDefMetrics *metr
 
 // GetMetric return the original metrics but with a service name as prefix in his names
 func (scrapper MetricsForwader) GetMetric() (val interface{}, err error) {
-	getCustomData := func() (data []byte, err error) {
+	getFordwadedMetrics := func() (data []byte, err error) {
 		successResponse := false
 		defer func(startTime time.Time) {
 			duration := time.Since(startTime).Seconds()
@@ -56,7 +56,7 @@ func (scrapper MetricsForwader) GetMetric() (val interface{}, err error) {
 				scrapper.defFordwaderMetrics.FordwaderScrapeDurationSeconds.WithLabelValues(labels...).Set(duration)
 			}
 		}(time.Now().UTC())
-		generalScopeErr := "Error getting custom data for metrics fordwader"
+		generalScopeErr := "Error getting data for metrics fordwader"
 		recorder := httptest.NewRecorder()
 		var cl client.FordwaderClient
 		if cl, err = scrapper.clientFactory.CreateClient(); err != nil {
@@ -108,10 +108,10 @@ func (scrapper MetricsForwader) GetMetric() (val interface{}, err error) {
 		successResponse = true
 		return data, nil
 	}
-	if customData, err := getCustomData(); err == nil {
-		val = customData
+	if fordwadedMetrics, err := getFordwadedMetrics(); err == nil {
+		val = fordwadedMetrics
 	} else {
-		log.WithError(err).Errorln("error getting custom data")
+		log.WithError(err).Errorln("error getting fordwaded metrics")
 	}
 	return val, nil
 }
