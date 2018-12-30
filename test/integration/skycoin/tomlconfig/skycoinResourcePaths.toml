@@ -5,6 +5,12 @@
 	nodeSolverType = "jsonPath"
 	MetricNames = ["seq", "fee", "Unspents", "Unconfirmed", "OpenConnections", "OutgoingConnections", "IncomingConnections", "UserVerifyBurnFactor", "UserVerifyMaxTransactionSize", "UserVerifyMaxDecimals", "UnconfirmedVerifyBurnFactor", "UnconfirmedVerifyMaxTransactionSize", "UnconfirmedVerifyMaxDecimals"]
 
+[[ResourcePaths]]
+	Name = "blockchain_metadata"
+	Path = "/api/v1/blockchain/metadata"
+	PathType = "rest_api"
+	nodeSolverType = "jsonPath"
+	MetricNames = ["blockchain_seq"]
 
 [[ResourcePaths]]
 	Name = "connections"

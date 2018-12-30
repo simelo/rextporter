@@ -126,3 +126,12 @@
 	[metrics.options]
 		type = "Gauge"
 		description = "Unconfirmed value from endpoint /api/v1/health, json node unconfirmed_verify_transaction -> max_decimals"
+
+[[metrics]]
+	name = "blockchain_seq"
+	path = "/head/seq"
+	nodeSolver = "blockchain_metadata"
+
+	[metrics.options]
+		type = "Counter"
+		description = "Value from endpoint /api/v1/blockchain/metadata, json node head -> seq"
