@@ -46,7 +46,11 @@ const metricsConfigFileContenTemplate = `# All metrics to be measured.{{range .M
 
 	[metrics.options]
 		type = "{{.Options.Type}}"
-		description = "{{.Options.Description}}"
+		description = "{{.Options.Description}}"{{if gt (len .Options.Labels) 0}} {{$len := (len .Options.Labels)}}
+		[[metrics.options.labels]]{{range .Options.Labels}}
+			name = "{{.Name}}"
+			path = "{{.Path}}"
+{{end}}{{end}}
 	
 	[metrics.histogramOptions]{{if gt (len .HistogramOptions.Buckets) 0}} {{$len := (len .HistogramOptions.Buckets)}}
 		buckets = [{{range $i, $v := .HistogramOptions.Buckets}}{{$v}}{{if lt (inc $i) $len}}, {{end}}{{end}}]{{end}}{{if gt (len .HistogramOptions.ExponentialBuckets) 0}} {{$len := (len .HistogramOptions.ExponentialBuckets)}}

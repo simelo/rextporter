@@ -116,3 +116,56 @@ func GetHistogramValue(metrics []byte, mtrName string) (HistogramValue, error) {
 	log.WithField("wanted_name", mtrName).Errorln("metric name not found")
 	return HistogramValue{}, core.ErrKeyNotFound
 }
+
+type LabelValue struct {
+	Name  string
+	Value string
+}
+
+type MetricVal struct {
+	Labels []LabelValue
+	Number float64
+}
+
+type NumericVec struct {
+	Values []MetricVal
+}
+
+func GetNumericVecValues(metrics []byte, mtrName string) (NumericVec, error) {
+	var parser expfmt.TextParser
+	in := bytes.NewReader(metrics)
+	metricFamilies, err := parser.TextToMetricFamilies(in)
+	if err != nil {
+		log.WithError(err).Errorln("error, reading text format failed")
+		return NumericVec{}, core.ErrKeyDecodingFile
+	}
+	for _, mf := range metricFamilies {
+		if mtrName == *mf.Name {
+			if (*mf.Type).String() != strings.ToUpper(core.KeyMetricTypeGauge) && (*mf.Type).String() != strings.ToUpper(core.KeyMetricTypeCounter) {
+				log.WithFields(log.Fields{
+					"current_type": (*mf.Type).String(),
+					"looking_for":  strings.ToUpper(core.KeyMetricTypeHistogram),
+				}).Errorln("metric is not one of the spected type")
+				return NumericVec{}, core.ErrKeyInvalidType
+			}
+			nv := NumericVec{}
+			for _, mtrVal := range mf.Metric {
+				var val float64
+				if (*mf.Type).String() == strings.ToUpper(core.KeyMetricTypeGauge) {
+					val = *((*mtrVal).Gauge.Value)
+				} else {
+					val = *((*mtrVal).Counter.Value)
+				}
+				mv := MetricVal{Number: val}
+				for _, label := range (*mtrVal).Label {
+					lv := LabelValue{Name: *label.Name, Value: *label.Value}
+					mv.Labels = append(mv.Labels, lv)
+				}
+				nv.Values = append(nv.Values, mv)
+			}
+			return nv, nil
+		}
+	}
+	log.WithField("wanted_name", mtrName).Errorln("metric name not found")
+	return NumericVec{}, core.ErrKeyNotFound
+}

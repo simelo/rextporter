@@ -41,9 +41,13 @@ func (suite SkycoinSuit) rootConf(fakeNodePort uint16) tomlconfig.RootConfig {
 		Options: tomlconfig.MetricOptions{Type: core.KeyMetricTypeGauge, Description: "This is a basic description"},
 	}
 	mtr3 := tomlconfig.Metric{
-		Name:             "burnFactor2",
-		Path:             "/connections/unconfirmed_verify_transaction/burn_factor",
-		Options:          tomlconfig.MetricOptions{Type: core.KeyMetricTypeHistogram, Description: "This is a basic description"},
+		Name: "burnFactorVec",
+		Path: "/connections/unconfirmed_verify_transaction/burn_factor",
+		Options: tomlconfig.MetricOptions{
+			Type:        core.KeyMetricTypeGauge,
+			Description: "This is a basic description",
+			Labels:      []tomlconfig.Label{tomlconfig.Label{Name: "address", Path: "/connections/address"}},
+		},
 		HistogramOptions: tomlconfig.HistogramOptions{Buckets: []float64{1, 2, 3}},
 	}
 	res1 := tomlconfig.ResourcePath{
@@ -51,7 +55,7 @@ func (suite SkycoinSuit) rootConf(fakeNodePort uint16) tomlconfig.RootConfig {
 		Path:           "/api/v1/network/connections",
 		PathType:       "rest_api",
 		NodeSolverType: "jsonPath",
-		MetricNames:    []string{mtr1.Name},
+		MetricNames:    []string{mtr1.Name, mtr3.Name},
 	}
 	res2 := tomlconfig.ResourcePath{
 		Name:     "Fordwader",
@@ -63,7 +67,7 @@ func (suite SkycoinSuit) rootConf(fakeNodePort uint16) tomlconfig.RootConfig {
 		Path:           "/api/v1/health",
 		PathType:       "rest_api",
 		NodeSolverType: "jsonPath",
-		MetricNames:    []string{mtr2.Name, mtr3.Name},
+		MetricNames:    []string{mtr2.Name},
 	}
 	srv1 := tomlconfig.Service{
 		Name:                 "MySuperServer",
@@ -184,7 +188,6 @@ func (suite *SkycoinSuit) TestFordwadedDuplicateMetricInLabeling() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	log.Errorln(string(respBody))
 	found, err = util.FoundMetric(respBody, "go_goroutines")
 	suite.Nil(err)
 	suite.True(found)
@@ -272,4 +275,50 @@ func (suite *SkycoinSuit) TestConfiguredHistogramMetric() {
 	suite.Equal(uint64(2), val.Buckets[1])
 	suite.Equal(uint64(3), val.Buckets[2])
 	suite.Equal(uint64(3), val.Buckets[3])
+}
+
+func (suite *SkycoinSuit) TestConfiguredGaugeVecMetric() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	resp, err := http.Get(suite.rextporterEndpoint)
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Nil(err)
+	suite.Equal(http.StatusOK, resp.StatusCode)
+	suite.NotNil(resp.Body)
+	var respBody []byte
+	respBody, err = ioutil.ReadAll(resp.Body)
+	suite.Nil(err)
+	suite.NotNil(respBody)
+	var val util.NumericVec
+	val, err = util.GetNumericVecValues(respBody, "burnFactorVec")
+	suite.Nil(err)
+	matchValueForLabels := func(key, val string, number float64, values util.NumericVec) bool {
+		for _, value := range values.Values {
+			for _, label := range value.Labels {
+				if label.Name == key && label.Value == val {
+					if value.Number == number {
+						return true
+					} else {
+						log.WithFields(
+							log.Fields{
+								"name":            key,
+								"value":           val,
+								"number":          value.Number,
+								"expected_number": number}).Errorln("invalid number value")
+						return false
+					}
+				}
+			}
+		}
+		log.WithFields(
+			log.Fields{
+				"name":  key,
+				"value": val}).Errorln("can not find metric with label")
+		return false
+	}
+	suite.True(matchValueForLabels("address", "139.162.161.41:20002", 2, val))
+	suite.True(matchValueForLabels("address", "176.9.84.75:6000", 0, val))
+	suite.True(matchValueForLabels("address", "185.120.34.60:6000", 0, val))
 }
