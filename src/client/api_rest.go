@@ -154,10 +154,12 @@ func (cl APIRest) GetData(metricsCollector chan<- prometheus.Metric) (data []byt
 				}
 			}(time.Now().UTC())
 			if resp, err = httpClient.Do(cl.req); err != nil {
+				log.WithFields(log.Fields{"err": err, "req": cl.req}).Errorln("no success response")
 				errCause := fmt.Sprintln("can not do the request: ", err.Error())
 				return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
 			if resp.StatusCode != http.StatusOK {
+				log.WithFields(log.Fields{"status": resp.Status, "req": cl.req}).Errorln("no success response")
 				errCause := fmt.Sprintf("no success response, status %s", resp.Status)
 				return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}

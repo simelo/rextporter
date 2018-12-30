@@ -9,35 +9,42 @@ import (
 	"testing"
 	"time"
 
-	"github.com/denisacostaq/rextporter/test/util"
+	"github.com/simelo/rextporter/src/core"
 	"github.com/simelo/rextporter/src/exporter"
 	"github.com/simelo/rextporter/src/tomlconfig"
+	"github.com/simelo/rextporter/test/util"
 	"github.com/simelo/rextporter/test/util/testrand"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
-type HealthSuit struct {
+type SkycoinSuit struct {
 	suite.Suite
 	require            *require.Assertions
 	rextporterEndpoint string
 	rextporterServer   *http.Server
 }
 
-func (suite HealthSuit) rootConf(fakeNodePort uint16) tomlconfig.RootConfig {
+func (suite SkycoinSuit) rootConf(fakeNodePort uint16) tomlconfig.RootConfig {
 	root := tomlconfig.RootConfig{}
 	mtr1 := tomlconfig.Metric{
-		Name: "burnFactor",
-		Path: "/connections/unconfirmed_verify_transaction/burn_factor",
-		// NodeSolverType: "ns0132",
-		Options: tomlconfig.MetricOptions{Type: "Gauge", Description: "This is a basic description"},
+		Name:             "burnFactor",
+		Path:             "/connections/unconfirmed_verify_transaction/burn_factor",
+		Options:          tomlconfig.MetricOptions{Type: core.KeyMetricTypeHistogram, Description: "This is a basic description"},
+		HistogramOptions: tomlconfig.HistogramOptions{Buckets: []float64{1, 2, 3}},
 	}
 	mtr2 := tomlconfig.Metric{
 		Name: "seq",
 		Path: "/blockchain/head/seq",
 		// NodeSolverType: "ns0132",
-		Options: tomlconfig.MetricOptions{Type: "Gauge", Description: "This is a basic description"},
+		Options: tomlconfig.MetricOptions{Type: core.KeyMetricTypeGauge, Description: "This is a basic description"},
+	}
+	mtr3 := tomlconfig.Metric{
+		Name:             "burnFactor2",
+		Path:             "/connections/unconfirmed_verify_transaction/burn_factor",
+		Options:          tomlconfig.MetricOptions{Type: core.KeyMetricTypeHistogram, Description: "This is a basic description"},
+		HistogramOptions: tomlconfig.HistogramOptions{Buckets: []float64{1, 2, 3}},
 	}
 	res1 := tomlconfig.ResourcePath{
 		Name:           "connections",
@@ -56,7 +63,7 @@ func (suite HealthSuit) rootConf(fakeNodePort uint16) tomlconfig.RootConfig {
 		Path:           "/api/v1/health",
 		PathType:       "rest_api",
 		NodeSolverType: "jsonPath",
-		MetricNames:    []string{mtr2.Name},
+		MetricNames:    []string{mtr2.Name, mtr3.Name},
 	}
 	srv1 := tomlconfig.Service{
 		Name:                 "MySuperServer",
@@ -68,14 +75,14 @@ func (suite HealthSuit) rootConf(fakeNodePort uint16) tomlconfig.RootConfig {
 		GenTokenEndpoint:     "/api/v1/csrf",
 		TokenKeyFromEndpoint: "csrf_token",
 		Location:             tomlconfig.Server{Location: "localhost"},
-		Metrics:              []tomlconfig.Metric{mtr1, mtr2},
+		Metrics:              []tomlconfig.Metric{mtr1, mtr2, mtr3},
 		ResourcePaths:        []tomlconfig.ResourcePath{res1, res2, res3},
 	}
 	root.Services = []tomlconfig.Service{srv1}
 	return root
 }
 
-func (suite *HealthSuit) SetupSuite() {
+func (suite *SkycoinSuit) SetupSuite() {
 	suite.require = require.New(suite.T())
 	mainConfigDir := testrand.RFolderPath()
 	err := createDirectoriesWithFullDepth([]string{mainConfigDir})
@@ -96,16 +103,16 @@ func (suite *HealthSuit) SetupSuite() {
 	time.Sleep(time.Second * 2)
 }
 
-func (suite *HealthSuit) TearDownSuite() {
+func (suite *SkycoinSuit) TearDownSuite() {
 	log.Info("Shutting down server...")
 	suite.Nil(suite.rextporterServer.Shutdown(context.Context(nil)))
 }
 
-func TestSkycoinHealthSuit(t *testing.T) {
-	suite.Run(t, new(HealthSuit))
+func TestSkycoinSuit(t *testing.T) {
+	suite.Run(t, new(SkycoinSuit))
 }
 
-func (suite *HealthSuit) TestDefaultMetricsArePresent() {
+func (suite *SkycoinSuit) TestDefaultMetricsArePresent() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -139,7 +146,7 @@ func (suite *HealthSuit) TestDefaultMetricsArePresent() {
 	suite.False(found)
 }
 
-func (suite *HealthSuit) TestFordwadedMetricIsPresent() {
+func (suite *SkycoinSuit) TestFordwadedMetricIsPresent() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -159,7 +166,7 @@ func (suite *HealthSuit) TestFordwadedMetricIsPresent() {
 	suite.True(found)
 }
 
-func (suite *HealthSuit) TestFordwadedDuplicateMetricInLabeling() {
+func (suite *SkycoinSuit) TestFordwadedDuplicateMetricInLabeling() {
 	// NOTE(denisacostaq@gmail.com): Giving
 	// NOTE(denisacostaq@gmail.com): go_goroutines is very usefull, this allow automatically check
 	// if labeling is working ok, because making go_goroutines exist two times(one with labels, fordwader
@@ -183,7 +190,7 @@ func (suite *HealthSuit) TestFordwadedDuplicateMetricInLabeling() {
 	suite.True(found)
 }
 
-func (suite *HealthSuit) TestConfiguredMetricIsPresent() {
+func (suite *SkycoinSuit) TestConfiguredMetricIsPresent() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -203,7 +210,7 @@ func (suite *HealthSuit) TestConfiguredMetricIsPresent() {
 	suite.True(found)
 }
 
-func (suite *HealthSuit) TestConfiguredMetricValue() {
+func (suite *SkycoinSuit) TestConfiguredGaugeMetricValue() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -223,7 +230,7 @@ func (suite *HealthSuit) TestConfiguredMetricValue() {
 	suite.Equal(float64(58894), val)
 }
 
-func (suite *HealthSuit) TestConfiguredMetricIsNotPresentBecauseServerEndpointInaccesible() {
+func (suite *SkycoinSuit) TestConfiguredMetricIsNotPresentBecauseIsNotUnderTheRightEndpoint() {
 	// NOTE(denisacostaq@gmail.com): Giving
 
 	// NOTE(denisacostaq@gmail.com): When
@@ -238,7 +245,31 @@ func (suite *HealthSuit) TestConfiguredMetricIsNotPresentBecauseServerEndpointIn
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "burnFactor")
+	found, err = util.FoundMetric(respBody, "burnFactor2")
 	suite.Nil(err)
 	suite.False(found)
+}
+
+func (suite *SkycoinSuit) TestConfiguredHistogramMetric() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	resp, err := http.Get(suite.rextporterEndpoint)
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Nil(err)
+	suite.Equal(http.StatusOK, resp.StatusCode)
+	suite.NotNil(resp.Body)
+	var respBody []byte
+	respBody, err = ioutil.ReadAll(resp.Body)
+	suite.Nil(err)
+	suite.NotNil(respBody)
+	var val util.HistogramValue
+	val, err = util.GetHistogramValue(respBody, "burnFactor")
+	suite.Nil(err)
+	suite.Equal(uint64(3), val.SampleCount)
+	suite.Equal(float64(2), val.SampleSum)
+	suite.Equal(uint64(2), val.Buckets[1])
+	suite.Equal(uint64(3), val.Buckets[2])
+	suite.Equal(uint64(3), val.Buckets[3])
 }

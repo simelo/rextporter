@@ -120,7 +120,9 @@ func collectCounters(metricsColl []constMetric, defMetrics *defaultMetrics, ch c
 					log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to get value %+v as float64", res.Val))
 				}
 			default:
-				log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to determine value %+v type", res.Val))
+				log.WithFields(log.Fields{
+					"val":  res.Val,
+					"type": fmt.Sprintf("%T", res.Val)}).Errorln("unable to determine value type in counter")
 			}
 			elapsed := time.Since(startScrappingInPool).Seconds()
 			defMetrics.scrapeDurations.addSeconds(elapsed, res.JobName, res.InstanceName)
@@ -201,7 +203,9 @@ func collectGauges(metricsColl []constMetric, defMetrics *defaultMetrics, ch cha
 					// FIXME(denisacostaq@gmail.com): onCollectFail(metricsColl[res.ConstMetricIdxOut], res.JobName, res.InstanceName, ch)
 				}
 			default:
-				log.WithField("val", res.Val).Errorln(fmt.Sprintf("unable to determine value %+v type", res.Val))
+				log.WithFields(log.Fields{
+					"val":  res.Val,
+					"type": fmt.Sprintf("%T", res.Val)}).Errorln("unable to determine value type in gauge")
 				// FIXME(denisacostaq@gmail.com): onCollectFail(metricsColl[res.ConstMetricIdxOut], res.JobName, res.InstanceName, ch)
 			}
 			elapsed := time.Since(startScrappingInPool).Seconds()
