@@ -86,13 +86,7 @@ func NewScrapper(cf client.Factory, parser BodyParser, resConf core.RextResource
 
 func createVecScrapper(cf client.Factory, parser BodyParser, jobName, instanceName, dataSource string, nSolver core.RextNodeSolver, mtrConf core.RextMetricDef) (scrapper Scrapper, err error) {
 	if mtrConf.GetMetricType() == core.KeyMetricTypeCounter || mtrConf.GetMetricType() == core.KeyMetricTypeGauge {
-		mtrOptions := mtrConf.GetOptions()
-		itemPath, err := mtrOptions.GetString(core.OptKeyRextMetricDefVecItemPath)
-		if err != nil {
-			log.WithError(err).Errorln("unable to get item path for metric vec")
-			return scrapper, err
-		}
-		return newNumericVec(cf, parser, jobName, instanceName, dataSource, nSolver, mtrConf, itemPath), nil
+		return newNumericVec(cf, parser, jobName, instanceName, dataSource, nSolver, mtrConf), nil
 	}
 	return NumericVec{}, errors.New("histogram vec and summary vec are not supported yet")
 }

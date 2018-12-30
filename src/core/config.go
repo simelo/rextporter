@@ -48,8 +48,6 @@ const (
 	// OptKeyRextMetricDefHMetricBuckets key to hold the configured buckets inside a RextMetricDef if you are using
 	// a histogram kind
 	OptKeyRextMetricDefHMetricBuckets = "9983807d-13fe-4b1d-9363-4b844ea2f301"
-	// OptKeyRextMetricDefVecItemPath key to hold the path where you can find the items for a metrics vec
-	OptKeyRextMetricDefVecItemPath = "ca49882d-893f-4707-b195-2ab885e0f67f"
 )
 
 const (

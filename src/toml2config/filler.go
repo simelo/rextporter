@@ -107,7 +107,7 @@ func createResourceFrom4API(mtrN2Metric map[string]tomlconfig.Metric, resPath to
 		for _, tomlLabel := range mtr.Options.Labels {
 			label := &memconfig.LabelDef{}
 			label.SetName(tomlLabel.Name)
-			lns := &memconfig.NodeSolver{}
+			lns := &memconfig.NodeSolver{MType: "jsonNode"}
 			lns.SetNodePath(tomlLabel.Path)
 			label.SetNodeSolver(lns)
 			metric.AddLabel(label)
@@ -115,12 +115,6 @@ func createResourceFrom4API(mtrN2Metric map[string]tomlconfig.Metric, resPath to
 		if mtr.Options.Type == core.KeyMetricTypeHistogram {
 			if _, err := mtrOpts.SetObject(core.OptKeyRextMetricDefHMetricBuckets, mtr.HistogramOptions.Buckets); err != nil {
 				log.WithFields(log.Fields{"key": core.OptKeyRextMetricDefHMetricBuckets, "value": mtr.HistogramOptions.Buckets}).Errorln("error saving buckets for histogram")
-				return resDef
-			}
-		}
-		if mtr.Options.Labels != nil && len(mtr.Options.Labels) > 0 {
-			if _, err := mtrOpts.SetString(core.OptKeyRextMetricDefVecItemPath, mtr.Options.ItemPath); err != nil {
-				log.WithFields(log.Fields{"key": core.OptKeyRextMetricDefVecItemPath, "value": mtr.Options.ItemPath}).Errorln("error saving item path")
 				return resDef
 			}
 		}
