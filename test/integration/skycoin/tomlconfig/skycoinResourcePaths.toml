@@ -17,7 +17,7 @@
 	Path = "/api/v1/blockchain/progress"
 	PathType = "rest_api"
 	nodeSolverType = "jsonPath"
-	MetricNames = ["blockchain_progress_current"]
+	MetricNames = ["blockchain_progress_current", "blockchain_progress_highest"]
 
 [[ResourcePaths]]
 	Name = "connections"
