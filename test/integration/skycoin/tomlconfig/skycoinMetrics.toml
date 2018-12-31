@@ -135,3 +135,12 @@
 	[metrics.options]
 		type = "Counter"
 		description = "Value from endpoint /api/v1/blockchain/metadata, json node head -> seq"
+
+[[metrics]]
+	name = "blockchain_fee"
+	path = "/head/fee"
+	nodeSolver = "blockchain_metadata"
+
+	[metrics.options]
+		type = "Gauge"
+		description = "Value from endpoint /api/v1/blockchain/metadata, json node head -> fee"

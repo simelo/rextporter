@@ -10,7 +10,7 @@
 	Path = "/api/v1/blockchain/metadata"
 	PathType = "rest_api"
 	nodeSolverType = "jsonPath"
-	MetricNames = ["blockchain_seq"]
+	MetricNames = ["blockchain_seq", "blockchain_fee"]
 
 [[ResourcePaths]]
 	Name = "connections"
