@@ -13,6 +13,13 @@
 	MetricNames = ["blockchain_seq", "blockchain_fee", "blockchain_unspents", "blockchain_unconfirmed"]
 
 [[ResourcePaths]]
+	Name = "blockchain_progress"
+	Path = "/api/v1/blockchain/progress"
+	PathType = "rest_api"
+	nodeSolverType = "jsonPath"
+	MetricNames = ["blockchain_progress_current"]
+
+[[ResourcePaths]]
 	Name = "connections"
 	Path = "/api/v1/network/connections"
 	PathType = "rest_api"

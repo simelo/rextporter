@@ -533,3 +533,27 @@ func (suite *SkycoinSuit) TestBlockchainMetadataUnconfirmed() {
 	suite.Nil(err)
 	suite.Equal(float64(1), val)
 }
+
+func (suite *SkycoinSuit) TestBlockchainProgressCurrent() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	resp, err := http.Get(suite.rextporterEndpoint)
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Nil(err)
+	suite.Equal(http.StatusOK, resp.StatusCode)
+	suite.NotNil(resp.Body)
+	var respBody []byte
+	respBody, err = ioutil.ReadAll(resp.Body)
+	suite.Nil(err)
+	suite.NotNil(respBody)
+	var found bool
+	found, err = util.FoundMetric(respBody, "blockchain_progress_current")
+	suite.Nil(err)
+	suite.True(found)
+	var val float64
+	val, err = util.GetCounterValue(respBody, "blockchain_progress_current")
+	suite.Nil(err)
+	suite.Equal(float64(180), val)
+}

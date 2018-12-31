@@ -166,4 +166,13 @@
 	[metrics.options]
 		type = "Gauge"
 		description = "Value from endpoint /api/v1/blockchain/metadata, json node unconfirmed"
-		
+
+
+[[metrics]]
+	name = "blockchain_progress_current"
+	path = "/current"
+	nodeSolver = "blockchain_progress"
+
+	[metrics.options]
+		type = "Counter"
+		description = "Value from endpoint /api/v1/blockchain/progress, json node current"
