@@ -156,4 +156,14 @@
 	[metrics.options]
 		type = "Gauge"
 		description = "Value from endpoint /api/v1/blockchain/metadata, json node unspents"
+
+
+[[metrics]]
+	name = "blockchain_unconfirmed"
+	path = "/unconfirmed"
+	nodeSolver = "blockchain_metadata"
+
+	[metrics.options]
+		type = "Gauge"
+		description = "Value from endpoint /api/v1/blockchain/metadata, json node unconfirmed"
 		
