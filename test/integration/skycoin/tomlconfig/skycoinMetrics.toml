@@ -127,6 +127,7 @@
 		type = "Gauge"
 		description = "Unconfirmed value from endpoint /api/v1/health, json node unconfirmed_verify_transaction -> max_decimals"
 
+
 [[metrics]]
 	name = "blockchain_seq"
 	path = "/head/seq"
@@ -136,6 +137,7 @@
 		type = "Counter"
 		description = "Value from endpoint /api/v1/blockchain/metadata, json node head -> seq"
 
+
 [[metrics]]
 	name = "blockchain_fee"
 	path = "/head/fee"
@@ -144,3 +146,14 @@
 	[metrics.options]
 		type = "Gauge"
 		description = "Value from endpoint /api/v1/blockchain/metadata, json node head -> fee"
+
+
+[[metrics]]
+	name = "blockchain_unspents"
+	path = "/unspents"
+	nodeSolver = "blockchain_metadata"
+
+	[metrics.options]
+		type = "Gauge"
+		description = "Value from endpoint /api/v1/blockchain/metadata, json node unspents"
+		
