@@ -184,5 +184,5 @@
 	nodeSolver = "blockchain_progress"
 
 	[metrics.options]
-		type = "Counter"
+		type = "Gauge"
 		description = "Value from endpoint /api/v1/blockchain/progress, json node highest"
