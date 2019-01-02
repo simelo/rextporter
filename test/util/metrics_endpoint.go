@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/simelo/rextporter/src/config"
 	"github.com/prometheus/common/expfmt"
+	"github.com/simelo/rextporter/src/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -78,12 +78,16 @@ func GetCounterValue(metrics []byte, mtrName string) (float64, error) {
 	return -1, config.ErrKeyNotFound
 }
 
+// HistogramValue have some field to fill a histograms instance an compare against some receive value in
+// an integration test
 type HistogramValue struct {
 	SampleCount uint64
 	SampleSum   float64
 	Buckets     map[float64]uint64
 }
 
+// GetHistogramValue return a HistogramValue instance looking into the metrics body for a
+// metric with the name mtrName
 func GetHistogramValue(metrics []byte, mtrName string) (HistogramValue, error) {
 	var parser expfmt.TextParser
 	in := bytes.NewReader(metrics)
@@ -117,20 +121,28 @@ func GetHistogramValue(metrics []byte, mtrName string) (HistogramValue, error) {
 	return HistogramValue{}, config.ErrKeyNotFound
 }
 
+// LabelValue have some field to fill a label instance an compare against some received value in
+// an integration test
 type LabelValue struct {
 	Name  string
 	Value string
 }
 
+// MetricVal have some field to fill a labeled metric instance an compare against some received value in
+// an integration test
 type MetricVal struct {
 	Labels []LabelValue
 	Number float64
 }
 
+// NumericVec have some field to fill a metric vec(with labels) instance an compare against some received value in
+// an integration test
 type NumericVec struct {
 	Values []MetricVal
 }
 
+// GetNumericVecValues return a NumericVec instance looking into the metrics body for a
+// metric with the name mtrName
 func GetNumericVecValues(metrics []byte, mtrName string) (NumericVec, error) {
 	var parser expfmt.TextParser
 	in := bytes.NewReader(metrics)

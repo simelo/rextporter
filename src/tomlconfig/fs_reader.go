@@ -3,8 +3,8 @@ package tomlconfig
 import (
 	"errors"
 
-	"github.com/simelo/rextporter/src/configlocator"
 	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/configlocator"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )

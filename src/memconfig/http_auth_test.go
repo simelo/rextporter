@@ -43,6 +43,7 @@ func (suite *authConfSuit) TestNewHTTPAuth() {
 	opts, err := suite.options.Clone()
 	suite.Nil(err)
 	_, err = suite.options.SetString("k1", "v2")
+	suite.Nil(err)
 
 	// NOTE(denisacostaq@gmail.com): Assert
 	suite.Equal(suite.authType, authConf.GetAuthType())

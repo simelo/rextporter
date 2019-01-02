@@ -172,7 +172,7 @@ func (suite *SkycoinSuit) TestFordwadedMetricIsPresent() {
 
 func (suite *SkycoinSuit) TestFordwadedDuplicateMetricInLabeling() {
 	// NOTE(denisacostaq@gmail.com): Giving
-	// NOTE(denisacostaq@gmail.com): go_goroutines is very usefull, this allow automatically check
+	// NOTE(denisacostaq@gmail.com): go_goroutines is very useful, this allow automatically check
 	// if labeling is working ok, because making go_goroutines exist two times(one with labels, fordwader
 	// and other without labels, rextporter) make the parser(expfmt.TextParser) fail
 
@@ -300,15 +300,14 @@ func (suite *SkycoinSuit) TestConfiguredGaugeVecMetric() {
 				if label.Name == key && label.Value == val {
 					if value.Number == number {
 						return true
-					} else {
-						log.WithFields(
-							log.Fields{
-								"name":            key,
-								"value":           val,
-								"number":          value.Number,
-								"expected_number": number}).Errorln("invalid number value")
-						return false
 					}
+					log.WithFields(
+						log.Fields{
+							"name":            key,
+							"value":           val,
+							"number":          value.Number,
+							"expected_number": number}).Errorln("invalid number value")
+					return false
 				}
 			}
 		}

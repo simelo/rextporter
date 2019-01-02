@@ -57,7 +57,7 @@ const (
 const (
 	// KeyLabelJob the label to map the job name for this system, can be a cluster
 	KeyLabelJob = "job"
-	// KeyLabelInstance is the label to map the instace in which this program is runing as part of the job cluster
+	// KeyLabelInstance is the label to map the instace in which this program is running as part of the job cluster
 	KeyLabelInstance = "instance"
 	// SystemProgramName is the name of this program
 	SystemProgramName = "rextporter"
