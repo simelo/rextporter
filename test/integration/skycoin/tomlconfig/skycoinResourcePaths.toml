@@ -24,7 +24,7 @@
 	Path = "/api/v1/network/connections"
 	PathType = "rest_api"
 	nodeSolverType = "jsonPath"
-	MetricNames = ["connections_highest", "connections_burn_factor_hist", "connections_max_transaction_size"]
+	MetricNames = ["connections_highest", "connections_burn_factor_hist", "connections_max_transaction_size", "connections_max_decimals"]
 
 
 [[ResourcePaths]]

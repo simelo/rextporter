@@ -203,7 +203,7 @@
 
 [[metrics]]
 	name = "connections_burn_factor_hist"
-	path = "/connections/user_agent/unconfirmed_verify_transaction/burn_factor"
+	path = "/connections/unconfirmed_verify_transaction/burn_factor"
 
 	[metrics.options]
 		type = "Histogram"
@@ -215,12 +215,25 @@
 
 [[metrics]]
 	name = "connections_max_transaction_size"
-	path = "/connections/user_agent/unconfirmed_verify_transaction/max_transaction_size"
+	path = "/connections/unconfirmed_verify_transaction/max_transaction_size"
 	nodeSolver = "connections"
 
 	[metrics.options]
 		type = "Gauge"
 		description = "Value from endpoint /api/v1/network/connections, json node connections -> max_transaction_size" 
 		[[metrics.options.labels]]
-			name = "Mirror"
-			path = "/connections/mirror"
+			name = "Address"
+			path = "/connections/address"
+
+
+[[metrics]]
+	name = "connections_max_decimals"
+	path = "/connections/unconfirmed_verify_transaction/max_decimals"
+	nodeSolver = "connections"
+
+	[metrics.options]
+		type = "Gauge"
+		description = "Value from endpoint /api/v1/network/connections, json node connections -> max_decimals" 
+		[[metrics.options.labels]]
+			name = "Address"
+			path = "/connections/address"
