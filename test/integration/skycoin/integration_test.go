@@ -664,7 +664,7 @@ func (suite *SkycoinSuit) TestConnectionsMaxTransactionSize() {
 		}
 		return false
 	}
-	suite.True(haveLabel("Mirror", val))
+	suite.True(haveLabel("Address", val))
 }
 
 func (suite *SkycoinSuit) TestConnectionsMaxDecimals() {
