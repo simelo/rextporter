@@ -16,7 +16,7 @@ import (
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 	"github.com/simelo/rextporter/src/cache"
-	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/scrapper"
 	"github.com/simelo/rextporter/src/util"
 	"github.com/simelo/rextporter/src/util/metrics"
@@ -25,9 +25,9 @@ import (
 )
 
 func autolabelSelftMetrics(metrics []byte, listenAddr string) (labeledMetrics []byte, err error) {
-	job := core.KeyLabelJob
-	jobValue := core.SystemProgramName
-	instance := core.KeyLabelInstance
+	job := config.KeyLabelJob
+	jobValue := config.SystemProgramName
+	instance := config.KeyLabelInstance
 	instanceValue := listenAddr
 	var mtrsWithOutLabels []string
 	// NOTE(denisacostaq@gmail.com): all scrapped metrics should have at least the
@@ -53,7 +53,7 @@ func autolabelSelftMetrics(metrics []byte, listenAddr string) (labeledMetrics []
 	)
 	if err != nil {
 		log.WithError(err).Errorln("Can not append default labels for self metric inside rextporter")
-		return nil, core.ErrKeyDecodingFile
+		return nil, config.ErrKeyDecodingFile
 	}
 	return labeledMetrics, err
 }
@@ -65,7 +65,7 @@ func mergeMetrics(scrappedMetrics, fordwadedMetrics []byte) (mergedMetrics []byt
 		var metricsFamilies map[string]*io_prometheus_client.MetricFamily
 		if metricsFamilies, err = parser.TextToMetricFamilies(in); err != nil {
 			log.WithError(err).Errorln("error, reading text format failed")
-			return core.ErrKeyDecodingFile
+			return config.ErrKeyDecodingFile
 		}
 		for key, mf := range metricsFamilies {
 			if mmf, ok := metricsRecorder[key]; ok {
@@ -86,11 +86,11 @@ func mergeMetrics(scrappedMetrics, fordwadedMetrics []byte) (mergedMetrics []byt
 	var mergedMetricFamilies = make(map[string]*io_prometheus_client.MetricFamily)
 	if err = recordMetrics(mergedMetricFamilies, scrappedMetrics); err != nil {
 		log.WithError(err).Errorln("can not record scrapped metrics")
-		return mergedMetrics, core.ErrKeyDecodingFile
+		return mergedMetrics, config.ErrKeyDecodingFile
 	}
 	if err = recordMetrics(mergedMetricFamilies, fordwadedMetrics); err != nil {
 		log.WithError(err).Errorln("can not record fordwaded metrics")
-		return mergedMetrics, core.ErrKeyDecodingFile
+		return mergedMetrics, config.ErrKeyDecodingFile
 	}
 	var buff bytes.Buffer
 	writer := bufio.NewWriter(&buff)
@@ -134,7 +134,7 @@ func exposedMetricsMiddleware(listenAddr string, scrappers []scrapper.FordwaderS
 			labeled, err := autolabelSelftMetrics(data, listenAddr)
 			if err != nil {
 				log.WithError(err).Errorln("Can not append default labels for self metric inside rextporter")
-				return nil, core.ErrKeyDecodingFile
+				return nil, config.ErrKeyDecodingFile
 			}
 			return labeled, nil
 		}
@@ -181,7 +181,7 @@ func exposedMetricsMiddleware(listenAddr string, scrappers []scrapper.FordwaderS
 }
 
 // MustExportMetrics will read the config from mainConfigFile if any or use a default one.
-func MustExportMetrics(listenAddr, handlerEndpoint string, listenPort uint16, conf core.RextRoot) (srv *http.Server) {
+func MustExportMetrics(listenAddr, handlerEndpoint string, listenPort uint16, conf config.RextRoot) (srv *http.Server) {
 	c := cache.NewCache()
 	var collector prometheus.Collector
 	var err error

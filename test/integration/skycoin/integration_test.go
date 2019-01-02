@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/denisacostaq/rextporter/test/util"
-	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/exporter"
 	"github.com/simelo/rextporter/src/toml2config"
 	"github.com/simelo/rextporter/src/tomlconfig"
@@ -31,7 +31,7 @@ func (suite *SkycoinSuit) SetupSuite() {
 	mainConfFilePath := "/usr/share/gocode/src/github.com/simelo/rextporter/test/integration/skycoin/tomlconfig/main.toml"
 	tomlConf, err := tomlconfig.ReadConfigFromFileSystem(mainConfFilePath)
 	suite.Nil(err)
-	var conf core.RextRoot
+	var conf config.RextRoot
 	conf, err = toml2config.Fill(tomlConf)
 	suite.Nil(err)
 	listenPort := testrand.RandomPort()

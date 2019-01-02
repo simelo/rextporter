@@ -7,7 +7,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/cache"
-	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/scrapper"
 	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
@@ -20,7 +20,7 @@ type MetricsCollector struct {
 	defMetrics *defaultMetrics
 }
 
-func newMetricsCollector(c cache.Cache, conf core.RextRoot) (collector *MetricsCollector, err error) {
+func newMetricsCollector(c cache.Cache, conf config.RextRoot) (collector *MetricsCollector, err error) {
 	const generalScopeErr = "error creating collector"
 	defMetrics := newDefaultMetrics()
 	var metrics endpointData2MetricsConsumer
@@ -293,9 +293,9 @@ func (collector *MetricsCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 	collector.defMetrics.reset()
 	for k := range collector.metrics {
-		counters := filterMetricsByKind(core.KeyMetricTypeCounter, collector.metrics[k])
-		gauges := filterMetricsByKind(core.KeyMetricTypeGauge, collector.metrics[k])
-		histograms := filterMetricsByKind(core.KeyMetricTypeHistogram, collector.metrics[k])
+		counters := filterMetricsByKind(config.KeyMetricTypeCounter, collector.metrics[k])
+		gauges := filterMetricsByKind(config.KeyMetricTypeGauge, collector.metrics[k])
+		histograms := filterMetricsByKind(config.KeyMetricTypeHistogram, collector.metrics[k])
 		collectCounters(counters, collector.defMetrics, ch)
 		collectGauges(gauges, collector.defMetrics, ch)
 		collectHistograms(histograms, collector.defMetrics, ch)

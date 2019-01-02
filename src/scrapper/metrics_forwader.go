@@ -8,7 +8,7 @@ import (
 
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/simelo/rextporter/src/client"
-	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
 	"github.com/simelo/rextporter/src/util/metrics"
 	mutil "github.com/simelo/rextporter/src/util/metrics"
@@ -69,8 +69,8 @@ func (scrapper MetricsForwader) GetMetric() (val interface{}, err error) {
 			errCause := "can not get the data"
 			return data, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
-		job := core.KeyLabelJob
-		instance := core.KeyLabelInstance
+		job := config.KeyLabelJob
+		instance := config.KeyLabelInstance
 		prefixed, err := mutil.AppendLables(
 			nil,
 			exposedMetricsData,
@@ -87,7 +87,7 @@ func (scrapper MetricsForwader) GetMetric() (val interface{}, err error) {
 		)
 		if err != nil {
 			log.WithError(err).Errorln("Can not append default labels for self metric inside rextporter")
-			return nil, core.ErrKeyDecodingFile
+			return nil, config.ErrKeyDecodingFile
 		}
 		if count, err := recorder.Write(prefixed); err != nil || count != len(prefixed) {
 			if err != nil {

@@ -5,17 +5,17 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
-	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/config"
 	log "github.com/sirupsen/logrus"
 )
 
 // NumericVec implements the Client interface(is able to get numeric metrics through `GetMetric` like Gauge and Counter)
 type NumericVec struct {
 	baseAPIScrapper
-	labels []core.RextLabelDef
+	labels []config.RextLabelDef
 }
 
-func newNumericVec(cf client.Factory, p BodyParser, jobName, instanceName, dataSource string, nSolver core.RextNodeSolver, mtrConf core.RextMetricDef) Scrapper {
+func newNumericVec(cf client.Factory, p BodyParser, jobName, instanceName, dataSource string, nSolver config.RextNodeSolver, mtrConf config.RextMetricDef) Scrapper {
 	return NumericVec{
 		baseAPIScrapper: baseAPIScrapper{
 			baseScrapper: baseScrapper{
@@ -50,19 +50,19 @@ func (nv NumericVec) GetMetric(metricsCollector chan<- prometheus.Metric) (val i
 	var iValColl interface{}
 	if iValColl, err = nv.parser.pathLookup(nv.jsonPath, iBody); err != nil {
 		log.WithFields(log.Fields{"err": err, "body": iBody, "path": nv.jsonPath}).Errorln("can not get node from body")
-		return val, core.ErrKeyDecodingFile
+		return val, config.ErrKeyDecodingFile
 	}
 	metricCollection, okMetricCollection := iValColl.([]interface{})
 	if !okMetricCollection {
 		log.WithField("val", iValColl).Errorln("can not assert value as []interface{}")
-		return val, core.ErrKeyInvalidType
+		return val, config.ErrKeyInvalidType
 	}
 	metricsVal := make(NumericVecVals, len(metricCollection))
 	for idxIMetricVal, iMetricVal := range metricCollection {
 		metricVal, okMetricVal := iMetricVal.(float64)
 		if !okMetricVal {
 			log.WithField("val", iMetricVal).Errorln("can not assert value as float64")
-			return val, core.ErrKeyInvalidType
+			return val, config.ErrKeyInvalidType
 		}
 		metricsVal[idxIMetricVal].Val = metricVal
 		metricsVal[idxIMetricVal].Labels = make([]string, len(nv.labels))
@@ -73,17 +73,17 @@ func (nv NumericVec) GetMetric(metricsCollector chan<- prometheus.Metric) (val i
 			// aditionally one for each metric, should be only one for each label
 			if iLabelValColl, err = nv.parser.pathLookup(ns.GetNodePath(), iBody); err != nil {
 				log.WithFields(log.Fields{"err": err, "body": iBody, "path": ns.GetNodePath()}).Errorln("can not get node from body")
-				return val, core.ErrKeyDecodingFile
+				return val, config.ErrKeyDecodingFile
 			}
 			iLabelVals, okLabelVal := iLabelValColl.([]interface{})
 			if !okLabelVal {
 				log.WithField("val", iLabelValColl).Errorln("can not assert value as []interface{}")
-				return val, core.ErrKeyInvalidType
+				return val, config.ErrKeyInvalidType
 			}
 			labelVal, okLabelVal := iLabelVals[idxIMetricVal].(string)
 			if !okLabelVal {
 				log.WithField("val", iLabelVals[idxIMetricVal]).Errorln("can not assert value as string")
-				return val, core.ErrKeyInvalidType
+				return val, config.ErrKeyInvalidType
 			}
 			metricsVal[idxIMetricVal].Labels[idxLabel] = labelVal
 		}

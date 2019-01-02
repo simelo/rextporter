@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/exporter"
 	"github.com/simelo/rextporter/src/tomlconfig"
 	"github.com/simelo/rextporter/test/util"
@@ -31,20 +31,20 @@ func (suite SkycoinSuit) rootConf(fakeNodePort uint16) tomlconfig.RootConfig {
 	mtr1 := tomlconfig.Metric{
 		Name:             "burnFactor",
 		Path:             "/connections/unconfirmed_verify_transaction/burn_factor",
-		Options:          tomlconfig.MetricOptions{Type: core.KeyMetricTypeHistogram, Description: "This is a basic description"},
+		Options:          tomlconfig.MetricOptions{Type: config.KeyMetricTypeHistogram, Description: "This is a basic description"},
 		HistogramOptions: tomlconfig.HistogramOptions{Buckets: []float64{1, 2, 3}},
 	}
 	mtr2 := tomlconfig.Metric{
 		Name: "seq",
 		Path: "/blockchain/head/seq",
 		// NodeSolverType: "ns0132",
-		Options: tomlconfig.MetricOptions{Type: core.KeyMetricTypeGauge, Description: "This is a basic description"},
+		Options: tomlconfig.MetricOptions{Type: config.KeyMetricTypeGauge, Description: "This is a basic description"},
 	}
 	mtr3 := tomlconfig.Metric{
 		Name: "burnFactorVec",
 		Path: "/connections/unconfirmed_verify_transaction/burn_factor",
 		Options: tomlconfig.MetricOptions{
-			Type:        core.KeyMetricTypeGauge,
+			Type:        config.KeyMetricTypeGauge,
 			Description: "This is a basic description",
 			Labels:      []tomlconfig.Label{tomlconfig.Label{Name: "address", Path: "/connections/address"}},
 		},

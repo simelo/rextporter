@@ -10,7 +10,7 @@ import (
 
 	"github.com/oliveagle/jsonpath"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 )
@@ -26,9 +26,9 @@ type APIRestCreator struct {
 }
 
 // CreateAPIRestCreator create an APIRestCreator
-func CreateAPIRestCreator(resConf core.RextResourceDef, srvConf core.RextServiceDef, dataSourceResponseDurationDesc *prometheus.Desc) (cf CacheableFactory, err error) {
+func CreateAPIRestCreator(resConf config.RextResourceDef, srvConf config.RextServiceDef, dataSourceResponseDurationDesc *prometheus.Desc) (cf CacheableFactory, err error) {
 	resOptions := resConf.GetOptions()
-	httpMethod, err := resOptions.GetString(core.OptKeyRextResourceDefHTTPMethod)
+	httpMethod, err := resOptions.GetString(config.OptKeyRextResourceDefHTTPMethod)
 	if err != nil {
 		log.WithError(err).Errorln("Can not find httpMethod")
 		return cf, err
@@ -38,17 +38,17 @@ func CreateAPIRestCreator(resConf core.RextResourceDef, srvConf core.RextService
 	var tkHeaderKey, tkKeyFromEndpoint, tkKeyGenEndpoint string
 	if auth != nil {
 		authOpts := auth.GetOptions()
-		tkHeaderKey, err = authOpts.GetString(core.OptKeyRextAuthDefTokenHeaderKey)
+		tkHeaderKey, err = authOpts.GetString(config.OptKeyRextAuthDefTokenHeaderKey)
 		if err != nil {
 			log.WithError(err).Errorln("Can not find tokenHeaderKey")
 			return cf, err
 		}
-		tkKeyFromEndpoint, err = authOpts.GetString(core.OptKeyRextAuthDefTokenKeyFromEndpoint)
+		tkKeyFromEndpoint, err = authOpts.GetString(config.OptKeyRextAuthDefTokenKeyFromEndpoint)
 		if err != nil {
 			log.WithError(err).Errorln("Can not find tokenKeyFromEndpoint")
 			return cf, err
 		}
-		tkKeyGenEndpoint, err = authOpts.GetString(core.OptKeyRextAuthDefTokenGenEndpoint)
+		tkKeyGenEndpoint, err = authOpts.GetString(config.OptKeyRextAuthDefTokenGenEndpoint)
 		if err != nil {
 			log.WithError(err).Errorln("Can not find tkKeyGenEndpoint")
 			return cf, err
@@ -57,12 +57,12 @@ func CreateAPIRestCreator(resConf core.RextResourceDef, srvConf core.RextService
 		log.Warnln("you have an empty auth")
 	}
 	srvOpts := srvConf.GetOptions()
-	jobName, err := srvOpts.GetString(core.OptKeyRextServiceDefJobName)
+	jobName, err := srvOpts.GetString(config.OptKeyRextServiceDefJobName)
 	if err != nil {
 		log.WithError(err).Errorln("Can not find jobName")
 		return cf, err
 	}
-	instanceName, err := srvOpts.GetString(core.OptKeyRextServiceDefInstanceName)
+	instanceName, err := srvOpts.GetString(config.OptKeyRextServiceDefInstanceName)
 	if err != nil {
 		log.WithError(err).Errorln("Can not find instanceName")
 		return cf, err

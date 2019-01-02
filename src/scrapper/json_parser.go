@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/oliveagle/jsonpath"
-	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 )
@@ -27,7 +27,7 @@ func (p JSONParser) decodeBody(body []byte) (val interface{}, err error) {
 func (p JSONParser) pathLookup(path string, val interface{}) (node interface{}, err error) {
 	if len(path) == 0 {
 		log.Errorln("node path is required")
-		return nil, core.ErrKeyEmptyValue
+		return nil, config.ErrKeyEmptyValue
 	}
 	generalScopeErr := "error looking for node in val"
 	jPath := "$" + strings.Replace(path, "/", ".", -1)

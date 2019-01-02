@@ -1,8 +1,8 @@
 package metrics
 
 import (
-	"github.com/simelo/rextporter/src/core"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/simelo/rextporter/src/config"
 )
 
 // DefaultFordwaderMetrics default metrics for metrics fordwader
@@ -13,7 +13,7 @@ type DefaultFordwaderMetrics struct {
 
 // NewDefaultFordwaderMetrics create a new DefaultFordwaderMetrics
 func NewDefaultFordwaderMetrics() (fordwaderMetrics *DefaultFordwaderMetrics) {
-	var instance4JobLabels = []string{core.KeyLabelJob, core.KeyLabelInstance}
+	var instance4JobLabels = []string{config.KeyLabelJob, config.KeyLabelInstance}
 	fordwaderMetrics = &DefaultFordwaderMetrics{
 		FordwaderResponseDuration: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{

@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 
-	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/exporter"
 	"github.com/simelo/rextporter/src/toml2config"
 	"github.com/simelo/rextporter/src/tomlconfig"
@@ -26,7 +26,7 @@ func main() {
 		log.WithError(err).Errorln("error reading config from file system")
 		os.Exit(1)
 	}
-	var rootConf core.RextRoot
+	var rootConf config.RextRoot
 	rootConf, err = toml2config.Fill(conf)
 	if err != nil {
 		log.WithError(err).Errorln("error filling config info")

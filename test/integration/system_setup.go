@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/alecthomas/template"
-	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/toml2config"
 	"github.com/simelo/rextporter/src/tomlconfig"
 	"github.com/simelo/rextporter/test/util/testrand"
@@ -83,14 +83,14 @@ const serviceResourcePathsFileContentTemplate = `{{range .}}[[ResourcePaths]]
 func createConfigFile(tmplContent, path string, data interface{}) (err error) {
 	if len(tmplContent) == 0 || len(path) == 0 {
 		log.Errorln("template content should not be empty")
-		return core.ErrKeyEmptyValue
+		return config.ErrKeyEmptyValue
 	}
 	tmpl := template.New("fileConfig")
 	var templateEngine *template.Template
 	funcs := template.FuncMap{"inc": func(i int) int { return i + 1 }}
 	if templateEngine, err = tmpl.New("").Funcs(funcs).Parse(tmplContent); err != nil {
 		log.WithField("template", tmplContent).Errorln("Can not parse template content")
-		return core.ErrKeyDecodingFile
+		return config.ErrKeyDecodingFile
 	}
 	var configFile *os.File
 	if configFile, err = os.Create(path); err != nil {
@@ -185,7 +185,7 @@ func createDirectoriesWithFullDepth(dirs []string) (err error) {
 	return err
 }
 
-func getConfig(mainConfFilePath string) (rootConf core.RextRoot, err error) {
+func getConfig(mainConfFilePath string) (rootConf config.RextRoot, err error) {
 	rawConf, err := tomlconfig.ReadConfigFromFileSystem(mainConfFilePath)
 	if err != nil {
 		log.WithField("path", mainConfFilePath).Errorln("error reading config from file system")

@@ -6,7 +6,7 @@ import (
 
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
-	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
 	log "github.com/sirupsen/logrus"
 )
@@ -21,7 +21,7 @@ func AppendLables(metricsNames []string, metricsBody []byte, labels []*io_promet
 	metricFamilies, err := parser.TextToMetricFamilies(in)
 	if err != nil {
 		log.WithError(err).Errorln("error, reading text format failed")
-		return metricsBody, core.ErrKeyDecodingFile
+		return metricsBody, config.ErrKeyDecodingFile
 	}
 	var buff bytes.Buffer
 	writer := bufio.NewWriter(&buff)
@@ -48,7 +48,7 @@ func FindMetricsNamesWithoutLabels(metricsBody []byte, labels []string) (mtrName
 	metricFamilies, err := parser.TextToMetricFamilies(in)
 	if err != nil {
 		log.WithError(err).Errorln("error, reading text format failed")
-		return mtrNames, core.ErrKeyDecodingFile
+		return mtrNames, config.ErrKeyDecodingFile
 	}
 	haveThisLabel := func(labels []*io_prometheus_client.LabelPair, name string) bool {
 		for _, label := range labels {
@@ -86,7 +86,7 @@ func FindMetricsNames(metricsBody []byte) (mtrNames []string, err error) {
 	metricFamilies, err := parser.TextToMetricFamilies(in)
 	if err != nil {
 		log.WithError(err).Errorln("error, reading text format failed")
-		return mtrNames, core.ErrKeyDecodingFile
+		return mtrNames, config.ErrKeyDecodingFile
 	}
 	for _, mf := range metricFamilies {
 		mtrNames = append(mtrNames, *mf.Name)

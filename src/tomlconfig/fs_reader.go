@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/simelo/rextporter/src/configlocator"
-	"github.com/simelo/rextporter/src/core"
+	"github.com/simelo/rextporter/src/config"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -28,7 +28,7 @@ type mainConfig struct {
 func (cf configFromFile) readTomlFile(data interface{}) error {
 	if len(cf.filePath) == 0 {
 		log.Errorln("file path is required to read toml config")
-		return core.ErrKeyEmptyValue
+		return config.ErrKeyEmptyValue
 	}
 	viper.SetConfigType("toml")
 	viper.SetConfigFile(cf.filePath)
