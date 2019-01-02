@@ -24,7 +24,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func autolabelSelftMetrics(metrics []byte, listenAddr string) (labeledMetrics []byte, err error) {
+func autolabelSelfMetrics(metrics []byte, listenAddr string) (labeledMetrics []byte, err error) {
 	job := config.KeyLabelJob
 	jobValue := config.SystemProgramName
 	instance := config.KeyLabelInstance
@@ -131,7 +131,11 @@ func exposedMetricsMiddleware(listenAddr string, scrappers []scrapper.FordwaderS
 				log.WithError(err).Errorln("can not read recorded default data")
 				return nil, err
 			}
-			labeled, err := autolabelSelftMetrics(data, listenAddr)
+			if recorder.Result().StatusCode != http.StatusOK {
+				log.WithFields(log.Fields{"code": recorder.Result().StatusCode, "status": recorder.Result().Status, "body": string(data)}).Errorln("invalid response from remote")
+				return nil, config.ErrKeyNotSuccessResponse
+			}
+			labeled, err := autolabelSelfMetrics(data, listenAddr)
 			if err != nil {
 				log.WithError(err).Errorln("Can not append default labels for self metric inside rextporter")
 				return nil, config.ErrKeyDecodingFile
@@ -141,7 +145,7 @@ func exposedMetricsMiddleware(listenAddr string, scrappers []scrapper.FordwaderS
 		var err error
 		var scrappedFromAPIData []byte
 		if scrappedFromAPIData, err = getScrappedMetricFromAPI(); err != nil {
-			log.WithError(err).Errorln("error getting default data")
+			log.WithError(err).Errorln("error getting data from API endpoints")
 		}
 		var allFordwadedData []byte
 		for _, fs := range scrappers {
@@ -207,7 +211,7 @@ func MustExportMetrics(listenAddr, handlerEndpoint string, listenPort uint16, co
 		handlerEndpoint,
 		gziphandler.GzipHandler(exposedMetricsMiddleware(listenAddr, metricsForwaders, promhttp.Handler())))
 	go func() {
-		log.Infoln(fmt.Sprintf("Starting server in port %d, path %s ...", listenPort, handlerEndpoint))
+		log.Infoln(fmt.Sprintf("Starting server in %s, path %s ...", listenAddrPort, handlerEndpoint))
 		log.WithError(srv.ListenAndServe()).Errorln("unable to start the server")
 	}()
 	return srv

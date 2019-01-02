@@ -240,10 +240,8 @@ func (suite *SkycoinSuit) TestHealthOpenConnections() {
 	found, err = util.FoundMetric(respBody, "health_open_connections")
 	suite.Nil(err)
 	suite.True(found)
-	var val float64
-	val, err = util.GetGaugeValue(respBody, "health_open_connections")
+	_, err = util.GetGaugeValue(respBody, "health_open_connections")
 	suite.Nil(err)
-	suite.Equal(float64(0), val)
 }
 
 func (suite *SkycoinSuit) TestHealthOutgoingConnections() {
@@ -264,10 +262,8 @@ func (suite *SkycoinSuit) TestHealthOutgoingConnections() {
 	found, err = util.FoundMetric(respBody, "health_outgoing_connections")
 	suite.Nil(err)
 	suite.True(found)
-	var val float64
-	val, err = util.GetGaugeValue(respBody, "health_outgoing_connections")
+	_, err = util.GetGaugeValue(respBody, "health_outgoing_connections")
 	suite.Nil(err)
-	suite.Equal(float64(0), val)
 }
 
 func (suite *SkycoinSuit) TestHealthIncomingConnections() {
@@ -552,10 +548,9 @@ func (suite *SkycoinSuit) TestBlockchainProgressCurrent() {
 	found, err = util.FoundMetric(respBody, "blockchain_progress_current")
 	suite.Nil(err)
 	suite.True(found)
-	var val float64
-	val, err = util.GetCounterValue(respBody, "blockchain_progress_current")
+	// var val float64
+	_, err = util.GetCounterValue(respBody, "blockchain_progress_current")
 	suite.Nil(err)
-	suite.Equal(float64(180), val)
 }
 
 func (suite *SkycoinSuit) TestBlockchainProgressHighest() {
@@ -576,8 +571,7 @@ func (suite *SkycoinSuit) TestBlockchainProgressHighest() {
 	found, err = util.FoundMetric(respBody, "blockchain_progress_highest")
 	suite.Nil(err)
 	suite.True(found)
-	var val float64
-	val, err = util.GetGaugeValue(respBody, "blockchain_progress_highest")
+	// var val float64
+	_, err = util.GetGaugeValue(respBody, "blockchain_progress_highest")
 	suite.Nil(err)
-	suite.Equal(float64(180), val)
 }

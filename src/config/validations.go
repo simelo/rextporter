@@ -177,7 +177,7 @@ func ValidateMetric(m RextMetricDef) (hasError bool) {
 		log.Errorf("type %s is not supported yet\n", KeyMetricTypeSummary)
 	default:
 		hasError = true
-		log.Errorf("type should be one of %s, %s, %s or %s", KeyMetricTypeCounter, KeyMetricTypeGauge, KeyMetricTypeSummary, KeyMetricTypeHistogram)
+		log.WithFields(log.Fields{"current": m.GetMetricType(), "expected": []string{KeyMetricTypeCounter, KeyMetricTypeGauge, KeyMetricTypeSummary, KeyMetricTypeHistogram}}).Errorln("invalid metric kind")
 	}
 	if m.GetNodeSolver() == nil {
 		hasError = true

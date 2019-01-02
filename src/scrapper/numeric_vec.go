@@ -1,8 +1,6 @@
 package scrapper
 
 import (
-	"errors"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
 	"github.com/simelo/rextporter/src/config"
@@ -45,7 +43,7 @@ func (nv NumericVec) GetMetric(metricsCollector chan<- prometheus.Metric) (val i
 	var iBody interface{}
 	if iBody, err = getData(nv.clientFactory, nv.parser, metricsCollector); err != nil {
 		log.WithError(err).Errorln("can not get data for numeric vec")
-		return val, errors.New("can not get data")
+		return val, config.ErrKeyNotSuccessResponse
 	}
 	var iValColl interface{}
 	if iValColl, err = nv.parser.pathLookup(nv.jsonPath, iBody); err != nil {

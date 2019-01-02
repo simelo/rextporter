@@ -17,6 +17,10 @@ var (
 	ErrKeyEmptyValue = errors.New("A required value is missed (empty or nil)")
 	// ErrKeyDecodingFile can not parse or decode content
 	ErrKeyDecodingFile = errors.New("Error decoding/parsing read content")
+	// ErrKeyNotSuccessResponse can not get the data
+	ErrKeyNotSuccessResponse = errors.New("Error getting data")
+	// ErrKeyNotSupported operation not supported(may be implemented in future)
+	ErrKeyNotSupported = errors.New("Unsupported operation")
 )
 
 const (

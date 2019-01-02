@@ -88,12 +88,14 @@ func createVecScrapper(cf client.Factory, parser BodyParser, jobName, instanceNa
 	if mtrConf.GetMetricType() == config.KeyMetricTypeCounter || mtrConf.GetMetricType() == config.KeyMetricTypeGauge {
 		return newNumericVec(cf, parser, jobName, instanceName, dataSource, nSolver, mtrConf), nil
 	}
-	return NumericVec{}, errors.New("histogram vec and summary vec are not supported yet")
+	log.WithError(errors.New("histogram vec and summary vec are not supported yet")).Errorln("invalid operation")
+	return NumericVec{}, config.ErrKeyNotSupported
 }
 
 func createAtomicScrapper(cf client.Factory, parser BodyParser, jobName, instanceName, dataSource string, mtrConf config.RextMetricDef, nSolver config.RextNodeSolver) (scrapper Scrapper, err error) {
 	if mtrConf.GetMetricType() == config.KeyMetricTypeSummary {
-		return Histogram{}, errors.New("summary scrapper is not supported yet")
+		log.WithError(errors.New("summary scrapper is not supported yet")).Errorln("invalid operation")
+		return Histogram{}, config.ErrKeyNotSupported
 	}
 	if mtrConf.GetMetricType() == config.KeyMetricTypeHistogram {
 		bObj, err := mtrConf.GetOptions().GetObject(config.OptKeyRextMetricDefHMetricBuckets)
