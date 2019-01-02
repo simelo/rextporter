@@ -1,5 +1,5 @@
 [[metrics]]
-	name = "seq"
+	name = "health_seq"
 	path = "/blockchain/head/seq"
 	nodeSolver = "health"
 
@@ -9,7 +9,7 @@
 
 
 [[metrics]]
-	name = "fee"
+	name = "health_fee"
 	path = "/blockchain/head/fee"
 	nodeSolver = "health"
 
@@ -19,7 +19,7 @@
 
 
 [[metrics]]
-	name = "Unspents"
+	name = "health_unspents"
 	path = "/blockchain/unspents"
 	nodeSolver = "health"
 
@@ -29,7 +29,7 @@
 
 
 [[metrics]]
-	name = "Unconfirmed"
+	name = "health_unconfirmed"
 	path = "/blockchain/unconfirmed"
 	nodeSolver = "health"
 
@@ -39,7 +39,7 @@
 
 
 [[metrics]]
-	name = "OpenConnections"
+	name = "health_open_connections"
 	path = "/open_connections"
 	nodeSolver = "health"
 
@@ -49,7 +49,7 @@
 
 
 [[metrics]]
-	name = "OutgoingConnections"
+	name = "health_outgoing_connections"
 	path = "/outgoing_connections"
 	nodeSolver = "health"
 
@@ -59,7 +59,7 @@
 
 
 [[metrics]]
-	name = "IncomingConnections"
+	name = "health_incoming_connections"
 	path = "/incoming_connections"
 	nodeSolver = "health"
 
@@ -69,7 +69,7 @@
 
 
 [[metrics]]
-	name = "UserVerifyBurnFactor"
+	name = "health_user_verify_burn_factor"
 	path = "/user_verify_transaction/burn_factor"
 	nodeSolver = "health"
 
@@ -79,7 +79,7 @@
 
 
 [[metrics]]
-	name = "UserVerifyMaxTransactionSize"
+	name = "health_user_verify_max_transaction_size"
 	path = "/user_verify_transaction/max_transaction_size"
 	nodeSolver = "health"
 
@@ -89,7 +89,7 @@
 
 
 [[metrics]]
-	name = "UserVerifyMaxDecimals"
+	name = "health_user_verify_max_decimals"
 	path = "/user_verify_transaction/max_decimals"
 	nodeSolver = "health"
 
@@ -99,7 +99,7 @@
 
 
 [[metrics]]
-	name = "UnconfirmedVerifyBurnFactor"
+	name = "health_unconfirmed_verify_burn_factor"
 	path = "/unconfirmed_verify_transaction/burn_factor"
 	nodeSolver = "health"
 
@@ -109,7 +109,7 @@
 
 
 [[metrics]]
-	name = "UnconfirmedVerifyMaxTransactionSize"
+	name = "health_unconfirmed_verify_max_transaction_size"
 	path = "/unconfirmed_verify_transaction/max_transaction_size"
 	nodeSolver = "health"
 
@@ -119,7 +119,7 @@
 
 
 [[metrics]]
-	name = "UnconfirmedVerifyMaxDecimals"
+	name = "health_unconfirmed_verify_max_decimals"
 	path = "/unconfirmed_verify_transaction/max_decimals"
 	nodeSolver = "health"
 
@@ -129,7 +129,7 @@
 
 
 [[metrics]]
-	name = "blockchain_seq"
+	name = "blockchain_metadata_seq"
 	path = "/head/seq"
 	nodeSolver = "blockchain_metadata"
 
@@ -139,7 +139,7 @@
 
 
 [[metrics]]
-	name = "blockchain_fee"
+	name = "blockchain_metadata_fee"
 	path = "/head/fee"
 	nodeSolver = "blockchain_metadata"
 
@@ -149,7 +149,7 @@
 
 
 [[metrics]]
-	name = "blockchain_unspents"
+	name = "blockchain_metadata_unspents"
 	path = "/unspents"
 	nodeSolver = "blockchain_metadata"
 
@@ -159,7 +159,7 @@
 
 
 [[metrics]]
-	name = "blockchain_unconfirmed"
+	name = "blockchain_metadata_unconfirmed"
 	path = "/unconfirmed"
 	nodeSolver = "blockchain_metadata"
 

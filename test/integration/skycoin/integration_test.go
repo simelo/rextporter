@@ -141,11 +141,11 @@ func (suite *SkycoinSuit) TestHealthSeq() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "seq")
+	found, err = util.FoundMetric(respBody, "health_seq")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetCounterValue(respBody, "seq")
+	val, err = util.GetCounterValue(respBody, "health_seq")
 	suite.Nil(err)
 	suite.Equal(float64(180), val)
 }
@@ -165,11 +165,11 @@ func (suite *SkycoinSuit) TestHealthFee() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "fee")
+	found, err = util.FoundMetric(respBody, "health_fee")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "fee")
+	val, err = util.GetGaugeValue(respBody, "health_fee")
 	suite.Nil(err)
 	suite.Equal(float64(2265261), val)
 }
@@ -189,11 +189,11 @@ func (suite *SkycoinSuit) TestHealthUnspents() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "Unspents")
+	found, err = util.FoundMetric(respBody, "health_unspents")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "Unspents")
+	val, err = util.GetGaugeValue(respBody, "health_unspents")
 	suite.Nil(err)
 	suite.Equal(float64(218), val)
 }
@@ -213,11 +213,11 @@ func (suite *SkycoinSuit) TestHealthUnconfirmed() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "Unconfirmed")
+	found, err = util.FoundMetric(respBody, "health_unconfirmed")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "Unconfirmed")
+	val, err = util.GetGaugeValue(respBody, "health_unconfirmed")
 	suite.Nil(err)
 	suite.Equal(float64(1), val)
 }
@@ -237,11 +237,11 @@ func (suite *SkycoinSuit) TestHealthOpenConnections() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "OpenConnections")
+	found, err = util.FoundMetric(respBody, "health_open_connections")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "OpenConnections")
+	val, err = util.GetGaugeValue(respBody, "health_open_connections")
 	suite.Nil(err)
 	suite.Equal(float64(0), val)
 }
@@ -261,11 +261,11 @@ func (suite *SkycoinSuit) TestHealthOutgoingConnections() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "OutgoingConnections")
+	found, err = util.FoundMetric(respBody, "health_outgoing_connections")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "OutgoingConnections")
+	val, err = util.GetGaugeValue(respBody, "health_outgoing_connections")
 	suite.Nil(err)
 	suite.Equal(float64(0), val)
 }
@@ -285,11 +285,11 @@ func (suite *SkycoinSuit) TestHealthIncomingConnections() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "IncomingConnections")
+	found, err = util.FoundMetric(respBody, "health_incoming_connections")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "IncomingConnections")
+	val, err = util.GetGaugeValue(respBody, "health_incoming_connections")
 	suite.Nil(err)
 	suite.Equal(float64(0), val)
 }
@@ -309,11 +309,11 @@ func (suite *SkycoinSuit) TestHealthUserVerifyBurnFactor() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "UserVerifyBurnFactor")
+	found, err = util.FoundMetric(respBody, "health_user_verify_burn_factor")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "UserVerifyBurnFactor")
+	val, err = util.GetGaugeValue(respBody, "health_user_verify_burn_factor")
 	suite.Nil(err)
 	suite.Equal(float64(2), val)
 }
@@ -333,11 +333,11 @@ func (suite *SkycoinSuit) TestHealthUserVerifyMaxTransactionSize() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "UserVerifyMaxTransactionSize")
+	found, err = util.FoundMetric(respBody, "health_user_verify_max_transaction_size")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "UserVerifyMaxTransactionSize")
+	val, err = util.GetGaugeValue(respBody, "health_user_verify_max_transaction_size")
 	suite.Nil(err)
 	suite.Equal(float64(32768), val)
 }
@@ -357,11 +357,11 @@ func (suite *SkycoinSuit) TestHealthUserVerifyMaxDecimals() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "UserVerifyMaxDecimals")
+	found, err = util.FoundMetric(respBody, "health_user_verify_max_decimals")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "UserVerifyMaxDecimals")
+	val, err = util.GetGaugeValue(respBody, "health_user_verify_max_decimals")
 	suite.Nil(err)
 	suite.Equal(float64(3), val)
 }
@@ -381,11 +381,11 @@ func (suite *SkycoinSuit) TestHealthUnconfirmedVerifyBurnFactor() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "UnconfirmedVerifyBurnFactor")
+	found, err = util.FoundMetric(respBody, "health_unconfirmed_verify_burn_factor")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "UnconfirmedVerifyBurnFactor")
+	val, err = util.GetGaugeValue(respBody, "health_unconfirmed_verify_burn_factor")
 	suite.Nil(err)
 	suite.Equal(float64(2), val)
 }
@@ -405,11 +405,11 @@ func (suite *SkycoinSuit) TestHealthUnconfirmedVerifyMaxTransactionSize() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "UnconfirmedVerifyMaxTransactionSize")
+	found, err = util.FoundMetric(respBody, "health_unconfirmed_verify_max_transaction_size")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "UnconfirmedVerifyMaxTransactionSize")
+	val, err = util.GetGaugeValue(respBody, "health_unconfirmed_verify_max_transaction_size")
 	suite.Nil(err)
 	suite.Equal(float64(32768), val)
 }
@@ -429,11 +429,11 @@ func (suite *SkycoinSuit) TestHealthUnconfirmedVerifyMaxDecimals() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "UnconfirmedVerifyMaxDecimals")
+	found, err = util.FoundMetric(respBody, "health_unconfirmed_verify_max_decimals")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "UnconfirmedVerifyMaxDecimals")
+	val, err = util.GetGaugeValue(respBody, "health_unconfirmed_verify_max_decimals")
 	suite.Nil(err)
 	suite.Equal(float64(3), val)
 }
@@ -453,11 +453,11 @@ func (suite *SkycoinSuit) TestBlockchainMetadataSeq() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "blockchain_seq")
+	found, err = util.FoundMetric(respBody, "blockchain_metadata_seq")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetCounterValue(respBody, "blockchain_seq")
+	val, err = util.GetCounterValue(respBody, "blockchain_metadata_seq")
 	suite.Nil(err)
 	suite.Equal(float64(180), val)
 }
@@ -477,11 +477,11 @@ func (suite *SkycoinSuit) TestBlockchainMetadataFee() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "blockchain_fee")
+	found, err = util.FoundMetric(respBody, "blockchain_metadata_fee")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "blockchain_fee")
+	val, err = util.GetGaugeValue(respBody, "blockchain_metadata_fee")
 	suite.Nil(err)
 	suite.Equal(float64(2265261), val)
 }
@@ -501,11 +501,11 @@ func (suite *SkycoinSuit) TestBlockchainMetadataUnspents() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "blockchain_unspents")
+	found, err = util.FoundMetric(respBody, "blockchain_metadata_unspents")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "blockchain_unspents")
+	val, err = util.GetGaugeValue(respBody, "blockchain_metadata_unspents")
 	suite.Nil(err)
 	suite.Equal(float64(218), val)
 }
@@ -525,11 +525,11 @@ func (suite *SkycoinSuit) TestBlockchainMetadataUnconfirmed() {
 	suite.Nil(err)
 	suite.NotNil(respBody)
 	var found bool
-	found, err = util.FoundMetric(respBody, "blockchain_unconfirmed")
+	found, err = util.FoundMetric(respBody, "blockchain_metadata_unconfirmed")
 	suite.Nil(err)
 	suite.True(found)
 	var val float64
-	val, err = util.GetGaugeValue(respBody, "blockchain_unconfirmed")
+	val, err = util.GetGaugeValue(respBody, "blockchain_metadata_unconfirmed")
 	suite.Nil(err)
 	suite.Equal(float64(1), val)
 }
