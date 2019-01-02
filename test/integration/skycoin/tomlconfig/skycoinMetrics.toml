@@ -186,3 +186,16 @@
 	[metrics.options]
 		type = "Gauge"
 		description = "Value from endpoint /api/v1/blockchain/progress, json node highest"
+
+
+[[metrics]]
+	name = "connections_highest"
+	path = "/connections/height"
+	nodeSolver = "connections"
+
+	[metrics.options]
+		type = "Gauge"
+		description = "Value from endpoint /api/v1/network/connections, json node connections -> highest" 
+		[[metrics.options.labels]]
+			name = "Address"
+			path = "/connections/address"
