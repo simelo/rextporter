@@ -632,3 +632,37 @@ func (suite *SkycoinSuit) TestConnectionsBurnFactor() {
 	_, err = util.GetHistogramValue(respBody, "connections_burn_factor_hist")
 	suite.Nil(err)
 }
+
+func (suite *SkycoinSuit) TestConnectionsMaxTransactionSize() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	resp, err := http.Get(suite.rextporterEndpoint)
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Nil(err)
+	suite.Equal(http.StatusOK, resp.StatusCode)
+	suite.NotNil(resp.Body)
+	var respBody []byte
+	respBody, err = ioutil.ReadAll(resp.Body)
+	suite.Nil(err)
+	suite.NotNil(respBody)
+	var found bool
+	found, err = util.FoundMetric(respBody, "connections_max_transaction_size")
+	suite.Nil(err)
+	suite.True(found)
+	var val util.NumericVec
+	val, err = util.GetNumericVecValues(respBody, "connections_max_transaction_size")
+	suite.Nil(err)
+	haveLabel := func(key string, values util.NumericVec) bool {
+		for _, value := range values.Values {
+			for _, label := range value.Labels {
+				if label.Name == key {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	suite.True(haveLabel("Mirror", val))
+}

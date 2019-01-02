@@ -211,3 +211,16 @@
 	
 	[metrics.histogramOptions]
 		buckets = [1, 2, 3]
+
+
+[[metrics]]
+	name = "connections_max_transaction_size"
+	path = "/connections/user_agent/unconfirmed_verify_transaction/max_transaction_size"
+	nodeSolver = "connections"
+
+	[metrics.options]
+		type = "Gauge"
+		description = "Value from endpoint /api/v1/network/connections, json node connections -> max_transaction_size" 
+		[[metrics.options.labels]]
+			name = "Mirror"
+			path = "/connections/mirror"
