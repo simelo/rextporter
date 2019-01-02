@@ -609,3 +609,26 @@ func (suite *SkycoinSuit) TestConnectionsHighest() {
 	}
 	suite.True(haveLabel("Address", val))
 }
+
+func (suite *SkycoinSuit) TestConnectionsBurnFactor() {
+	// NOTE(denisacostaq@gmail.com): Giving
+
+	// NOTE(denisacostaq@gmail.com): When
+	resp, err := http.Get(suite.rextporterEndpoint)
+
+	// NOTE(denisacostaq@gmail.com): Assert
+	suite.Nil(err)
+	suite.Equal(http.StatusOK, resp.StatusCode)
+	suite.NotNil(resp.Body)
+	var respBody []byte
+	respBody, err = ioutil.ReadAll(resp.Body)
+	suite.Nil(err)
+	suite.NotNil(respBody)
+	var found bool
+	found, err = util.FoundMetric(respBody, "connections_burn_factor_hist")
+	suite.Nil(err)
+	suite.True(found)
+	// var val float64
+	_, err = util.GetHistogramValue(respBody, "connections_burn_factor_hist")
+	suite.Nil(err)
+}

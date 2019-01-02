@@ -199,3 +199,15 @@
 		[[metrics.options.labels]]
 			name = "Address"
 			path = "/connections/address"
+
+
+[[metrics]]
+	name = "connections_burn_factor_hist"
+	path = "/connections/user_agent/unconfirmed_verify_transaction/burn_factor"
+
+	[metrics.options]
+		type = "Histogram"
+		description = "Burn factor histogram across connections"
+	
+	[metrics.histogramOptions]
+		buckets = [1, 2, 3]
