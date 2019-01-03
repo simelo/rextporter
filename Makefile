@@ -6,7 +6,9 @@ build-grammar: ## Generate source code for REXT grammar
 
 mocks: ## Create all mock files for unit tests
 	echo "Generating mock files"
-	cd src/core/ ; mockery -all ; cd ../../
+	rm -rf ./src/config/mocks/*.go
+	mockery -all -dir ./src/config -output ./src/config/mocks
+	grep -rl "github.com/denisacostaq/rextporter/src/config" src/config/mocks | xargs sed -i 's:"github.com/denisacostaq/rextporter/src/config":"github.com/simelo/rextporter/src/config":g'
 
 test-grammar: build-grammar ## Test cases for REXT lexer and parser
 	go run cmd/rxtc/lexer.go < src/rxt/testdata/skyexample.rxt 2> src/rxt/testdata/skyexample.golden.orig
