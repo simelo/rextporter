@@ -3,11 +3,11 @@ package util
 import (
 	"net/url"
 
-	"github.com/simelo/rextporter/src/config"
+	"github.com/simelo/rextporter/src/core"
 )
 
 // MergeStoresInplace to update key / values in destination with those in source
-func MergeStoresInplace(dst, src config.RextKeyValueStore) (err error) {
+func MergeStoresInplace(dst, src core.RextKeyValueStore) (err error) {
 	var value interface{}
 	err = nil
 	for _, k := range src.GetKeys() {
