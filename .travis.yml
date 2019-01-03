@@ -12,6 +12,7 @@ before_install:
   - mkdir /tmp/skydata
   - wget https://github.com/skycoin/skycoin/blob/develop/src/api/integration/testdata/blockchain-180.db -O /tmp/skydata/blockchain-180.db
   - docker run --detach --rm --name skycoin-blockchain-180 -v /tmp/skydata:/tmp/skydata -v /tmp/skycoin-data:/data/.skycoin -v /tmp/skycoin-wallet:/wallet -p 6000:6000 -p 6420:6420 skycoin/skycoin:develop -db-path /tmp/skydata/blockchain-180.db -db-read-only=true -disable-networking=false -download-peerlist=false -launch-browser=false -enable-all-api-sets=true
+  - sleep 5
 
 matrix:
   include:
