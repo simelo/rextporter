@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/denisacostaq/rextporter/test/util"
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/exporter"
 	"github.com/simelo/rextporter/src/toml2config"
 	"github.com/simelo/rextporter/src/tomlconfig"
+	"github.com/simelo/rextporter/test/util"
 	"github.com/simelo/rextporter/test/util/testrand"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
