@@ -8,7 +8,7 @@ mocks: ## Create all mock files for unit tests
 	echo "Generating mock files"
 	rm -rf ./src/config/mocks/*.go
 	mockery -all -dir ./src/config -output ./src/config/mocks
-	grep -rl "github.com/denisacostaq/rextporter/src/config" src/config/mocks | xargs sed -i 's:"github.com/denisacostaq/rextporter/src/config":"github.com/simelo/rextporter/src/config":g'
+	grep -rl "github.com/denisacostaq/rextporter/src/config" src/config/mocks | xargs sed -i 's:"github.com/denisacostaq/rextporter/src/config":"github.com/simelo/rextporter/src/config":g' || true
 
 test-grammar: build-grammar ## Test cases for REXT lexer and parser
 	go run cmd/rxtc/lexer.go < src/rxt/testdata/skyexample.rxt 2> src/rxt/testdata/skyexample.golden.orig
@@ -52,6 +52,7 @@ test-amd64: mocks ## Run tests with GOARCH=amd64
 	cat screenlog.0
 
 lint: ## Run linters. Use make install-linters first.
+	ls src/
 	vendorcheck ./...
 	golangci-lint run -c .golangci.yml ./...
 	# The govet version in golangci-lint is out of date and has spurious warnings, run it separately
