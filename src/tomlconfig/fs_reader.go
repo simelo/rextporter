@@ -148,7 +148,6 @@ func readRootStructure(mainConf mainConfig) (rootConf RootConfig, err error) {
 
 // ReadConfigFromFileSystem will read the config from the file system.
 func ReadConfigFromFileSystem(filePath string) (rootConf RootConfig, err error) {
-	const generalScopeErr = "error getting config values from file system"
 	mainConfigPath := configlocator.MainFile()
 	if len(filePath) != 0 {
 		mainConfigPath = filePath

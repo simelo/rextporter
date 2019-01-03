@@ -133,12 +133,12 @@ func createFullConfig(mainConfFilePath string, conf tomlconfig.RootConfig) (err 
 		MetricsForServicesConfPath:       mtrs4ServiceConfPath,
 		ResourcePathsForServicesConfPath: res4ServiceConfPath,
 	}
-	if err = createConfigFile(mainConfigFileContenTemplate, mainConfFilePath, confData); err != nil {
-		log.Errorln("error writing main config")
+	if e := createConfigFile(mainConfigFileContenTemplate, mainConfFilePath, confData); e != nil {
+		log.WithError(e).Errorln("error writing main config")
 		err = ErrKeyWritingFsStructure
 	}
-	if err = createConfigFile(servicesConfigFileContenTemplate, srvsConfPath, conf); err != nil {
-		log.Errorln("error writing service config")
+	if e := createConfigFile(servicesConfigFileContenTemplate, srvsConfPath, conf); e != nil {
+		log.WithError(e).Errorln("error writing service config")
 		err = ErrKeyWritingFsStructure
 	}
 	mtrs4Srvs := make(map[string]string)
@@ -147,29 +147,29 @@ func createFullConfig(mainConfFilePath string, conf tomlconfig.RootConfig) (err 
 		mtrsConfDir := testrand.RFolderPath()
 		res4SrvsConfDir := testrand.RFolderPath()
 		dirs = []string{mtrsConfDir, res4SrvsConfDir}
-		if err = createDirectoriesWithFullDepth(dirs); err != nil {
-			log.WithError(err).Errorln("error creating directory")
+		if e := createDirectoriesWithFullDepth(dirs); e != nil {
+			log.WithError(e).Errorln("error creating directory")
 			return ErrKeyWritingFsStructure
 		}
 		mtrsConfPath := filepath.Join(mtrsConfDir, testrand.RName())
 		res4SrvsConfPath := filepath.Join(res4SrvsConfDir, testrand.RName())
 		mtrs4Srvs[srv.Name] = mtrsConfPath
 		res4Srvs[srv.Name] = res4SrvsConfPath
-		if err = createConfigFile(metricsConfigFileContenTemplate, mtrsConfPath, srv); err != nil {
-			log.Errorln("error writing metrics config")
+		if e := createConfigFile(metricsConfigFileContenTemplate, mtrsConfPath, srv); e != nil {
+			log.WithError(e).Errorln("error writing metrics config")
 			err = ErrKeyWritingFsStructure
 		}
-		if err = createConfigFile(serviceResourcePathsFileContentTemplate, res4SrvsConfPath, srv.ResourcePaths); err != nil {
-			log.Errorln("error writing service resource paths config")
+		if e := createConfigFile(serviceResourcePathsFileContentTemplate, res4SrvsConfPath, srv.ResourcePaths); e != nil {
+			log.WithError(e).Errorln("error writing service resource paths config")
 			err = ErrKeyWritingFsStructure
 		}
 	}
-	if err = createConfigFile(resourceForServicesConfFileContentTemplate, res4ServiceConfPath, res4Srvs); err != nil {
-		log.Errorln("error writing resources paths for services config")
+	if e := createConfigFile(resourceForServicesConfFileContentTemplate, res4ServiceConfPath, res4Srvs); e != nil {
+		log.WithError(e).Errorln("error writing resources paths for services config")
 		err = ErrKeyWritingFsStructure
 	}
-	if err = createConfigFile(metricsForServicesConfFileContenTemplate, mtrs4ServiceConfPath, mtrs4Srvs); err != nil {
-		log.Errorln("error writing metrics for service config")
+	if e := createConfigFile(metricsForServicesConfFileContenTemplate, mtrs4ServiceConfPath, mtrs4Srvs); e != nil {
+		log.WithError(e).Errorln("error writing metrics for service config")
 		err = ErrKeyWritingFsStructure
 	}
 	return err

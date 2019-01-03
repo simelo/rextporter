@@ -28,7 +28,7 @@ func AppendLables(metricsNames []string, metricsBody []byte, labels []*io_promet
 	encoder := expfmt.NewEncoder(writer, expfmt.FmtText)
 	for _, mf := range metricFamilies {
 		for idxMetric := range mf.Metric {
-			if metricsNames == nil || len(metricsNames) == 0 || util.StrSliceContains(metricsNames, *mf.Name) {
+			if len(metricsNames) == 0 || util.StrSliceContains(metricsNames, *mf.Name) {
 				mf.Metric[idxMetric].Label = append(mf.Metric[idxMetric].Label, labels...)
 			}
 		}
