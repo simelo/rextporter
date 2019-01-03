@@ -38,11 +38,11 @@ const (
 	// OptKeyRextResourceDefHTTPMethod key to define an http method inside a RextResourceDef
 	OptKeyRextResourceDefHTTPMethod = "d43e326a-3e5d-462c-ad92-39dc2272f1d8"
 	// OptKeyRextAuthDefTokenHeaderKey key to define a token header key inside a RextAuthDef
-	OptKeyRextAuthDefTokenHeaderKey = "768772f5-cbe7-4a61-96ba-72ab99aede59"
+	OptKeyRextAuthDefTokenHeaderKey = "768772f5-cbe7-4a61-96ba-72ab99aede59" // nolint gosec
 	// OptKeyRextAuthDefTokenKeyFromEndpoint key to define a token key from a response auth API inside a RextAuthDef
-	OptKeyRextAuthDefTokenKeyFromEndpoint = "1cb99a48-c642-4234-af5e-7de88cb20271"
+	OptKeyRextAuthDefTokenKeyFromEndpoint = "1cb99a48-c642-4234-af5e-7de88cb20271" // nolint gosec
 	// OptKeyRextAuthDefTokenGenEndpoint key to define a token endpoint to get authenticated inside a RextAuthDef
-	OptKeyRextAuthDefTokenGenEndpoint = "3a5e1d2f-53c0-4c47-b0cb-13a3190ce97f"
+	OptKeyRextAuthDefTokenGenEndpoint = "3a5e1d2f-53c0-4c47-b0cb-13a3190ce97f" // nolint gosec
 	// OptKeyRextServiceDefJobName key to define the job name, it is mandatory for all services
 	OptKeyRextServiceDefJobName = "555efe9a-fd0a-4f03-9724-fed758491e65"
 	// OptKeyRextServiceDefInstanceName key to define a instance name for a service, it is mandatory for all services
