@@ -28,7 +28,7 @@ type SkycoinSuit struct {
 
 func (suite *SkycoinSuit) SetupSuite() {
 	suite.require = require.New(suite.T())
-	mainConfFilePath := "/usr/share/gocode/src/github.com/simelo/rextporter/test/integration/skycoin/tomlconfig/main.toml"
+	mainConfFilePath := "tomlconfig/main.toml"
 	tomlConf, err := tomlconfig.ReadConfigFromFileSystem(mainConfFilePath)
 	suite.Nil(err)
 	var conf config.RextRoot

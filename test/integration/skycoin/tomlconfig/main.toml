@@ -1,4 +1,4 @@
 servicesConfigTransport = "file" # "file" | "consulCatalog"
-servicesConfigPath = "/usr/share/gocode/src/github.com/simelo/rextporter/test/integration/skycoin/tomlconfig/services.toml"
-metricsForServicesConfigPath = "/usr/share/gocode/src/github.com/simelo/rextporter/test/integration/skycoin/tomlconfig/metricsForServices.toml"
-resourcePathsForServicesConfPath = "/usr/share/gocode/src/github.com/simelo/rextporter/test/integration/skycoin/tomlconfig/resourcePathsForServices.toml"
+servicesConfigPath = "tomlconfig/services.toml"
+metricsForServicesConfigPath = "tomlconfig/metricsForServices.toml"
+resourcePathsForServicesConfPath = "tomlconfig/resourcePathsForServices.toml"
