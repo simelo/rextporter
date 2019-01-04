@@ -25,6 +25,7 @@ test: mocks ## Run test with GOARCH=Default
 	screen -list || true
 	screen -S fakeSkycoinForIntegrationTest -X quit
 	cat screenlog.0
+	go test -cpu=1 -parallel=1  -count=1 github.com/simelo/rextporter/test/integration/skycoin
 
 
 test-386: mocks ## Run tests  with GOARCH=386
@@ -38,6 +39,7 @@ test-386: mocks ## Run tests  with GOARCH=386
 	screen -list || true
 	screen -S fakeSkycoinForIntegrationTest -X quit
 	cat screenlog.0
+	GOARCH=386 go test -cpu=1 -parallel=1  -count=1 github.com/simelo/rextporter/test/integration/skycoin
 
 test-amd64: mocks ## Run tests with GOARCH=amd64
 	GOARCH=amd64 go test -count=1 github.com/simelo/rextporter/src/config
@@ -50,6 +52,7 @@ test-amd64: mocks ## Run tests with GOARCH=amd64
 	screen -list || true
 	screen -S fakeSkycoinForIntegrationTest -X quit
 	cat screenlog.0
+	GOARCH=amd64 go test -cpu=1 -parallel=1  -count=1 github.com/simelo/rextporter/test/integration/skycoin
 
 lint: ## Run linters. Use make install-linters first.
 	ls src/
