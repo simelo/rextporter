@@ -36,6 +36,8 @@ script:
   - make lint
   - make test-386
   - make test-amd64
+  - make integration-test-386
+  - make integration-test-amd64
 
 after_script:
   - docker images
