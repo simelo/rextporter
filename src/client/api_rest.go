@@ -76,7 +76,7 @@ func CreateAPIRestCreator(resConf config.RextResourceDef, srvConf config.RextSer
 		},
 		httpMethod:           httpMethod,
 		dataPath:             resConf.GetResourcePATH(srvConf.GetBasePath()),
-		tokenPath:            tkKeyGenEndpoint,
+		tokenPath:            srvConf.GetBasePath() + tkKeyGenEndpoint,
 		tokenHeaderKey:       tkHeaderKey,
 		tokenKeyFromEndpoint: tkKeyFromEndpoint,
 	}
@@ -93,13 +93,10 @@ func (ac APIRestCreator) CreateClient() (cl CacheableClient, err error) {
 	}
 	var tokenClient Client
 	tc := TokenCreator{
-		baseFactory: baseFactory{
-			jobName:                        ac.jobName,
-			instanceName:                   ac.instanceName,
-			dataSource:                     ac.tokenPath,
-			dataSourceResponseDurationDesc: ac.dataSourceResponseDurationDesc,
-		},
-		URIToGenToken: ac.tokenPath,
+		jobName:                        ac.jobName,
+		instanceName:                   ac.instanceName,
+		dataSource:                     ac.tokenPath,
+		dataSourceResponseDurationDesc: ac.dataSourceResponseDurationDesc,
 	}
 	if tokenClient, err = tc.CreateClient(); err != nil {
 		errCause := fmt.Sprintln("create token client: ", err.Error())
