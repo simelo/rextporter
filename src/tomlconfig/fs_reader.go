@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/simelo/rextporter/src/config"
-	"github.com/simelo/rextporter/src/configlocator"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -148,10 +147,8 @@ func readRootStructure(mainConf mainConfig) (rootConf RootConfig, err error) {
 
 // ReadConfigFromFileSystem will read the config from the file system.
 func ReadConfigFromFileSystem(filePath string) (rootConf RootConfig, err error) {
-	mainConfigPath := configlocator.MainFile()
-	if len(filePath) != 0 {
-		mainConfigPath = filePath
-	}
+	// TODO(denisacostaq@gmail.com): use configlocator.MainFile() here if filePath is empty
+	mainConfigPath := filePath
 	mainConfReader := configFromFile{filePath: mainConfigPath}
 	var mainConf mainConfig
 	if mainConf, err = mainConfReader.readMainConf(); err != nil {

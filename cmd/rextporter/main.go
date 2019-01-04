@@ -13,7 +13,7 @@ import (
 
 func main() {
 	// log.SetFlags(log.LstdFlags | log.Lshortfile)
-	mainConfigFile := flag.String("config", "/home/adacosta/.config/simelo/rextporter/main.toml", "Metrics main config file path.")
+	mainConfigFile := flag.String("config", "", "Metrics main config file path.")
 	defaultListenPort := 8080
 	listenPort := flag.Uint("port", uint(defaultListenPort), "Listen port.")
 	defaultHandlerEndpoint := "/metrics"
