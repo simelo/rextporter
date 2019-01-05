@@ -25,6 +25,7 @@ run:
   #   	vendor$, third_party$, testdata$, examples$, Godeps$, builtin$
   skip-dirs:
     - src/config/mocks
+    - src/rxt/mygrammar
     - src/memconfig.test
     - src/core
     - src/rxt

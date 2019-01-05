@@ -58,10 +58,6 @@ integration-test-amd64: ## Run integration tests with GOARCH=amd64
 	screen -list || true
 	screen -S fakeSkycoinForIntegrationTest -X quit
 	cat screenlog.0
-	echo "bbbbbbbbb"
-	curl http://localhost:6420/api/v1/network/connections
-	echo "aaaaa"
-	curl http://localhost:6420/api/v1/health
 	GOARCH=amd64 go test -cpu=1 -parallel=1  -count=1 github.com/simelo/rextporter/test/integration/skycoin
 
 lint: ## Run linters. Use make install-linters first.
