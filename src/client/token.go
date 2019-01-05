@@ -25,7 +25,7 @@ func (tc TokenCreator) CreateClient() (cl Client, err error) {
 		return cl, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	cl = TokenClient{
-		baseClient: baseClient{
+		baseClient: baseClient{ // nolint megacheck
 			jobName:                        tc.jobName,
 			instanceName:                   tc.instanceName,
 			dataSource:                     tc.dataSource,
