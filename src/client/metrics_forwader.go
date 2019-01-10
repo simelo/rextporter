@@ -2,7 +2,6 @@ package client
 
 import (
 	"compress/gzip"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,6 +11,7 @@ import (
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
 	"github.com/simelo/rextporter/src/util/metrics"
+	log "github.com/sirupsen/logrus"
 )
 
 // ProxyMetricClientCreator create a metrics fordwader client
@@ -23,15 +23,24 @@ type ProxyMetricClientCreator struct {
 }
 
 // CreateProxyMetricClientCreator create a ProxyMetricClientCreator with required info to create a metrics fordwader client
-func CreateProxyMetricClientCreator(service config.Service, fDefMetrics *metrics.DefaultFordwaderMetrics) (cf ProxyMetricClientCreator, err error) {
-	if !util.StrSliceContains(service.Modes, config.ServiceTypeProxy) {
-		return ProxyMetricClientCreator{}, errors.New("can not create a forward_metrics metric client from a service whitout type " + config.ServiceTypeProxy)
+func CreateProxyMetricClientCreator(resConf config.RextResourceDef, srvConf config.RextServiceDef, fDefMetrics *metrics.DefaultFordwaderMetrics) (cf ProxyMetricClientCreator, err error) {
+	srvOpts := srvConf.GetOptions()
+	jobName, err := srvOpts.GetString(config.OptKeyRextServiceDefJobName)
+	if err != nil {
+		log.WithError(err).Errorln("Can not find jobName")
+		return cf, err
 	}
+	instanceName, err := srvOpts.GetString(config.OptKeyRextServiceDefInstanceName)
+	if err != nil {
+		log.WithError(err).Errorln("Can not find instanceName")
+		return cf, err
+	}
+	resPath := resConf.GetResourcePATH(srvConf.GetBasePath())
 	cf = ProxyMetricClientCreator{
 		defFordwaderMetrics: fDefMetrics,
-		dataPath:            service.URIToGetExposedMetric(),
-		JobName:             service.JobName(),
-		InstanceName:        service.InstanceName(),
+		dataPath:            resPath,
+		JobName:             jobName,
+		InstanceName:        instanceName,
 	}
 	return cf, err
 }
@@ -77,10 +86,12 @@ func (client ProxyMetricClient) GetData() (data []byte, err error) {
 			}
 		}(time.Now().UTC())
 		if resp, err = httpClient.Do(client.req); err != nil {
+			log.WithFields(log.Fields{"err": err, "req": client.req}).Errorln("no success response")
 			errCause := fmt.Sprintln("can not do the request: ", err.Error())
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}
 		if resp.StatusCode != http.StatusOK {
+			log.WithFields(log.Fields{"status": resp.Status, "req": client.req}).Errorln("no success response")
 			errCause := fmt.Sprintf("no success response, status %s", resp.Status)
 			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 		}

@@ -26,19 +26,59 @@ type APIRestCreator struct {
 }
 
 // CreateAPIRestCreator create an APIRestCreator
-func CreateAPIRestCreator(metric config.Metric, service config.Service, dataSourceResponseDurationDesc *prometheus.Desc) (cf CacheableFactory, err error) {
+func CreateAPIRestCreator(resConf config.RextResourceDef, srvConf config.RextServiceDef, dataSourceResponseDurationDesc *prometheus.Desc) (cf CacheableFactory, err error) {
+	resOptions := resConf.GetOptions()
+	httpMethod, err := resOptions.GetString(config.OptKeyRextResourceDefHTTPMethod)
+	if err != nil {
+		log.WithError(err).Errorln("Can not find httpMethod")
+		return cf, err
+	}
+	resURI := strings.TrimPrefix(resConf.GetResourcePATH(srvConf.GetBasePath()), srvConf.GetBasePath())
+	auth := resConf.GetAuth(srvConf.GetAuthForBaseURL())
+	var tkHeaderKey, tkKeyFromEndpoint, tkKeyGenEndpoint string
+	if auth != nil {
+		authOpts := auth.GetOptions()
+		tkHeaderKey, err = authOpts.GetString(config.OptKeyRextAuthDefTokenHeaderKey)
+		if err != nil {
+			log.WithError(err).Errorln("Can not find tokenHeaderKey")
+			return cf, err
+		}
+		tkKeyFromEndpoint, err = authOpts.GetString(config.OptKeyRextAuthDefTokenKeyFromEndpoint)
+		if err != nil {
+			log.WithError(err).Errorln("Can not find tokenKeyFromEndpoint")
+			return cf, err
+		}
+		tkKeyGenEndpoint, err = authOpts.GetString(config.OptKeyRextAuthDefTokenGenEndpoint)
+		if err != nil {
+			log.WithError(err).Errorln("Can not find tkKeyGenEndpoint")
+			return cf, err
+		}
+	} else {
+		log.Warnln("you have an empty auth")
+	}
+	srvOpts := srvConf.GetOptions()
+	jobName, err := srvOpts.GetString(config.OptKeyRextServiceDefJobName)
+	if err != nil {
+		log.WithError(err).Errorln("Can not find jobName")
+		return cf, err
+	}
+	instanceName, err := srvOpts.GetString(config.OptKeyRextServiceDefInstanceName)
+	if err != nil {
+		log.WithError(err).Errorln("Can not find instanceName")
+		return cf, err
+	}
 	cf = APIRestCreator{
 		baseFactory: baseFactory{
-			jobName:                        service.JobName(),
-			instanceName:                   service.InstanceName(),
-			dataSource:                     metric.URL,
+			jobName:                        jobName,
+			instanceName:                   instanceName,
+			dataSource:                     resURI,
 			dataSourceResponseDurationDesc: dataSourceResponseDurationDesc,
 		},
-		httpMethod:           metric.HTTPMethod,
-		dataPath:             service.URIToGetMetric(metric),
-		tokenPath:            service.URIToGetToken(),
-		tokenHeaderKey:       service.TokenHeaderKey,
-		tokenKeyFromEndpoint: service.TokenKeyFromEndpoint,
+		httpMethod:           httpMethod,
+		dataPath:             resConf.GetResourcePATH(srvConf.GetBasePath()),
+		tokenPath:            srvConf.GetBasePath() + tkKeyGenEndpoint,
+		tokenHeaderKey:       tkHeaderKey,
+		tokenKeyFromEndpoint: tkKeyFromEndpoint,
 	}
 	return cf, err
 }
@@ -53,13 +93,10 @@ func (ac APIRestCreator) CreateClient() (cl CacheableClient, err error) {
 	}
 	var tokenClient Client
 	tc := TokenCreator{
-		baseFactory: baseFactory{
-			jobName:                        ac.jobName,
-			instanceName:                   ac.instanceName,
-			dataSource:                     ac.tokenPath,
-			dataSourceResponseDurationDesc: ac.dataSourceResponseDurationDesc,
-		},
-		URIToGenToken: ac.tokenPath,
+		jobName:                        ac.jobName,
+		instanceName:                   ac.instanceName,
+		dataSource:                     ac.tokenPath,
+		dataSourceResponseDurationDesc: ac.dataSourceResponseDurationDesc,
 	}
 	if tokenClient, err = tc.CreateClient(); err != nil {
 		errCause := fmt.Sprintln("create token client: ", err.Error())
@@ -114,10 +151,12 @@ func (cl APIRest) GetData(metricsCollector chan<- prometheus.Metric) (data []byt
 				}
 			}(time.Now().UTC())
 			if resp, err = httpClient.Do(cl.req); err != nil {
+				log.WithFields(log.Fields{"err": err, "req": cl.req}).Errorln("no success response")
 				errCause := fmt.Sprintln("can not do the request: ", err.Error())
 				return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}
 			if resp.StatusCode != http.StatusOK {
+				log.WithFields(log.Fields{"status": resp.Status, "req": cl.req}).Errorln("no success response")
 				errCause := fmt.Sprintf("no success response, status %s", resp.Status)
 				return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 			}

@@ -5,7 +5,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/simelo/rextporter/src/client"
-	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/util"
 )
 
@@ -18,7 +17,7 @@ type Histogram struct {
 	buckets histogramClientOptions
 }
 
-func newHistogram(cf client.Factory, parser BodyParser, metric config.Metric, jobName, instanceName, dataSource string) Scrapper {
+func newHistogram(cf client.Factory, parser BodyParser, datasource, jobName, instanceName, nodePath string, buckets histogramClientOptions) Scrapper {
 	return Histogram{
 		baseAPIScrapper: baseAPIScrapper{
 			baseScrapper: baseScrapper{
@@ -26,11 +25,11 @@ func newHistogram(cf client.Factory, parser BodyParser, metric config.Metric, jo
 				instanceName: instanceName,
 			},
 			clientFactory: cf,
-			dataSource:    dataSource,
+			dataSource:    datasource,
 			parser:        parser,
-			jsonPath:      metric.Path,
+			jsonPath:      nodePath,
 		},
-		buckets: histogramClientOptions(metric.HistogramOptions.Buckets),
+		buckets: buckets,
 	}
 }
 
@@ -47,7 +46,7 @@ func (h Histogram) GetMetric(metricsCollector chan<- prometheus.Metric) (val int
 		errCause := fmt.Sprintln("can not get node: ", err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	histogram, err := createHistogramValueWithFromData(h.buckets, iVal)
+	histogram, err := createHistogramValueFromData(h.buckets, iVal)
 	if err != nil {
 		errCause := fmt.Sprintf("can not create histogram value from data %+v.\n%s\n", iVal, err.Error())
 		return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
@@ -75,7 +74,7 @@ func newHistogramValue(buckets []float64) HistogramValue {
 	return val
 }
 
-func createHistogramValueWithFromData(buckets []float64, data interface{}) (histogram HistogramValue, err error) {
+func createHistogramValueFromData(buckets []float64, data interface{}) (histogram HistogramValue, err error) {
 	generalScopeErr := "creating histogram from data"
 	collection, okCollection := data.([]interface{})
 	if !okCollection {

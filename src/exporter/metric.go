@@ -10,19 +10,24 @@ import (
 	"github.com/simelo/rextporter/src/scrapper"
 	"github.com/simelo/rextporter/src/util"
 	"github.com/simelo/rextporter/src/util/metrics"
+	log "github.com/sirupsen/logrus"
 )
 
-func createMetricsForwaders(conf config.RootConfig, fDefMetrics *metrics.DefaultFordwaderMetrics) (fordwaderScrappers []scrapper.FordwaderScrapper, err error) {
+func createMetricsForwaders(conf config.RextRoot, fDefMetrics *metrics.DefaultFordwaderMetrics) (fordwaderScrappers []scrapper.FordwaderScrapper, err error) {
 	generalScopeErr := "can not create metrics Middleware"
-	services := conf.FilterServicesByType(config.ServiceTypeProxy)
-	fordwaderScrappers = make([]scrapper.FordwaderScrapper, len(services))
-	for idxService := range services {
+	services := conf.GetServices()
+	for _, srvConf := range services {
 		var metricFordwaderCreator client.ProxyMetricClientCreator
-		if metricFordwaderCreator, err = client.CreateProxyMetricClientCreator(services[idxService], fDefMetrics); err != nil {
-			errCause := fmt.Sprintln("error creating metric client: ", err.Error())
-			return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
+		resources := srvConf.GetResources()
+		for _, resConf := range resources {
+			if resConf.GetType() == "metrics_fordwader" {
+				if metricFordwaderCreator, err = client.CreateProxyMetricClientCreator(resConf, srvConf, fDefMetrics); err != nil {
+					errCause := fmt.Sprintln("error creating metric client: ", err.Error())
+					return nil, util.ErrorFromThisScope(errCause, generalScopeErr)
+				}
+				fordwaderScrappers = append(fordwaderScrappers, scrapper.NewMetricsForwader(metricFordwaderCreator, fDefMetrics))
+			}
 		}
-		fordwaderScrappers[idxService] = scrapper.NewMetricsForwader(metricFordwaderCreator, fDefMetrics)
 	}
 	return fordwaderScrappers, nil
 }
@@ -36,42 +41,53 @@ type constMetric struct {
 
 type endpointData2MetricsConsumer map[string][]constMetric
 
-func createMetrics(cache cache.Cache, srvsConf []config.Service, dataSourceResponseDurationDesc *prometheus.Desc) (metrics endpointData2MetricsConsumer, err error) {
+func createMetrics(cache cache.Cache, conf config.RextRoot, dataSourceResponseDurationDesc *prometheus.Desc) (metrics endpointData2MetricsConsumer, err error) {
 	generalScopeErr := "can not create metrics"
 	metrics = make(endpointData2MetricsConsumer)
-	for _, srvConf := range srvsConf {
-		for _, mConf := range srvConf.Metrics {
-			k := srvConf.URIToGetMetric(mConf)
+	for _, srvConf := range conf.GetServices() {
+		for _, resConf := range srvConf.GetResources() {
+			k := resConf.GetResourcePATH(srvConf.GetBasePath())
 			var m constMetric
-			if m, err = createConstMetric(cache, mConf, srvConf, dataSourceResponseDurationDesc); err != nil {
-				errCause := fmt.Sprintln(fmt.Sprintf("error creating metric client for %s metric of kind %s. ", mConf.Name, mConf.Options.Type), err.Error())
-				return metrics, util.ErrorFromThisScope(errCause, generalScopeErr)
+			for _, mtrConf := range resConf.GetMetricDefs() {
+				nSolver := mtrConf.GetNodeSolver()
+				if m, err = createConstMetric(cache, resConf, srvConf, mtrConf, nSolver, dataSourceResponseDurationDesc); err != nil {
+					errCause := fmt.Sprintln(fmt.Sprintf("error creating metric client for %s metric of kind %s. ", mtrConf.GetMetricName(), mtrConf.GetMetricType()), err.Error())
+					return metrics, util.ErrorFromThisScope(errCause, generalScopeErr)
+				}
+				metrics[k] = append(metrics[k], m)
 			}
-			metrics[k] = append(metrics[k], m)
 		}
 	}
 	return metrics, err
 }
 
-func createConstMetric(cache cache.Cache, metricConf config.Metric, srvConf config.Service, dataSourceResponseDurationDesc *prometheus.Desc) (metric constMetric, err error) {
-	generalScopeErr := "can not create metric " + metricConf.Name
+func createConstMetric(cache cache.Cache, resConf config.RextResourceDef, srvConf config.RextServiceDef, mtrConf config.RextMetricDef, nSolver config.RextNodeSolver, dataSourceResponseDurationDesc *prometheus.Desc) (metric constMetric, err error) {
+	generalScopeErr := "can not create metric " + mtrConf.GetMetricName()
+	if len(mtrConf.GetMetricName()) == 0 {
+		log.Errorln("metric name is required")
+		return metric, config.ErrKeyEmptyValue
+	}
 	var ccf client.CacheableFactory
-	if ccf, err = client.CreateAPIRestCreator(metricConf, srvConf, dataSourceResponseDurationDesc); err != nil {
+	if ccf, err = client.CreateAPIRestCreator(resConf, srvConf, dataSourceResponseDurationDesc); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
 	cc := client.CatcherCreator{Cache: cache, ClientFactory: ccf}
 	var numScrapper scrapper.Scrapper
-	if numScrapper, err = scrapper.NewScrapper(cc, scrapper.JSONParser{}, metricConf, srvConf); err != nil {
+	if numScrapper, err = scrapper.NewScrapper(cc, scrapper.JSONParser{}, resConf, srvConf, mtrConf, nSolver); err != nil {
 		errCause := fmt.Sprintln("error creating metric client: ", err.Error())
 		return metric, util.ErrorFromThisScope(errCause, generalScopeErr)
 	}
-	labels := append(metricConf.LabelNames(), instance4JobLabels...)
+	var labelsNames []string
+	for _, label := range mtrConf.GetLabels() {
+		labelsNames = append(labelsNames, label.GetName())
+	}
+	labels := append(labelsNames, instance4JobLabels...)
 	metric = constMetric{
-		kind:     metricConf.Options.Type,
+		kind:     mtrConf.GetMetricType(),
 		scrapper: numScrapper,
 		// FIXME(denisacostaq@gmail.com): if you use a duplicated name can panic?
-		metricDesc: prometheus.NewDesc(metricConf.Name, metricConf.Options.Description, labels, nil),
+		metricDesc: prometheus.NewDesc(mtrConf.GetMetricName(), mtrConf.GetMetricDescription(), labels, nil),
 	}
 	return metric, err
 }
