@@ -39,7 +39,8 @@ script:
   - make lint
   - make test-386
   - make test-amd64
-  - curl http://localhost:6420/api/v1/network/connections
+  # Probe Docker container to know it's up and running
+  - if [ "$TRAVIS_OS_NAME" != "osx" ]; then curl http://localhost:6420/api/v1/network/connections ; fi
   - if [ "$TRAVIS_OS_NAME" != "osx" ]; then make integration-test-386 ; fi
   - if [ "$TRAVIS_OS_NAME" != "osx" ]; then make integration-test-amd64 ; fi
 
