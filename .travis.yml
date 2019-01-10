@@ -40,8 +40,8 @@ script:
   - make test-386
   - make test-amd64
   - curl http://localhost:6420/api/v1/network/connections
-  - make integration-test-386
-  - make integration-test-amd64
+  - if [ "$TRAVIS_OS_NAME" != "osx" ]; then make integration-test-386 ; fi
+  - if [ "$TRAVIS_OS_NAME" != "osx" ]; then make integration-test-amd64 ; fi
 
 after_script:
   - docker images
