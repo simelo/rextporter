@@ -1,0 +1,3 @@
+FROM skycoin/skycoin
+
+ADD ./test/integration/skycoin/skydata/ /tmp/skydata

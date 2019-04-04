@@ -9,4 +9,4 @@
 	tokenKeyFromEndpoint = "csrf_token"
 
 	[services.location]
-		location = "localhost"
+		location = "skycoin"
