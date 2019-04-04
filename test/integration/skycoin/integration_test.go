@@ -35,7 +35,7 @@ func (suite *SkycoinSuit) SetupSuite() {
 	conf, err = toml2config.Fill(tomlConf)
 	suite.Nil(err)
 	listenPort := testrand.RandomPort()
-	suite.rextporterEndpoint = fmt.Sprintf("http://rextporter:%d%s", 8080, "/metrics")
+	suite.rextporterEndpoint = fmt.Sprintf("http://localhost:%d%s", listenPort, "/metrics")
 	suite.rextporterServer = exporter.MustExportMetrics("", "/metrics", listenPort, conf)
 	suite.require.NotNil(suite.rextporterServer)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
