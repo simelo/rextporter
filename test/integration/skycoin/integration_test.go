@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 	"time"
-	
+
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/exporter"
 	"github.com/simelo/rextporter/src/toml2config"
@@ -41,7 +41,7 @@ func (suite *SkycoinSuit) SetupSuite() {
 		listenPort = 8080
 		host = "skycoin"
 	}
-	suite.rextporterEndpoint = fmt.Sprintf("http://%s:%d%s",host, listenPort, "/metrics")
+	suite.rextporterEndpoint = fmt.Sprintf("http://%s:%d%s", host, listenPort, "/metrics")
 	suite.rextporterServer = exporter.MustExportMetrics("", "/metrics", listenPort, conf)
 	suite.require.NotNil(suite.rextporterServer)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
