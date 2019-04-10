@@ -8,6 +8,7 @@ import (
 	"os"
 	"testing"
 	"time"
+	
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/exporter"
 	"github.com/simelo/rextporter/src/toml2config"
