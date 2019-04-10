@@ -8,12 +8,14 @@ services:
     command: go test
     depends_on:
       - "rextporter"
+    environment:
+      - HOST_TEST=ON_DOCKER_CLOUD
 
   rextporter:
     build:
       dockerfile: Dockerfile-rextporter.test
       context: .
-    command: "rextporter -config tomlconfig/main.toml"
+    command: "rextporter -config tomlconfig/DockerCloud/main.toml"
     container_name: rextporter
     depends_on:
       - "skycoin"

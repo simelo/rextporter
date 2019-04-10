@@ -39,7 +39,7 @@ func (suite *SkycoinSuit) SetupSuite() {
 	listenPort := testrand.RandomPort()
 	if os.Getenv("HOST_TEST") == "ON_DOCKER_CLOUD" {
 		listenPort = 8080
-		host = "skycoin"
+		host = "rextporter"
 	}
 	suite.rextporterEndpoint = fmt.Sprintf("http://%s:%d%s", host, listenPort, "/metrics")
 	suite.rextporterServer = exporter.MustExportMetrics("", "/metrics", listenPort, conf)
