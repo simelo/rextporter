@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 	"time"
-
+	
 	"github.com/simelo/rextporter/src/config"
 	"github.com/simelo/rextporter/src/exporter"
 	"github.com/simelo/rextporter/src/toml2config"
@@ -28,14 +29,19 @@ type SkycoinSuit struct {
 
 func (suite *SkycoinSuit) SetupSuite() {
 	suite.require = require.New(suite.T())
-	mainConfFilePath := "tomlconfig/main.toml"
+	mainConfFilePath := "tomlconfig/travis/main.toml"
 	tomlConf, err := tomlconfig.ReadConfigFromFileSystem(mainConfFilePath)
 	suite.Nil(err)
 	var conf config.RextRoot
 	conf, err = toml2config.Fill(tomlConf)
 	suite.Nil(err)
+	host := "localhost"
 	listenPort := testrand.RandomPort()
-	suite.rextporterEndpoint = fmt.Sprintf("http://localhost:%d%s", listenPort, "/metrics")
+	if os.Getenv("HOST_TEST") == "ON_DOCKER_CLOUD" {
+		listenPort = 8080
+		host = "skycoin"
+	}
+	suite.rextporterEndpoint = fmt.Sprintf("http://%s:%d%s",host, listenPort, "/metrics")
 	suite.rextporterServer = exporter.MustExportMetrics("", "/metrics", listenPort, conf)
 	suite.require.NotNil(suite.rextporterServer)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
