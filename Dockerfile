@@ -7,4 +7,4 @@ RUN cd $GOPATH/src/github.com/simelo/rextporter/cmd/rextporter && go install ./.
 
 FROM alpine:latest as final_layer
 WORKDIR /bin
-COPY --from=build_layer /go/bin/rextporter .
+COPY --from=builder /go/bin/rextporter .
