@@ -27,8 +27,8 @@ services:
 
   skycoin:
     build:
-      dockerfile: Dockerfile.sky
       context: ./..
+      dockerfile: ./Docker/Dockerfile.sky
     container_name: skycoin
     ports:
       - "6420:6420"
