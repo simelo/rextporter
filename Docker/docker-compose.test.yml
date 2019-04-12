@@ -15,7 +15,7 @@ services:
   rextporter:
     build:
       context: ./..
-      dockerfile: Dockerfile-rextporter.test
+      dockerfile: ./Docker/Dockerfile-rextporter.test
     command: "rextporter -config tomlconfig/DockerCloud/main.toml"
     container_name: rextporter
     depends_on:
