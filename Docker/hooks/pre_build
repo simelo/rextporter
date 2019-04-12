@@ -1,4 +1,6 @@
 #!/bin/bash
 docker volume create skycoin-data
 docker volume create skycoin-wallet
-docker volume ls
+echo ----------------------------------
+pwd
+echo ----------------------------------
