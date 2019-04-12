@@ -4,8 +4,8 @@ services:
 
   sut:
     build:  
+      context: ./..
       dockerfile: Dockerfile.test
-      context: .
     command: go test
     depends_on:
       - "rextporter"
