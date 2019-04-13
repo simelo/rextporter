@@ -5,7 +5,7 @@ RUN cd $GOPATH/src/github.com/simelo && git clone https://github.com/simelo/rext
 RUN cd $GOPATH/src/github.com/simelo/rextporter/cmd/rextporter && go install ./...
 
 
-FROM busybox as final_layer
+FROM alpine:latest as final_layer
 WORKDIR /bin
 COPY --from=builder /go/bin/rextporter .
 ADD /test/integration/skycoin/tomlconfig/ ./tomlconfig/
