@@ -13,17 +13,17 @@ services:
       - HOST_TEST=ON_DOCKER_CLOUD
 
   rextporter:
-    build:
-      context: ./..
-      dockerfile: ./Docker/Dockerfile-rextporter.test
-    command: "rextporter -config tomlconfig/DockerCloud/main.toml"
+    image: $IMAGE_NAME
     container_name: rextporter
+    volumes:
+      - "./../test/integration/skycoin/tomlconfig:/tomlconfig"
+    command: "rextporter -config tomlconfig/DockerCloud/main.toml"
     depends_on:
       - "skycoin"
-    expose:
-      - "8080"
     ports:
       - "8080:8080"
+    expose:
+      - "8080"
 
   skycoin:
     image: skycoin/skycoin
