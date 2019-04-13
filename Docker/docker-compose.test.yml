@@ -26,10 +26,10 @@ services:
       - "8080:8080"
 
   skycoin:
-    build:
-      context: ./..
-      dockerfile: ./Docker/Dockerfile.sky
+    image: skycoin/skycoin
     container_name: skycoin
+    volumes:
+      - "/test/integration/skycoin/skydata:/tmp/skydata"
     ports:
       - "6420:6420"
       - "6000:6000"
