@@ -40,11 +40,10 @@ func (suite *SkycoinSuit) SetupSuite() {
 	if os.Getenv("HOST_TEST") == "ON_DOCKER_CLOUD" {
 		listenPort = 8080
 		host = "rextporter"
-	} else {
-		suite.rextporterEndpoint = fmt.Sprintf("http://%s:%d%s", host, listenPort, "/metrics")
-		suite.rextporterServer = exporter.MustExportMetrics("", "/metrics", listenPort, conf)
-		suite.require.NotNil(suite.rextporterServer)
 	}
+	suite.rextporterEndpoint = fmt.Sprintf("http://%s:%d%s", host, listenPort, "/metrics")
+	suite.rextporterServer = exporter.MustExportMetrics("", "/metrics", listenPort, conf)
+	suite.require.NotNil(suite.rextporterServer)
 	// NOTE(denisacostaq@gmail.com): Wait for server starts
 	time.Sleep(time.Second * 2)
 }
