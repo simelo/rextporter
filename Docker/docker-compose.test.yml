@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.7'
 services:
 
 
@@ -29,7 +29,7 @@ services:
     image: skycoin/skycoin
     container_name: skycoin
     volumes:
-      - "/test/integration/skycoin/skydata:/tmp/skydata"
+      - "./../test/integration/skycoin/skydata:/tmp/skydata"
     ports:
       - "6420:6420"
       - "6000:6000"
