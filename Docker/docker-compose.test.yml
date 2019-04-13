@@ -13,7 +13,9 @@ services:
       - HOST_TEST=ON_DOCKER_CLOUD
 
   rextporter:
-    image: $IMAGE_NAME
+    build:
+      context: ./..
+      dockerfile: ./Docker/Dockerfile
     container_name: rextporter
     volumes:
       - "./../test/integration/skycoin/tomlconfig:/tomlconfig"
