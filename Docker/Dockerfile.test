@@ -1,0 +1,5 @@
+FROM golang:1.11-alpine
+
+ADD . $GOPATH/src/github.com/simelo/rextporter/
+RUN apk add --no-cache gcc musl-dev
+WORKDIR $GOPATH/src/github.com/simelo/rextporter/test/integration/skycoin

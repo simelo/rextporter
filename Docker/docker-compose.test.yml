@@ -1,0 +1,40 @@
+version: '3.3'
+services:
+
+
+  sut:
+    build:  
+      context: ./..
+      dockerfile: ./Docker/Dockerfile.test
+    command: go test
+    depends_on:
+      - "rextporter"
+    environment:
+      - HOST_TEST=ON_DOCKER_CLOUD
+      
+
+  rextporter:
+    build:
+      context: ./..
+      dockerfile: ./Docker/Dockerfile
+    container_name: rextporter
+    volumes:
+      - "./../test/integration/skycoin/tomlconfig:/bin/tomlconfig"
+    command: "rextporter -config tomlconfig/DockerCloud/main.toml"
+    depends_on:
+      - "skycoin"
+    ports:
+      - "8080:8080"
+    expose:
+      - "8080"
+
+  skycoin:
+    image: skycoin/skycoin
+    container_name: skycoin
+    volumes:
+      - "./../test/integration/skycoin/skydata:/tmp/skydata"
+    ports:
+      - "6420:6420"
+      - "6000:6000"
+    
+    command: "-db-path /tmp/skydata/blockchain-180.db -db-read-only=true -disable-networking=false -download-peerlist=false -launch-browser=false -enable-all-api-sets=true"
