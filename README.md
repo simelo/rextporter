@@ -5,6 +5,7 @@
 
 This is the executable entry point for the server.
 - [Install](#install)
+- [Docker](/Docker/README.md)
 - [Run](#run)
 - [Config file](#config-file)
 
