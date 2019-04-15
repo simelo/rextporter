@@ -11,10 +11,12 @@ services:
       - "rextporter"
     environment:
       - HOST_TEST=ON_DOCKER_CLOUD
-      - IMAGE_NAME
+      
 
   rextporter:
-    image: IMAGE_NAME
+    build:
+      context: ./..
+      dockerfile: ./Docker/Dockerfile
     container_name: rextporter
     volumes:
       - "./../test/integration/skycoin/tomlconfig:/bin/tomlconfig"
