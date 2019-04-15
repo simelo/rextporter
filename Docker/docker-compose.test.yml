@@ -11,6 +11,7 @@ services:
       - "rextporter"
     environment:
       - HOST_TEST=ON_DOCKER_CLOUD
+      - IMAGE_NAME
 
   rextporter:
     image: IMAGE_NAME
